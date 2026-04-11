@@ -1,0 +1,3167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FlyForge — Design. Tie. Fish.</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1814;
+    --surface: #252118;
+    --surface-2: #2e2a1f;
+    --border: #3a3426;
+    --accent: #c4882a;
+    --accent-glow: #e8a63f;
+    --olive: #7a8c4e;
+    --text: #e8e0d0;
+    --text-dim: #9a9080;
+    --danger: #b85c3c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.77 0 0 0 0 0.53 0 0 0 0 0.16 0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.5;
+    z-index: 1;
+    mix-blend-mode: overlay;
+  }
+  h1, h2, h3, h4 { font-family: "Playfair Display", Georgia, serif; font-weight: 700; letter-spacing: 0.01em; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 16px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    pointer-events: none;
+  }
+  .nav .brand {
+    font-family: "Playfair Display", serif;
+    font-size: 20px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-transform: uppercase;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+  .nav .brand span { color: var(--text); }
+  .nav .my-patterns {
+    pointer-events: auto;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: "IBM Plex Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    background: rgba(37, 33, 24, 0.7);
+    backdrop-filter: blur(8px);
+    transition: all 200ms ease;
+  }
+  .nav .my-patterns:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ---------- SCREENS ---------- */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    position: relative;
+    z-index: 2;
+  }
+  .screen.active { display: block; animation: fadeIn 400ms ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ---------- TITLE SCREEN ---------- */
+  #title-screen {
+    display: none;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  #title-screen.active { display: flex; }
+  .ripple-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, #2a2518 0%, #1a1814 70%);
+    overflow: hidden;
+  }
+  .ripple {
+    position: absolute;
+    top: 50%; left: 50%;
+    border: 1px solid rgba(196, 136, 42, 0.15);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: ripple 6s ease-out infinite;
+  }
+  .ripple:nth-child(2) { animation-delay: 2s; }
+  .ripple:nth-child(3) { animation-delay: 4s; }
+  @keyframes ripple {
+    0% { width: 0; height: 0; opacity: 0.8; }
+    100% { width: 1400px; height: 1400px; opacity: 0; }
+  }
+  .title-inner { position: relative; z-index: 2; max-width: 600px; padding: 40px; }
+  .logo-mark {
+    width: 90px; height: 90px;
+    margin: 0 auto 24px;
+    display: block;
+  }
+  .title-inner h1 {
+    font-size: clamp(56px, 9vw, 110px);
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    text-shadow: 0 0 40px rgba(196, 136, 42, 0.3);
+  }
+  .tagline {
+    font-family: "IBM Plex Mono", monospace;
+    color: var(--text-dim);
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    font-size: 13px;
+    margin-bottom: 48px;
+  }
+  .start-btn {
+    padding: 18px 52px;
+    background: linear-gradient(180deg, #d4962e, #a87120);
+    color: #1a1814;
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 14px;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(232, 166, 63, 0.4), 0 0 30px rgba(196, 136, 42, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 300ms ease;
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(232, 166, 63, 0.4), 0 0 30px rgba(196, 136, 42, 0.4), inset 0 1px 0 rgba(255,255,255,0.2); }
+    50% { box-shadow: 0 0 0 1px rgba(232, 166, 63, 0.6), 0 0 60px rgba(196, 136, 42, 0.6), inset 0 1px 0 rgba(255,255,255,0.2); }
+  }
+  .start-btn:hover { transform: translateY(-2px); }
+
+  /* ---------- QUESTION FLOW ---------- */
+  #question-screen {
+    padding: 100px 20px 40px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  #question-screen.active { display: flex; }
+  .progress-wrap {
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 32px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+  }
+  .progress-bar {
+    height: 3px;
+    background: var(--surface);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--olive), var(--accent));
+    transition: width 400ms ease;
+    width: 0%;
+  }
+  .flip-stage {
+    width: 100%;
+    max-width: 560px;
+    perspective: 1600px;
+    min-height: 340px;
+    position: relative;
+  }
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 44px 40px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 20px 60px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .q-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence baseFrequency='0.7'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.05'/></svg>");
+    pointer-events: none;
+  }
+  .q-num {
+    font-family: "IBM Plex Mono", monospace;
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .q-text {
+    font-size: 26px;
+    font-family: "Playfair Display", serif;
+    margin-bottom: 28px;
+    line-height: 1.25;
+  }
+  .q-options { display: flex; flex-direction: column; gap: 10px; }
+  .q-options.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .opt {
+    padding: 14px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: left;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    color: var(--text);
+    transition: all 200ms ease;
+  }
+  .opt:hover { border-color: var(--accent); background: #332c1f; transform: translateX(2px); }
+  .opt.selected { border-color: var(--accent); background: rgba(196, 136, 42, 0.1); color: var(--accent); }
+  select.opt, input.opt { width: 100%; appearance: none; cursor: pointer; }
+  select.opt {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%23c4882a' stroke-width='1.5' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+  }
+  .q-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 28px;
+  }
+  .btn-ghost, .btn-primary {
+    padding: 11px 22px;
+    font-family: "IBM Plex Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 11px;
+    border-radius: 5px;
+    transition: all 200ms ease;
+  }
+  .btn-ghost { color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--accent); border-color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #1a1814; font-weight: 600; }
+  .btn-primary:hover { background: var(--accent-glow); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .q-card.flip-in { animation: flipIn 600ms ease; }
+  .q-card.flip-out { animation: flipOut 400ms ease forwards; }
+  @keyframes flipIn {
+    0% { opacity: 0; transform: rotateY(-80deg); }
+    100% { opacity: 1; transform: rotateY(0); }
+  }
+  @keyframes flipOut {
+    0% { opacity: 1; transform: rotateY(0); }
+    100% { opacity: 0; transform: rotateY(80deg); }
+  }
+
+  /* material search */
+  .mat-search {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    margin-bottom: 12px;
+    outline: none;
+  }
+  .mat-search:focus { border-color: var(--accent); }
+  .mat-list {
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-right: 4px;
+  }
+  .mat-list::-webkit-scrollbar { width: 6px; }
+  .mat-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .mat-chip {
+    padding: 6px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 200ms ease;
+  }
+  .mat-chip.on { background: rgba(196, 136, 42, 0.15); border-color: var(--accent); color: var(--accent); }
+  .mat-cat {
+    width: 100%;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 8px 0 4px;
+    border-bottom: 1px solid var(--border);
+    margin: 4px 0 4px;
+  }
+  .mat-cat:first-child { margin-top: 0; padding-top: 0; }
+  .mat-cat-row { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; margin-bottom: 4px; }
+  .mat-toggle {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .mat-toggle input { accent-color: var(--accent); }
+
+  /* ---------- PATTERN CARDS ---------- */
+  #pattern-screen { padding: 100px 20px 60px; display: none; }
+  #pattern-screen.active { display: block; }
+  .section-head {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .section-head .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+  .section-head h2 {
+    font-size: 42px;
+    margin-top: 8px;
+    color: var(--text);
+  }
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .pattern-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 24px;
+    position: relative;
+    transform: translateY(30px);
+    opacity: 0;
+    animation: slideUp 700ms ease forwards;
+    transition: transform 300ms ease, border-color 300ms ease;
+  }
+  .pattern-card:nth-child(1) { animation-delay: 0.1s; }
+  .pattern-card:nth-child(2) { animation-delay: 0.3s; }
+  .pattern-card:nth-child(3) { animation-delay: 0.5s; }
+  .pattern-card:hover { transform: translateY(-6px); border-color: var(--accent); }
+  @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
+  .difficulty {
+    position: absolute;
+    top: 20px; right: 20px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .diff-easy { background: rgba(122, 140, 78, 0.2); color: var(--olive); }
+  .diff-med { background: rgba(196, 136, 42, 0.2); color: var(--accent); }
+  .diff-hard { background: rgba(184, 92, 60, 0.2); color: var(--danger); }
+  .pattern-preview {
+    width: 100%;
+    aspect-ratio: 720 / 260;
+    background: #d2d6dc;
+    border-radius: 6px;
+    margin-bottom: 18px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.15);
+  }
+  .pattern-preview canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .pattern-name {
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .pattern-sub {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 16px;
+  }
+  .pros-cons { margin-bottom: 16px; font-size: 13px; }
+  .pros-cons div { padding: 4px 0; color: var(--text-dim); }
+  .pros-cons .pro::before { content: "+ "; color: var(--olive); font-weight: 700; }
+  .pros-cons .con::before { content: "− "; color: var(--danger); font-weight: 700; }
+  .tech-list {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px;
+  }
+  .tech-tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+  }
+  .select-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 5px;
+    font-family: "IBM Plex Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 11px;
+    transition: all 200ms ease;
+  }
+  .select-btn:hover { background: var(--accent); color: #1a1814; }
+
+  /* ---------- CUSTOMIZER ---------- */
+  #customizer-screen { padding: 80px 20px 40px; display: none; }
+  #customizer-screen.active { display: block; }
+  .custom-wrap {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  @media (max-width: 900px) { .custom-wrap { grid-template-columns: 1fr; } }
+  .canvas-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    min-height: 420px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .canvas-panel canvas {
+    max-width: 100%;
+    height: auto;
+  }
+  .controls-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+  }
+  .controls-panel h3 { font-size: 22px; margin-bottom: 4px; }
+  .controls-panel .sub { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 20px; }
+  .part-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .part-btn {
+    padding: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    transition: all 200ms ease;
+  }
+  .part-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(196,136,42,0.1); }
+  .part-btn:hover { color: var(--text); }
+  .ctrl-group { margin-bottom: 18px; }
+  .ctrl-group label {
+    display: block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  input[type="color"] {
+    width: 100%;
+    height: 38px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .swatch {
+    padding: 12px 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .swatch.active { border-color: var(--accent); color: var(--accent); background: rgba(196,136,42,0.1); }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+  .slider-val { font-family: "IBM Plex Mono", monospace; color: var(--accent); font-size: 12px; float: right; }
+  .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+  }
+  .toggle-row span {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .switch {
+    position: relative;
+    width: 40px; height: 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    background: var(--text-dim);
+    border-radius: 50%;
+    transition: all 200ms ease;
+  }
+  .switch.on { background: rgba(196,136,42,0.2); border-color: var(--accent); }
+  .switch.on::after { left: 20px; background: var(--accent); }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
+  .action-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .spinning { animation: spin 600ms ease; }
+  @keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+
+  /* ---------- MATERIALS ---------- */
+  #materials-screen { padding: 100px 20px 60px; display: none; max-width: 900px; margin: 0 auto; }
+  #materials-screen.active { display: block; }
+  .mat-row {
+    display: grid;
+    grid-template-columns: 30px 1.5fr auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 200ms ease;
+  }
+  .mat-row.owned { opacity: 0.5; }
+  .mat-row.owned .mat-name { text-decoration: line-through; }
+  .mat-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--olive); cursor: pointer; }
+  .mat-name { font-size: 15px; }
+  .mat-qty { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-dim); }
+  .mat-price { font-family: "IBM Plex Mono", monospace; color: var(--accent); font-size: 14px; }
+  .buy-btns { display: flex; gap: 6px; }
+  .buy-btn {
+    padding: 6px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: all 200ms ease;
+  }
+  .buy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mat-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    margin-top: 16px;
+  }
+  .mat-total .label { font-family: "IBM Plex Mono", monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-dim); }
+  .mat-total .val { font-family: "Playfair Display", serif; font-size: 30px; color: var(--accent); }
+
+  /* ---------- TYING VIEW ---------- */
+  #tying-screen { padding: 80px 0 100px; display: none; }
+  #tying-screen.active { display: block; }
+  .tying-wrap {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 0;
+    max-width: 1300px;
+    margin: 0 auto;
+    min-height: 560px;
+  }
+  @media (max-width: 900px) { .tying-wrap { grid-template-columns: 1fr; } }
+  .tying-canvas {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px 0 0 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    gap: 14px;
+  }
+  .tying-canvas canvas { max-width: 100%; height: auto; background: #d2d6dc; border-radius: 4px; }
+  .your-design-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    opacity: 0.75;
+  }
+  .canvas-panel canvas { background: #d2d6dc; border-radius: 4px; }
+  .tying-steps {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    padding: 36px 32px;
+  }
+  .step-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .step-title {
+    font-size: 28px;
+    margin-bottom: 18px;
+    line-height: 1.2;
+  }
+  .step-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .video-box {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #0f0d09;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--text-dim);
+  }
+  .play-icon {
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .play-icon::after {
+    content: "";
+    width: 0; height: 0;
+    border-left: 16px solid var(--accent);
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    margin-left: 4px;
+  }
+  .video-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+  .tying-bar {
+    max-width: 1300px;
+    margin: 24px auto 0;
+    padding: 20px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 24px;
+  }
+  .tying-bar .progress-bar { background: var(--surface-2); }
+  .step-counter { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--text-dim); letter-spacing: 0.1em; }
+
+  /* ---------- MODAL ---------- */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 8, 5, 0.85);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(6px);
+  }
+  .modal-backdrop.active { display: flex; animation: fadeIn 300ms ease; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h2 { font-size: 32px; margin-bottom: 6px; }
+  .modal .sub { font-family: "IBM Plex Mono", monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-dim); margin-bottom: 24px; }
+  .modal input[type="text"] {
+    width: 100%;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .summary {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+  .summary .row { display: flex; justify-content: space-between; padding: 5px 0; }
+  .summary .row span:first-child { color: var(--text-dim); font-family: "IBM Plex Mono", monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-actions button { flex: 1; }
+
+  /* saved list */
+  .saved-item {
+    padding: 14px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .saved-item .nm { font-family: "Playfair Display", serif; font-size: 16px; }
+  .saved-item .dt { font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--text-dim); }
+
+  .hl-flash { animation: hlFlash 800ms ease; }
+  @keyframes hlFlash {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.5) drop-shadow(0 0 10px var(--accent)); }
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="brand" onclick="goTo('title-screen')">Fly<span>Forge</span></div>
+  <button class="my-patterns" onclick="openSaved()">◆ My Patterns</button>
+</div>
+
+<!-- ============ TITLE SCREEN ============ -->
+<div id="title-screen" class="screen active">
+  <div class="ripple-bg">
+    <div class="ripple"></div>
+    <div class="ripple"></div>
+    <div class="ripple"></div>
+  </div>
+  <div class="title-inner">
+    <svg class="logo-mark" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#c4882a" stroke-width="1.5" opacity="0.5"/>
+      <path d="M20 60 Q30 40 50 50 Q70 60 80 40" fill="none" stroke="#c4882a" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="20" cy="60" r="3" fill="#c4882a"/>
+      <path d="M75 42 L82 35 M80 45 L85 45 M78 48 L85 50" stroke="#c4882a" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <h1>FlyForge</h1>
+    <div class="tagline">Design · Tie · Fish</div>
+    <button class="start-btn" onclick="startFlow()">Begin Forging</button>
+  </div>
+</div>
+
+<!-- ============ QUESTION SCREEN ============ -->
+<div id="question-screen" class="screen">
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Question <span id="qnum">1</span> / <span id="qtotal">8</span></span>
+      <span id="qsection">Target</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="qfill"></div></div>
+  </div>
+  <div class="flip-stage">
+    <div class="q-card" id="qcard"></div>
+  </div>
+</div>
+
+<!-- ============ PATTERN SCREEN ============ -->
+<div id="pattern-screen" class="screen">
+  <div class="section-head">
+    <div class="eyebrow">Three Forged Patterns</div>
+    <h2>Choose Your Fly</h2>
+  </div>
+  <div class="pattern-grid" id="patternGrid"></div>
+</div>
+
+<!-- ============ CUSTOMIZER SCREEN ============ -->
+<div id="customizer-screen" class="screen">
+  <div class="section-head">
+    <div class="eyebrow">Customize</div>
+    <h2 id="custTitle">Crazy Charlie</h2>
+  </div>
+  <div class="custom-wrap">
+    <div class="canvas-panel">
+      <canvas id="customCanvas" width="400" height="300"></canvas>
+    </div>
+    <div class="controls-panel">
+      <h3>Fly Parts</h3>
+      <div class="sub">Click to highlight & edit</div>
+      <div class="part-selector" id="partSelector"></div>
+
+      <div class="ctrl-group">
+        <label>Color <span class="slider-val" id="currentPartLabel">Body</span></label>
+        <input type="color" id="colorPick" value="#e8d4a0">
+      </div>
+
+      <div class="ctrl-group">
+        <label>Material Density</label>
+        <div class="swatches" id="swatches"></div>
+      </div>
+
+      <div class="ctrl-group">
+        <label>Hook Size <span class="slider-val" id="hookLbl">#6</span></label>
+        <input type="range" id="hookSlider" min="0" max="7" step="1" value="2">
+      </div>
+
+      <div class="ctrl-group">
+        <div class="toggle-row">
+          <span>Weed Guard</span>
+          <div class="switch" id="weedSwitch" onclick="toggleWeed()"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-ghost" onclick="randomizeFly()">⟳ Randomize</button>
+        <button class="btn-ghost" onclick="resetFly()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="action-btns">
+    <button class="btn-ghost" onclick="goTo('pattern-screen')">← Back</button>
+    <button class="btn-primary" onclick="goTo('materials-screen'); renderMaterials();">Materials →</button>
+  </div>
+</div>
+
+<!-- ============ MATERIALS SCREEN ============ -->
+<div id="materials-screen" class="screen">
+  <div class="section-head">
+    <div class="eyebrow">Sourcing</div>
+    <h2>Materials & Supplies</h2>
+  </div>
+  <div id="matListWrap"></div>
+  <div class="mat-total">
+    <div>
+      <div class="label">Estimated Total</div>
+      <div class="val" id="matTotal">$0.00</div>
+    </div>
+    <button class="btn-primary" onclick="exportShoppingList()">⬇ Export List</button>
+  </div>
+  <div class="action-btns">
+    <button class="btn-ghost" onclick="goTo('customizer-screen')">← Back</button>
+    <button class="btn-primary" onclick="startTying()">Begin Tying →</button>
+  </div>
+</div>
+
+<!-- ============ TYING SCREEN ============ -->
+<div id="tying-screen" class="screen">
+  <div class="section-head">
+    <div class="eyebrow">At the Vise</div>
+    <h2 id="tyTitle">Crazy Charlie</h2>
+  </div>
+  <div class="tying-wrap">
+    <div class="tying-canvas">
+      <canvas id="tyingCanvas" width="400" height="300"></canvas>
+      <div class="your-design-label">◆ Your Design</div>
+    </div>
+    <div class="tying-steps">
+      <div class="step-num">Step <span id="stepNum">1</span></div>
+      <div class="step-title" id="stepTitle">—</div>
+      <div class="step-desc" id="stepDesc">—</div>
+      <div class="video-box">
+        <div class="play-icon"></div>
+        <div class="video-label">Demo video coming soon</div>
+      </div>
+    </div>
+  </div>
+  <div class="tying-bar">
+    <button class="btn-ghost" onclick="stepPrev()">← Previous</button>
+    <div>
+      <div class="progress-bar"><div class="progress-fill" id="tyFill"></div></div>
+      <div class="step-counter" style="margin-top:6px"><span id="stepCt">Step 1 of 8</span></div>
+    </div>
+    <button class="btn-primary" id="stepNextBtn" onclick="stepNext()">Next →</button>
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-backdrop" id="saveModal">
+  <div class="modal">
+    <h2>Save Your Pattern</h2>
+    <div class="sub">Forged at the vise</div>
+    <input type="text" id="saveName" placeholder="Name your fly…">
+    <div class="summary" id="saveSummary"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('saveModal')">Cancel</button>
+      <button class="btn-ghost" onclick="copyShare()">Copy</button>
+      <button class="btn-ghost" onclick="window.print()">PDF</button>
+      <button class="btn-primary" onclick="savePattern()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="savedModal">
+  <div class="modal">
+    <h2>My Patterns</h2>
+    <div class="sub">Your forged collection</div>
+    <div id="savedList"></div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn-primary" onclick="closeModal('savedModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   EMBEDDED FLY RENDERER — extracted from flies.html
+   Exposes window.FLY_RENDERER.renderFly(ctx, cfg)
+   ================================================================ */
+window.FLY_RENDERER = (function() {
+let _state = 1;
+function mulberry32(seed) {
+  _state = seed | 0;
+  return function() {
+    _state = (_state + 0x6D2B79F5) | 0;
+    let t = _state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let rng = mulberry32(1);
+const rand = (lo, hi) => lo + rng() * (hi - lo);
+const randInt = (lo, hi) => Math.floor(lo + rng() * (hi - lo + 1));
+const randPick = arr => arr[Math.floor(rng() * arr.length)];
+
+/* ============================================================
+   TEXTURE_PARAMS — all tunable constants for fuzzy textures.
+   These are the numbers to tweak when a texture looks wrong.
+   Grouped by texture; never hardcode inside drawing functions.
+   ============================================================ */
+const TEXTURE_PARAMS = {
+  dubbing: {
+    baseAlpha: 0.62,
+    // undercoat: longer, darker, lower-alpha fibers — the body of the fuzz
+    undercoat: {
+      fibers: 320,
+      lenMin: 5, lenMax: 11,
+      widthMin: 0.6, widthMax: 1.5,
+      alphaMin: 0.3, alphaMax: 0.62,
+      brightness: -0.13
+    },
+    // tips: shorter, brighter, higher-alpha — the highlights
+    tips: {
+      fibers: 230,
+      lenMin: 3, lenMax: 7,
+      widthMin: 0.5, widthMax: 1.1,
+      alphaMin: 0.5, alphaMax: 0.9,
+      brightness: 0.2
+    },
+    angleJitterDeg: 42,
+    brightJitter: 0.18,
+    // fiber origins cluster near the silhouette edge so the fuzz actually
+    // sticks out past the base shape — otherwise most fibers hide inside.
+    radialMin: 0.55,
+    radialMax: 1.0
+  },
+  dryHackle: {
+    countMin: 34, countMax: 54,
+    lenMin: 16, lenMax: 28,
+    lenJitter: 0.22,
+    angleJitterDeg: 8,
+    curveAmount: 4,
+    widthMin: 0.7, widthMax: 1.15,
+    alpha: 0.94,
+    barredSegments: 7 // for grizzly/furnace barring
+  },
+  softHackle: {
+    countMin: 24, countMax: 40,
+    lenMin: 18, lenMax: 36,
+    lenJitter: 0.28,
+    sweepArcDeg: 130, // total arc over which fibers are distributed
+    sweepAxisOffset: -5, // degrees; negative = swept slightly back over body
+    curveAmount: 12,
+    alphaMin: 0.48, alphaMax: 0.82,
+    widthMin: 0.55, widthMax: 0.95
+  },
+  herl: {
+    baseAlpha: 0.95,
+    fiberDensity: 2.3, // fibers per pixel of length
+    fiberLenMin: 1.0, fiberLenMax: 2.6,
+    fiberWidth: 0.9,
+    iridescence: {
+      highlightAlpha: 0.55,
+      gradientStops: [
+        [0.00, '#1a2e20'],
+        [0.35, '#32522a'],
+        [0.62, '#5a4a25'],
+        [0.88, '#4a2e4a']
+      ]
+    }
+  },
+  marabou: {
+    strandsMin: 46, strandsMax: 72,
+    lenMin: 28, lenMax: 58,
+    lenJitter: 0.4,
+    spreadDeg: 55,
+    sCurveAmount: 0.42,
+    barbsPerStrand: 15,
+    barbLenMin: 1, barbLenMax: 3,
+    alphaMin: 0.38, alphaMax: 0.72,
+    widthMin: 0.55, widthMax: 1.0
+  },
+  bucktail: {
+    countMin: 16, countMax: 26,
+    lenJitter: 0.14,
+    angleJitterDeg: 3,
+    widthMin: 0.8, widthMax: 1.3,
+    alpha: 0.95,
+    brightJitter: 0.1
+  },
+  tailFiber: {
+    countMin: 3, countMax: 7,
+    spreadDeg: 14,
+    widthMin: 0.7, widthMax: 1.1,
+    alpha: 0.94
+  },
+  feather: {
+    barbSpacing: 1.4,
+    barbLenMin: 3, barbLenMax: 7,
+    barbAngleDeg: 36,
+    alpha: 0.85
+  },
+  chenille: {
+    segmentSpacing: 3.2,
+    bumpJitter: 0.18
+  },
+  ribbing: {
+    wireWidth: 1.2,
+    tinselWidth: 2.0,
+    highlightOffset: 0.3
+  }
+};
+
+/* ============================================================
+   COLORS — named color lookup. Add new ones freely.
+   ============================================================ */
+const COLORS = {
+  // naturals
+  dun: '#82817a', 'medium-dun': '#8f8d85', 'light-dun': '#a4a398', 'dark-dun': '#5f5d56',
+  brown: '#5c3a1e', 'dark-brown': '#3a2310', 'light-brown': '#8a5a2a',
+  ginger: '#b97a38', cream: '#eadca9',
+  black: '#181818', white: '#f0f0f0',
+  olive: '#4e5c24', 'olive-dark': '#343d17', 'olive-light': '#6c7a36',
+  tan: '#b28a52',
+  grizzly: '#ece8de', grizzlyBar: '#141414',
+  furnace: '#712d11', furnaceBar: '#141010',
+  // fly-specific
+  peacock: '#263a2b',
+  partridge: '#8c7658', 'partridge-dark': '#564530',
+  pheasant: '#8a5a2b', 'pheasant-dark': '#3e2612', 'pheasant-fiber': '#6e4722',
+  'hares-ear': '#826344', 'hares-ear-dark': '#5a3e20',
+  'rusty-brown': '#72391a',
+  // metallics
+  gold: '#d4a53c', copper: '#a6522a', silver: '#c4c4c4',
+  tungsten: '#2d3138', 'bead-black': '#121418',
+  // brights
+  red: '#9a1c14', yellow: '#dab020', chartreuse: '#c0d640',
+  orange: '#d76f1c', pink: '#d85a7a',
+  'kelly-green': '#2a7a3a', 'royal-blue': '#1e3a7e',
+  // thread/floss
+  thread: '#1c1c1c', 'red-thread': '#8a1c14', 'yellow-thread': '#c39a1a'
+};
+function getColor(c) {
+  if (!c) return '#888';
+  if (typeof c === 'string' && c.charAt(0) === '#') return c;
+  return COLORS[c] || '#888';
+}
+function hexToRgb(h) {
+  h = h.replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+function rgbToHex(r, g, b) {
+  const to2 = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+  return '#' + to2(r) + to2(g) + to2(b);
+}
+function rgbaStr(r, g, b, a) {
+  return 'rgba(' + (r | 0) + ',' + (g | 0) + ',' + (b | 0) + ',' + a + ')';
+}
+function jitterBrightness(hex, amt, jitter) {
+  const [r, g, b] = hexToRgb(hex);
+  const f = 1 + amt + (rng() - 0.5) * 2 * jitter;
+  return [Math.max(0, Math.min(255, r * f)), Math.max(0, Math.min(255, g * f)), Math.max(0, Math.min(255, b * f))];
+}
+function shade(hex, amt) {
+  const [r, g, b] = hexToRgb(hex);
+  const f = 1 + amt;
+  return rgbToHex(r * f, g * f, b * f);
+}
+
+/* ============================================================
+   GEOMETRY UTILS
+   ============================================================ */
+function polyLen(poly) {
+  let L = 0;
+  for (let i = 1; i < poly.length; i++) {
+    L += Math.hypot(poly[i][0] - poly[i - 1][0], poly[i][1] - poly[i - 1][1]);
+  }
+  return L;
+}
+// Sample a polyline at parameter t in [0,1]. Returns [x, y, angle].
+function samplePoly(poly, t) {
+  if (poly.length < 2) return [poly[0][0], poly[0][1], 0];
+  const total = polyLen(poly);
+  const target = Math.max(0, Math.min(1, t)) * total;
+  let cum = 0;
+  for (let i = 1; i < poly.length; i++) {
+    const dx = poly[i][0] - poly[i - 1][0];
+    const dy = poly[i][1] - poly[i - 1][1];
+    const seg = Math.hypot(dx, dy);
+    if (cum + seg >= target || i === poly.length - 1) {
+      const ft = seg > 0 ? (target - cum) / seg : 0;
+      return [poly[i - 1][0] + dx * ft, poly[i - 1][1] + dy * ft, Math.atan2(dy, dx)];
+    }
+    cum += seg;
+  }
+  const last = poly[poly.length - 1];
+  const prev = poly[poly.length - 2];
+  return [last[0], last[1], Math.atan2(last[1] - prev[1], last[0] - prev[0])];
+}
+// Build a tapered path from (x1,y1,r1) to (x2,y2,r2) as a filled shape.
+function taperPath(ctx, x1, y1, x2, y2, r1, r2) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  ctx.beginPath();
+  ctx.moveTo(x1 + nx * r1, y1 + ny * r1);
+  ctx.lineTo(x2 + nx * r2, y2 + ny * r2);
+  const endAng = Math.atan2(ny, nx);
+  ctx.arc(x2, y2, r2, endAng, endAng + Math.PI, false);
+  ctx.lineTo(x1 - nx * r1, y1 - ny * r1);
+  const startAng = Math.atan2(-ny, -nx);
+  ctx.arc(x1, y1, r1, startAng, startAng + Math.PI, false);
+  ctx.closePath();
+}
+
+/* ============================================================
+   TEXTURE 1: DUBBING — tapered body of radiating fur fibers
+   ============================================================
+   The workhorse. Sells any dry/nymph body. Two passes:
+   undercoat (longer, darker) then tips (shorter, brighter).
+*/
+function drawDubbing(ctx, p) {
+  const P = TEXTURE_PARAMS.dubbing;
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const density = p.density == null ? 1 : p.density;
+  const baseHex = getColor(p.color);
+  const [br, bg, bb] = hexToRgb(baseHex);
+
+  // base silhouette — the core color that fibers sit on top of
+  ctx.save();
+  ctx.fillStyle = rgbaStr(br, bg, bb, P.baseAlpha);
+  taperPath(ctx, x1, y1, x2, y2, r1, r2);
+  ctx.fill();
+
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const spineAng = Math.atan2(dy, dx);
+  const perpAng = spineAng + Math.PI / 2;
+  const jitterRad = P.angleJitterDeg * Math.PI / 180;
+
+  const passes = [P.undercoat, P.tips];
+  for (let pi = 0; pi < passes.length; pi++) {
+    const pass = passes[pi];
+    const n = Math.max(10, Math.floor(pass.fibers * density));
+    for (let i = 0; i < n; i++) {
+      const t = rng();
+      const cx = x1 + dx * t;
+      const cy = y1 + dy * t;
+      const r = r1 + (r2 - r1) * t;
+      // position on the silhouette: random offset perpendicular to spine,
+      // biased toward the outer edge so fibers stick out past the base shape
+      const side = rng() < 0.5 ? -1 : 1;
+      const radialFrac = P.radialMin + rng() * (P.radialMax - P.radialMin);
+      const radial = r * radialFrac;
+      const sx = cx + Math.cos(perpAng) * radial * side;
+      const sy = cy + Math.sin(perpAng) * radial * side;
+      // fiber direction: perpendicular outward ± angle jitter
+      const outwardBase = perpAng + (side > 0 ? 0 : Math.PI);
+      const ang = outwardBase + (rng() - 0.5) * 2 * jitterRad;
+      const fl = pass.lenMin + rng() * (pass.lenMax - pass.lenMin);
+      const ex = sx + Math.cos(ang) * fl;
+      const ey = sy + Math.sin(ang) * fl;
+      const [fr, fg, fbl] = jitterBrightness(baseHex, pass.brightness, P.brightJitter);
+      const alpha = pass.alphaMin + rng() * (pass.alphaMax - pass.alphaMin);
+      ctx.strokeStyle = rgbaStr(fr, fg, fbl, alpha);
+      ctx.lineWidth = pass.widthMin + rng() * (pass.widthMax - pass.widthMin);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   TEXTURE 2: DRY HACKLE — 360° fibers at a point
+   ============================================================
+   Stiff cock hackle. Evenly spaced fibers with small angle
+   jitter, slight curve, and optional barring for grizzly.
+*/
+function drawDryHackle(ctx, p) {
+  const P = TEXTURE_PARAMS.dryHackle;
+  const cx = p.x, cy = p.y;
+  const density = p.density == null ? 1 : p.density;
+  const style = p.style || 'dry'; // 'dry'|'parachute'
+  const baseLen = p.length || 22;
+  const colorName = p.color || 'brown';
+  const col = getColor(colorName);
+  const n = Math.max(6, Math.floor((P.countMin + rng() * (P.countMax - P.countMin)) * density));
+
+  ctx.save();
+  // parachute hackle is horizontal (wound around a post); draw as flattened ring.
+  const flatten = style === 'parachute' ? 0.35 : 1;
+  const arcStart = 0;
+  const arcSpan = Math.PI * 2;
+  const barred = (colorName === 'grizzly' || colorName === 'furnace');
+  const barCol = colorName === 'grizzly' ? COLORS.grizzlyBar : COLORS.furnaceBar;
+
+  for (let i = 0; i < n; i++) {
+    const baseAng = arcStart + (i / n) * arcSpan;
+    const ang = baseAng + (rng() - 0.5) * 2 * P.angleJitterDeg * Math.PI / 180;
+    const fl = baseLen * (1 + (rng() - 0.5) * 2 * P.lenJitter);
+    const dirX = Math.cos(ang);
+    const dirY = Math.sin(ang) * flatten;
+    const ex = cx + dirX * fl;
+    const ey = cy + dirY * fl;
+    // slight curve via quadratic control
+    const midX = cx + dirX * fl * 0.55;
+    const midY = cy + dirY * fl * 0.55;
+    const perpX = -dirY, perpY = dirX;
+    const curve = (rng() - 0.5) * 2 * P.curveAmount;
+    const cpx = midX + perpX * curve;
+    const cpy = midY + perpY * curve;
+    ctx.lineWidth = P.widthMin + rng() * (P.widthMax - P.widthMin);
+    ctx.lineCap = 'round';
+    if (barred) {
+      // draw alternating segments along the fiber
+      const segs = P.barredSegments;
+      let prev = [cx, cy];
+      for (let s = 1; s <= segs; s++) {
+        const tt = s / segs;
+        // quadratic interp
+        const it = 1 - tt;
+        const qx = it * it * cx + 2 * it * tt * cpx + tt * tt * ex;
+        const qy = it * it * cy + 2 * it * tt * cpy + tt * tt * ey;
+        ctx.strokeStyle = (s % 2 === 0) ? barCol : col;
+        ctx.globalAlpha = P.alpha;
+        ctx.beginPath();
+        ctx.moveTo(prev[0], prev[1]);
+        ctx.lineTo(qx, qy);
+        ctx.stroke();
+        prev = [qx, qy];
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.strokeStyle = col;
+      ctx.globalAlpha = P.alpha;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.quadraticCurveTo(cpx, cpy, ex, ey);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   TEXTURE 3: SOFT HACKLE — rear-swept wispy fibers
+   ============================================================
+   Partridge-style wet hackle. Fibers sweep back over body
+   in a ~120° arc, longer and wispier than dry hackle.
+*/
+function drawSoftHackle(ctx, p) {
+  const P = TEXTURE_PARAMS.softHackle;
+  const cx = p.x, cy = p.y;
+  const density = p.density == null ? 1 : p.density;
+  const baseLen = p.length || 26;
+  const col = getColor(p.color || 'brown');
+  // sweepDirection: angle pointing "backwards" over the body (usually +x for our layout)
+  const sweepDir = p.sweepDirection == null ? 0 : p.sweepDirection; // radians
+  const n = Math.max(6, Math.floor((P.countMin + rng() * (P.countMax - P.countMin)) * density));
+
+  const arcRad = P.sweepArcDeg * Math.PI / 180;
+  const axisRad = sweepDir + P.sweepAxisOffset * Math.PI / 180;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const t = (i + rng() * 0.6) / n;
+    const ang = axisRad - arcRad / 2 + t * arcRad;
+    const fl = baseLen * (1 + (rng() - 0.5) * 2 * P.lenJitter);
+    const dirX = Math.cos(ang), dirY = Math.sin(ang);
+    const ex = cx + dirX * fl;
+    const ey = cy + dirY * fl;
+    // curve: soft hackle has more curve than dry hackle
+    const midX = cx + dirX * fl * 0.5;
+    const midY = cy + dirY * fl * 0.5;
+    const perpX = -dirY, perpY = dirX;
+    const curve = (rng() - 0.3) * P.curveAmount; // biased so curve tends one way per fiber
+    const cpx = midX + perpX * curve;
+    const cpy = midY + perpY * curve;
+    const alpha = P.alphaMin + rng() * (P.alphaMax - P.alphaMin);
+    ctx.strokeStyle = col;
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = P.widthMin + rng() * (P.widthMax - P.widthMin);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.quadraticCurveTo(cpx, cpy, ex, ey);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+/* ============================================================
+   TEXTURE 4: PEACOCK HERL — iridescent fuzzy body
+   ============================================================
+   Dark base with a green→bronze→purple gradient along length,
+   overlaid with dense short perpendicular fibers.
+*/
+function drawPeacockHerl(ctx, p) {
+  const P = TEXTURE_PARAMS.herl;
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const density = p.density == null ? 1 : p.density;
+
+  ctx.save();
+  // base gradient
+  const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+  for (const stop of P.iridescence.gradientStops) grad.addColorStop(stop[0], stop[1]);
+  ctx.fillStyle = grad;
+  ctx.globalAlpha = P.baseAlpha;
+  taperPath(ctx, x1, y1, x2, y2, r1, r2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // overlay: dense short perpendicular fibers
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const spineAng = Math.atan2(dy, dx);
+  const perpAng = spineAng + Math.PI / 2;
+  const nFibers = Math.floor(len * P.fiberDensity * density * 2);
+  const stops = P.iridescence.gradientStops;
+
+  for (let i = 0; i < nFibers; i++) {
+    const t = rng();
+    const cx = x1 + dx * t;
+    const cy = y1 + dy * t;
+    const r = r1 + (r2 - r1) * t;
+    const side = rng() < 0.5 ? -1 : 1;
+    const radial = (0.25 + rng() * 0.75) * r;
+    const sx = cx + Math.cos(perpAng) * radial * side;
+    const sy = cy + Math.sin(perpAng) * radial * side;
+    const ang = perpAng + (side > 0 ? 0 : Math.PI) + (rng() - 0.5) * 0.5;
+    const fl = P.fiberLenMin + rng() * (P.fiberLenMax - P.fiberLenMin);
+    const ex = sx + Math.cos(ang) * fl;
+    const ey = sy + Math.sin(ang) * fl;
+    // pick nearest gradient color and brighten a touch for iridescence
+    let baseCol = stops[stops.length - 1][1];
+    for (let k = 0; k < stops.length - 1; k++) {
+      if (t >= stops[k][0] && t < stops[k + 1][0]) { baseCol = stops[k][1]; break; }
+    }
+    const [r_, g_, b_] = hexToRgb(baseCol);
+    const f = 1 + P.iridescence.highlightAlpha + (rng() - 0.5) * 0.3;
+    ctx.strokeStyle = rgbaStr(r_ * f, g_ * f, b_ * f, 0.5 + rng() * 0.35);
+    ctx.lineWidth = P.fiberWidth;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   TEXTURE 5: MARABOU — wispy flowing feather
+   ============================================================
+   Streamer tail/wing. Long bezier strands with fine barbs.
+*/
+function drawMarabou(ctx, p) {
+  const P = TEXTURE_PARAMS.marabou;
+  const cx = p.x, cy = p.y;
+  const baseLen = p.length || 48;
+  const density = p.density == null ? 1 : p.density;
+  const col = getColor(p.color || 'olive');
+  const [br, bg, bb] = hexToRgb(col);
+  // flow direction: where the marabou "points" (default: +x for streamer tail)
+  const flowAng = p.angle == null ? 0 : p.angle;
+  const n = Math.max(10, Math.floor((P.strandsMin + rng() * (P.strandsMax - P.strandsMin)) * density));
+  const spreadRad = P.spreadDeg * Math.PI / 180;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    const ang = flowAng + (t - 0.5) * spreadRad + (rng() - 0.5) * 0.15;
+    const fl = baseLen * (1 + (rng() - 0.5) * 2 * P.lenJitter);
+    // S-curve: two control points
+    const dirX = Math.cos(ang), dirY = Math.sin(ang);
+    const perpX = -dirY, perpY = dirX;
+    const sCurve1 = (rng() - 0.5) * fl * P.sCurveAmount;
+    const sCurve2 = (rng() - 0.5) * fl * P.sCurveAmount;
+    const cp1x = cx + dirX * fl * 0.33 + perpX * sCurve1;
+    const cp1y = cy + dirY * fl * 0.33 + perpY * sCurve1;
+    const cp2x = cx + dirX * fl * 0.67 + perpX * sCurve2;
+    const cp2y = cy + dirY * fl * 0.67 + perpY * sCurve2;
+    const ex = cx + dirX * fl + perpX * (rng() - 0.5) * fl * 0.1;
+    const ey = cy + dirY * fl + perpY * (rng() - 0.5) * fl * 0.1;
+
+    // brightness jitter for depth
+    const bf = 1 + (rng() - 0.5) * 0.2;
+    const alpha = P.alphaMin + rng() * (P.alphaMax - P.alphaMin);
+    ctx.strokeStyle = rgbaStr(br * bf, bg * bf, bb * bf, alpha);
+    ctx.lineWidth = P.widthMin + rng() * (P.widthMax - P.widthMin);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ex, ey);
+    ctx.stroke();
+
+    // sample the curve and add perpendicular barbs
+    const nBarbs = P.barbsPerStrand;
+    for (let b = 1; b < nBarbs; b++) {
+      const tt = b / nBarbs;
+      const it = 1 - tt;
+      // cubic bezier at tt
+      const bx = it * it * it * cx + 3 * it * it * tt * cp1x + 3 * it * tt * tt * cp2x + tt * tt * tt * ex;
+      const by = it * it * it * cy + 3 * it * it * tt * cp1y + 3 * it * tt * tt * cp2y + tt * tt * tt * ey;
+      // tangent
+      const tx = 3 * it * it * (cp1x - cx) + 6 * it * tt * (cp2x - cp1x) + 3 * tt * tt * (ex - cp2x);
+      const ty = 3 * it * it * (cp1y - cy) + 6 * it * tt * (cp2y - cp1y) + 3 * tt * tt * (ey - cp2y);
+      const tlen = Math.hypot(tx, ty) || 1;
+      const bpx = -ty / tlen, bpy = tx / tlen;
+      const side = rng() < 0.5 ? -1 : 1;
+      const blen = P.barbLenMin + rng() * (P.barbLenMax - P.barbLenMin);
+      ctx.lineWidth = 0.45;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(bx + bpx * blen * side, by + bpy * blen * side);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   HOOK — five types, all with spine + bend as polylines
+   ============================================================
+*/
+function buildHook(size, type) {
+  const baseShank = Math.max(60, 300 - (size - 4) * 12);
+  const mul = {
+    standard: 1, nymph: 1.3, scud: 1.15, streamer: 1.7, jig: 1.05
+  }[type] || 1;
+  // cap so even the biggest streamer fits in the canvas width, leaving
+  // room for tail and eye margins
+  const shankLen = Math.min(470, baseShank * mul);
+  const gap = Math.max(10, 30 - (size - 4) * 1);
+  const wireW = Math.max(0.9, 2.6 - (size - 4) * 0.08);
+  const eyeR = wireW + 1.8;
+
+  // eye pushed toward the left to leave room for long tails/wings on streamers
+  const eyeX = type === 'streamer' ? 130 : 165;
+  const eye = { x: eyeX, y: 250, r: eyeR };
+  const startX = eye.x + eyeR + 1;
+  const startY = eye.y;
+  const spine = [];
+
+  if (type === 'scud') {
+    const N = 32;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const x = startX + t * shankLen;
+      const y = startY + Math.sin(t * Math.PI) * 16;
+      spine.push([x, y]);
+    }
+  } else if (type === 'jig') {
+    // kink down at eye then horizontal back
+    const kinkLen = 16;
+    const kinkAng = -Math.PI / 3.2;
+    const kx = startX + Math.cos(kinkAng) * kinkLen;
+    const ky = startY + Math.sin(kinkAng) * kinkLen;
+    spine.push([startX, startY]);
+    const kN = 4;
+    for (let i = 1; i <= kN; i++) {
+      const t = i / kN;
+      spine.push([startX + Math.cos(kinkAng) * kinkLen * t, startY + Math.sin(kinkAng) * kinkLen * t]);
+    }
+    const rest = shankLen - kinkLen;
+    const N = 24;
+    for (let i = 1; i <= N; i++) {
+      const t = i / N;
+      spine.push([kx + t * rest, ky]);
+    }
+  } else {
+    const N = 24;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      spine.push([startX + t * shankLen, startY]);
+    }
+  }
+
+  const shankEnd = spine[spine.length - 1];
+  // bend: semi-circle curving down and back
+  const bend = [];
+  const bcx = shankEnd[0] - gap * 0.1;
+  const bcy = shankEnd[1] + gap * 0.55;
+  const br_ = gap * 0.7;
+  const bN = 22;
+  for (let i = 0; i <= bN; i++) {
+    const t = i / bN;
+    const ang = -Math.PI / 2 + t * Math.PI * 1.22;
+    bend.push([bcx + Math.cos(ang) * br_, bcy + Math.sin(ang) * br_ * 1.05]);
+  }
+
+  return {
+    eye, spine, bend,
+    wireW, gap, shankLen,
+    shankStart: [startX, startY],
+    shankEnd
+  };
+}
+function drawHook(ctx, hook, colorName) {
+  const col = getColor(colorName || 'tungsten');
+  ctx.save();
+  ctx.strokeStyle = col;
+  ctx.lineWidth = hook.wireW;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // shank
+  ctx.beginPath();
+  for (let i = 0; i < hook.spine.length; i++) {
+    const p = hook.spine[i];
+    if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+  }
+  ctx.stroke();
+
+  // bend
+  ctx.beginPath();
+  for (let i = 0; i < hook.bend.length; i++) {
+    const p = hook.bend[i];
+    if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+  }
+  ctx.stroke();
+
+  // point: small extension past end of bend toward shank
+  const last = hook.bend[hook.bend.length - 1];
+  const prev = hook.bend[hook.bend.length - 2];
+  const pdx = last[0] - prev[0], pdy = last[1] - prev[1];
+  const plen = Math.hypot(pdx, pdy) || 1;
+  const ptLen = hook.gap * 0.35;
+  const px = last[0] + (pdx / plen) * ptLen;
+  const py = last[1] + (pdy / plen) * ptLen;
+  ctx.beginPath();
+  ctx.moveTo(last[0], last[1]);
+  ctx.lineTo(px, py);
+  ctx.stroke();
+  // small barb
+  const perp1 = -pdy / plen, perp2 = pdx / plen;
+  ctx.beginPath();
+  ctx.moveTo(last[0] + (px - last[0]) * 0.65, last[1] + (py - last[1]) * 0.65);
+  ctx.lineTo(last[0] + (px - last[0]) * 0.35 + perp1 * hook.gap * 0.12, last[1] + (py - last[1]) * 0.35 + perp2 * hook.gap * 0.12);
+  ctx.stroke();
+
+  // eye — small circle
+  ctx.beginPath();
+  ctx.arc(hook.eye.x, hook.eye.y, hook.eye.r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ============================================================
+   NON-FUZZY BODY MATERIALS
+   ============================================================
+*/
+// Solid smooth thread body — the baseline.
+function drawThreadBody(ctx, p) {
+  ctx.save();
+  ctx.fillStyle = getColor(p.color || 'thread');
+  taperPath(ctx, p.x1, p.y1, p.x2, p.y2, p.r1, p.r2);
+  ctx.fill();
+  // subtle shade along the underside
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  ctx.beginPath();
+  ctx.moveTo(p.x1 + nx * p.r1 * 0.2, p.y1 + ny * p.r1 * 0.2);
+  ctx.lineTo(p.x2 + nx * p.r2 * 0.2, p.y2 + ny * p.r2 * 0.2);
+  ctx.lineTo(p.x2 + nx * p.r2, p.y2 + ny * p.r2);
+  ctx.lineTo(p.x1 + nx * p.r1, p.y1 + ny * p.r1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+// Segmented chenille — overlapping bumpy circles along spine.
+function drawChenille(ctx, p) {
+  const C = TEXTURE_PARAMS.chenille;
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const col = getColor(p.color || 'olive');
+  const [r_, g_, b_] = hexToRgb(col);
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const steps = Math.max(3, Math.floor(len / C.segmentSpacing));
+  ctx.save();
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const cx = x1 + dx * t;
+    const cy = y1 + dy * t;
+    const r = (r1 + (r2 - r1) * t) * (1 + (rng() - 0.5) * 2 * C.bumpJitter);
+    const grad = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.35, r * 0.1, cx, cy, r);
+    grad.addColorStop(0, rgbaStr(r_ * 1.3, g_ * 1.3, b_ * 1.3, 1));
+    grad.addColorStop(0.55, col);
+    grad.addColorStop(1, rgbaStr(r_ * 0.6, g_ * 0.6, b_ * 0.6, 1));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+// Floss — flat smooth body with satin highlight.
+function drawFloss(ctx, p) {
+  ctx.save();
+  const col = getColor(p.color || 'yellow-thread');
+  taperPath(ctx, p.x1, p.y1, p.x2, p.y2, p.r1, p.r2);
+  ctx.fillStyle = col;
+  ctx.fill();
+  // highlight strip along top
+  const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  const hOff = 0.4;
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.beginPath();
+  ctx.moveTo(p.x1 - nx * p.r1 * hOff, p.y1 - ny * p.r1 * hOff);
+  ctx.lineTo(p.x2 - nx * p.r2 * hOff, p.y2 - ny * p.r2 * hOff);
+  ctx.lineTo(p.x2 - nx * p.r2 * 0.85, p.y2 - ny * p.r2 * 0.85);
+  ctx.lineTo(p.x1 - nx * p.r1 * 0.85, p.y1 - ny * p.r1 * 0.85);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ============================================================
+   RIBBING — diagonal wire/tinsel wraps over a body
+   ============================================================
+*/
+function drawRibbing(ctx, p) {
+  const R = TEXTURE_PARAMS.ribbing;
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const wraps = p.wraps || 6;
+  const material = p.material || 'wire';
+  const col = getColor(p.color || 'gold');
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  ctx.save();
+  ctx.strokeStyle = col;
+  ctx.lineWidth = material === 'tinsel' ? R.tinselWidth : R.wireWidth;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < wraps; i++) {
+    const t = (i + 0.5) / wraps;
+    const cx = x1 + dx * t;
+    const cy = y1 + dy * t;
+    const r = r1 + (r2 - r1) * t;
+    // the wrap appears as a diagonal across the body at this point
+    ctx.beginPath();
+    ctx.moveTo(cx + nx * r + dx / len * 2, cy + ny * r + dy / len * 2);
+    ctx.lineTo(cx - nx * r - dx / len * 2, cy - ny * r - dy / len * 2);
+    ctx.stroke();
+  }
+  if (material === 'tinsel') {
+    // add a thinner highlight
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = R.tinselWidth * 0.35;
+    for (let i = 0; i < wraps; i++) {
+      const t = (i + 0.5) / wraps;
+      const cx = x1 + dx * t;
+      const cy = y1 + dy * t;
+      const r = r1 + (r2 - r1) * t;
+      ctx.beginPath();
+      ctx.moveTo(cx + nx * r * 0.6, cy + ny * r * 0.6);
+      ctx.lineTo(cx - nx * r * 0.3, cy - ny * r * 0.3);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   BEAD HEAD — circle with radial gradient highlight
+   ============================================================
+*/
+function drawBeadHead(ctx, p) {
+  const cx = p.x, cy = p.y, r = p.r;
+  const baseColor = p.color || 'gold';
+  const base = getColor(baseColor);
+  const [br, bg, bb] = hexToRgb(base);
+  ctx.save();
+  const grad = ctx.createRadialGradient(cx - r * 0.4, cy - r * 0.5, r * 0.08, cx, cy, r * 1.05);
+  grad.addColorStop(0, rgbaStr(Math.min(255, br * 1.8 + 40), Math.min(255, bg * 1.8 + 40), Math.min(255, bb * 1.8 + 40), 1));
+  grad.addColorStop(0.35, rgbaStr(br * 1.2, bg * 1.2, bb * 1.2, 1));
+  grad.addColorStop(0.75, base);
+  grad.addColorStop(1, rgbaStr(br * 0.45, bg * 0.45, bb * 0.45, 1));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  // sharp highlight dot
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.beginPath();
+  ctx.arc(cx - r * 0.4, cy - r * 0.45, r * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ============================================================
+   TAILS — fiber, marabou, hair
+   ============================================================
+*/
+// Small fan of fibers off the back of the shank.
+function drawTailFiber(ctx, p) {
+  const P = TEXTURE_PARAMS.tailFiber;
+  const cx = p.x, cy = p.y;
+  const ang = p.angle || 0;
+  const length = p.length || 30;
+  const count = p.count || randInt(P.countMin, P.countMax);
+  const spread = (p.spread == null ? P.spreadDeg : p.spread) * Math.PI / 180;
+  const col = getColor(p.color || 'brown');
+  ctx.save();
+  ctx.strokeStyle = col;
+  ctx.globalAlpha = P.alpha;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0 : i / (count - 1) - 0.5;
+    const fAng = ang + t * spread + (rng() - 0.5) * 0.06;
+    const fl = length * (1 + (rng() - 0.5) * 0.15);
+    const ex = cx + Math.cos(fAng) * fl;
+    const ey = cy + Math.sin(fAng) * fl;
+    ctx.lineWidth = P.widthMin + rng() * (P.widthMax - P.widthMin);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+/* ============================================================
+   WINGS
+   ============================================================
+*/
+// Feather wing: teardrop silhouette with a central quill and fine barbs.
+function drawFeatherWing(ctx, p) {
+  const F = TEXTURE_PARAMS.feather;
+  const cx = p.x, cy = p.y;
+  const ang = p.angle || -Math.PI / 2; // default upright
+  const length = p.length || 50;
+  const width = p.width || length * 0.28;
+  const col = getColor(p.color || 'dun');
+  const [r_, g_, b_] = hexToRgb(col);
+
+  const dirX = Math.cos(ang), dirY = Math.sin(ang);
+  const perpX = -dirY, perpY = dirX;
+  const tipX = cx + dirX * length;
+  const tipY = cy + dirY * length;
+
+  ctx.save();
+  // silhouette
+  ctx.fillStyle = rgbaStr(r_, g_, b_, 0.85);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.quadraticCurveTo(cx + dirX * length * 0.4 + perpX * width, cy + dirY * length * 0.4 + perpY * width, tipX, tipY);
+  ctx.quadraticCurveTo(cx + dirX * length * 0.4 - perpX * width, cy + dirY * length * 0.4 - perpY * width, cx, cy);
+  ctx.closePath();
+  ctx.fill();
+
+  // quill (central spine)
+  ctx.strokeStyle = rgbaStr(r_ * 0.55, g_ * 0.55, b_ * 0.55, 0.9);
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(tipX, tipY);
+  ctx.stroke();
+
+  // barbs
+  const nBarbs = Math.floor(length / F.barbSpacing);
+  ctx.lineWidth = 0.55;
+  for (let i = 1; i < nBarbs; i++) {
+    const t = i / nBarbs;
+    const bx = cx + dirX * length * t;
+    const by = cy + dirY * length * t;
+    const wHere = width * (1 - Math.abs(t - 0.45) * 1.2);
+    const barbAngOff = F.barbAngleDeg * Math.PI / 180;
+    for (const side of [-1, 1]) {
+      const bAng = ang + side * (Math.PI / 2 - barbAngOff);
+      const bl = (F.barbLenMin + rng() * (F.barbLenMax - F.barbLenMin)) * Math.max(0.3, wHere / width);
+      const bf = 1 + (rng() - 0.5) * 0.2;
+      ctx.strokeStyle = rgbaStr(r_ * bf, g_ * bf, b_ * bf, F.alpha);
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(bx + Math.cos(bAng) * bl, by + Math.sin(bAng) * bl);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+// Bucktail wing: bundle of slightly-varying straight hairs.
+function drawBucktailWing(ctx, p) {
+  const B = TEXTURE_PARAMS.bucktail;
+  const cx = p.x, cy = p.y;
+  const ang = p.angle || 0;
+  const length = p.length || 60;
+  const col = getColor(p.color || 'white');
+  const [r_, g_, b_] = hexToRgb(col);
+  const n = Math.floor(B.countMin + rng() * (B.countMax - B.countMin));
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const spread = ((i / n) - 0.5) * 0.25;
+    const fAng = ang + spread + (rng() - 0.5) * B.angleJitterDeg * Math.PI / 180;
+    const fl = length * (1 + (rng() - 0.5) * 2 * B.lenJitter);
+    const bf = 1 + (rng() - 0.5) * 2 * B.brightJitter;
+    ctx.strokeStyle = rgbaStr(r_ * bf, g_ * bf, b_ * bf, B.alpha);
+    ctx.lineWidth = B.widthMin + rng() * (B.widthMax - B.widthMin);
+    const ex = cx + Math.cos(fAng) * fl;
+    const ey = cy + Math.sin(fAng) * fl;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   WING CASE — dark shellback over the thorax of a nymph
+   ============================================================
+*/
+function drawWingCase(ctx, p) {
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const col = getColor(p.color || 'pheasant-dark');
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  // (nx,ny) is "down" (perpendicular pointing below the spine).
+  // Negate it for the "up" direction so the shellback sits on top.
+  const nx = -dy / len, ny = dx / len;
+  ctx.save();
+  ctx.fillStyle = col;
+  // domed shellback: top arc rises above the spine, bottom runs along the spine
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.quadraticCurveTo(
+    x1 + dx * 0.25 - nx * r1 * 1.15,
+    y1 + dy * 0.25 - ny * r1 * 1.15,
+    x1 + dx * 0.5 - nx * (r1 + r2) * 0.55,
+    y1 + dy * 0.5 - ny * (r1 + r2) * 0.55
+  );
+  ctx.quadraticCurveTo(
+    x1 + dx * 0.75 - nx * r2 * 1.15,
+    y1 + dy * 0.75 - ny * r2 * 1.15,
+    x2, y2
+  );
+  ctx.lineTo(x1, y1);
+  ctx.closePath();
+  ctx.fill();
+  // sheen highlight strip along the top edge
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x1 - nx * r1 * 0.3, y1 - ny * r1 * 0.3);
+  ctx.quadraticCurveTo(
+    x1 + dx * 0.5 - nx * (r1 + r2) * 0.5,
+    y1 + dy * 0.5 - ny * (r1 + r2) * 0.5,
+    x2 - nx * r2 * 0.3, y2 - ny * r2 * 0.3
+  );
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ============================================================
+   DUMBBELL / BEAD-CHAIN EYES
+   ============================================================
+*/
+function drawDumbbellEyes(ctx, p) {
+  const cx = p.x, cy = p.y;
+  const w = p.width || 14;
+  const r = w * 0.35;
+  const style = p.style || 'dumbbell';
+  const col = getColor(p.color || 'silver');
+  const [r_, g_, b_] = hexToRgb(col);
+  ctx.save();
+  // small bar connecting eyes (perpendicular to shank)
+  if (style === 'dumbbell') {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = r * 0.55;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - w / 2);
+    ctx.lineTo(cx, cy + w / 2);
+    ctx.stroke();
+  }
+  for (const side of [-1, 1]) {
+    const ex = cx;
+    const ey = cy + side * (w / 2);
+    const grad = ctx.createRadialGradient(ex - r * 0.3, ey - r * 0.3, r * 0.1, ex, ey, r);
+    grad.addColorStop(0, rgbaStr(Math.min(255, r_ * 1.9 + 40), Math.min(255, g_ * 1.9 + 40), Math.min(255, b_ * 1.9 + 40), 1));
+    grad.addColorStop(0.5, col);
+    grad.addColorStop(1, rgbaStr(r_ * 0.4, g_ * 0.4, b_ * 0.4, 1));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(ex, ey, r, 0, Math.PI * 2);
+    ctx.fill();
+    // pupil
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(ex, ey, r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.arc(ex - r * 0.1, ey - r * 0.12, r * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   FLY RENDERER — dispatches all components in back-to-front order
+   ============================================================
+*/
+function renderFly(ctx, cfg) {
+  rng = mulberry32(cfg.seed || 1);
+  const hook = buildHook(cfg.hookSize || 12, cfg.hookType || 'standard');
+
+  // determine body coverage based on category and bead presence
+  const cat = cfg.category || 'dry';
+  const hasBead = !!cfg.beadHead;
+  const beadFrac = hasBead ? 0.08 : 0.0;
+  let bodyStart, bodyEnd, thoraxStart = 0, thoraxEnd = 0, wingHackleAt;
+
+  if (cat === 'nymph') {
+    bodyStart = 0.42;
+    bodyEnd = 0.98;
+    thoraxStart = Math.max(0.10, beadFrac + 0.03);
+    thoraxEnd = 0.42;
+    wingHackleAt = thoraxStart + 0.02;
+  } else if (cat === 'streamer') {
+    bodyStart = Math.max(0.1, beadFrac + 0.02);
+    bodyEnd = 0.98;
+    wingHackleAt = bodyStart;
+  } else if (cat === 'wet') {
+    bodyStart = Math.max(0.12, beadFrac + 0.02);
+    bodyEnd = 0.97;
+    wingHackleAt = bodyStart;
+  } else { // dry
+    bodyStart = 0.18;
+    bodyEnd = 0.97;
+    wingHackleAt = bodyStart + 0.03;
+  }
+
+  // body radius profile
+  const maxRadius = Math.max(3, hook.gap * 0.38);
+  const taper = cfg.body && cfg.body.taper != null ? cfg.body.taper : 0.6;
+  const abdomenR1 = maxRadius * (0.5 + taper * 0.25); // front (head side)
+  const abdomenR2 = maxRadius * (0.25 + taper * 0.15); // rear
+  const thoraxR1 = maxRadius * 0.95;
+  const thoraxR2 = maxRadius * (0.6 + taper * 0.2);
+
+  // === DRAW LAYERS BACK-TO-FRONT ===
+
+  // 1. Hook
+  drawHook(ctx, hook);
+
+  // 2. Tail
+  if (cfg.tail) {
+    const tailAt = samplePoly(hook.spine, bodyEnd);
+    const tailAngle = tailAt[2]; // tail extends in the direction of the spine at t
+    const tailLen = (cfg.tail.length || 30);
+    if (cfg.tail.material === 'marabou') {
+      drawMarabou(ctx, {
+        x: tailAt[0], y: tailAt[1],
+        angle: tailAngle, length: tailLen * 1.3,
+        color: cfg.tail.color, density: 1
+      });
+    } else if (cfg.tail.material === 'hair') {
+      drawBucktailWing(ctx, {
+        x: tailAt[0], y: tailAt[1],
+        angle: tailAngle, length: tailLen,
+        color: cfg.tail.color
+      });
+    } else {
+      drawTailFiber(ctx, {
+        x: tailAt[0], y: tailAt[1],
+        angle: tailAngle, length: tailLen,
+        count: cfg.tail.count, color: cfg.tail.color
+      });
+    }
+  }
+
+  // 3. Body / Abdomen
+  if (cfg.body) {
+    const bStart = samplePoly(hook.spine, bodyStart);
+    const bEnd = samplePoly(hook.spine, bodyEnd);
+    // use abdomen-only range for nymphs (front = thoraxEnd instead of bodyStart)
+    const frontT = (cat === 'nymph') ? thoraxEnd : bodyStart;
+    const front = samplePoly(hook.spine, frontT);
+    const rear = samplePoly(hook.spine, bodyEnd);
+    const params = {
+      x1: front[0], y1: front[1],
+      x2: rear[0], y2: rear[1],
+      r1: abdomenR1, r2: abdomenR2,
+      color: cfg.body.color,
+      density: cfg.body.density || 1
+    };
+    const mat = cfg.body.material || 'dubbing';
+    if (mat === 'dubbing') drawDubbing(ctx, params);
+    else if (mat === 'thread') drawThreadBody(ctx, params);
+    else if (mat === 'chenille') drawChenille(ctx, params);
+    else if (mat === 'herl') drawPeacockHerl(ctx, params);
+    else if (mat === 'floss') drawFloss(ctx, params);
+    else drawDubbing(ctx, params);
+  }
+
+  // 4. Ribbing over abdomen
+  if (cfg.ribbing && cfg.body) {
+    const frontT = (cat === 'nymph') ? thoraxEnd : bodyStart;
+    const front = samplePoly(hook.spine, frontT);
+    const rear = samplePoly(hook.spine, bodyEnd);
+    drawRibbing(ctx, {
+      x1: front[0], y1: front[1],
+      x2: rear[0], y2: rear[1],
+      r1: abdomenR1, r2: abdomenR2,
+      wraps: cfg.ribbing.wraps || 6,
+      material: cfg.ribbing.material || 'wire',
+      color: cfg.ribbing.color || 'gold'
+    });
+  }
+
+  // 5. Thorax (nymphs) — drawn bulkier, wing case + legs sit around here
+  if (cat === 'nymph' && cfg.thorax) {
+    const front = samplePoly(hook.spine, thoraxStart);
+    const rear = samplePoly(hook.spine, thoraxEnd);
+    const params = {
+      x1: front[0], y1: front[1],
+      x2: rear[0], y2: rear[1],
+      r1: thoraxR1, r2: thoraxR2,
+      color: cfg.thorax.color,
+      density: cfg.thorax.density || 1.1
+    };
+    const mat = cfg.thorax.material || 'dubbing';
+    if (mat === 'herl') drawPeacockHerl(ctx, params);
+    else drawDubbing(ctx, params);
+  }
+
+  // 6. Wing case — over thorax, drawn after thorax so it covers the top
+  if (cat === 'nymph' && cfg.wingCase) {
+    const front = samplePoly(hook.spine, thoraxStart);
+    const rear = samplePoly(hook.spine, thoraxEnd);
+    drawWingCase(ctx, {
+      x1: front[0], y1: front[1],
+      x2: rear[0], y2: rear[1],
+      r1: thoraxR1, r2: thoraxR2,
+      color: cfg.wingCase.color
+    });
+  }
+
+  // 7. Wing — varies by style
+  if (cfg.wing) {
+    const at = samplePoly(hook.spine, wingHackleAt);
+    const wLen = cfg.wing.length || 40;
+    const style = cfg.wing.style || 'upright-divided';
+    if (style === 'upright-divided') {
+      // two forward-leaning wings
+      drawFeatherWing(ctx, {
+        x: at[0], y: at[1] - 2,
+        angle: -Math.PI / 2 - 0.15, length: wLen, width: wLen * 0.25,
+        color: cfg.wing.color
+      });
+      drawFeatherWing(ctx, {
+        x: at[0], y: at[1] - 2,
+        angle: -Math.PI / 2 + 0.15, length: wLen, width: wLen * 0.25,
+        color: cfg.wing.color
+      });
+    } else if (style === 'parachute-post') {
+      drawFeatherWing(ctx, {
+        x: at[0], y: at[1],
+        angle: -Math.PI / 2, length: wLen * 0.9, width: wLen * 0.18,
+        color: cfg.wing.color
+      });
+    } else if (style === 'down') {
+      // elk hair caddis-style: hair swept back over body
+      drawBucktailWing(ctx, {
+        x: at[0], y: at[1] - 2,
+        angle: 0.15, length: wLen * 1.1,
+        color: cfg.wing.color
+      });
+    } else if (style === 'bucktail') {
+      drawBucktailWing(ctx, {
+        x: at[0], y: at[1] - 2,
+        angle: 0, length: wLen * 1.2,
+        color: cfg.wing.color
+      });
+    } else if (style === 'feather') {
+      drawFeatherWing(ctx, {
+        x: at[0], y: at[1],
+        angle: 0, length: wLen * 1.1, width: wLen * 0.28,
+        color: cfg.wing.color
+      });
+    }
+  }
+
+  // 8. Hackle
+  if (cfg.hackle) {
+    const at = samplePoly(hook.spine, wingHackleAt);
+    const hLen = (cfg.hackle.length || 0) || Math.max(14, hook.gap * 0.9);
+    const style = cfg.hackle.style || 'dry';
+    if (style === 'palmered') {
+      // palmered: hackle wound along the entire body length (woolly bugger,
+      // elk hair caddis). Sample multiple positions and drop small tufts.
+      const steps = 7;
+      const pStart = (cat === 'nymph') ? thoraxEnd : bodyStart;
+      for (let k = 0; k < steps; k++) {
+        const tt = pStart + (bodyEnd - pStart) * (k + 0.5) / steps;
+        const pt = samplePoly(hook.spine, tt);
+        drawDryHackle(ctx, {
+          x: pt[0], y: pt[1],
+          length: hLen * 0.75,
+          color: cfg.hackle.color,
+          density: (cfg.hackle.density || 1) * 0.45,
+          style: 'dry'
+        });
+      }
+    } else if (style === 'soft') {
+      // soft hackle: single point, fibers sweep back over the body toward the tail
+      drawSoftHackle(ctx, {
+        x: at[0], y: at[1],
+        length: hLen, color: cfg.hackle.color,
+        density: cfg.hackle.density || 1,
+        sweepDirection: at[2]
+      });
+    } else {
+      drawDryHackle(ctx, {
+        x: at[0], y: at[1],
+        length: hLen, color: cfg.hackle.color,
+        density: cfg.hackle.density || 1,
+        style: style === 'parachute' ? 'parachute' : 'dry'
+      });
+    }
+  }
+
+  // 9. Bead head (drawn over body front, in front of hackle for realism)
+  if (cfg.beadHead) {
+    const beadR = Math.max(4, hook.gap * 0.42);
+    drawBeadHead(ctx, {
+      x: hook.shankStart[0] + beadR * 0.7,
+      y: hook.shankStart[1],
+      r: beadR,
+      color: cfg.beadHead.color
+    });
+  }
+
+  // 10. Dumbbell / bead-chain eyes (streamers)
+  if (cfg.eyes) {
+    const beadR = Math.max(5, hook.gap * 0.5);
+    drawDumbbellEyes(ctx, {
+      x: hook.shankStart[0] + beadR * 0.6,
+      y: hook.shankStart[1],
+      width: beadR * 2,
+      color: cfg.eyes.color,
+      style: cfg.eyes.style
+    });
+  }
+}
+
+return { renderFly: renderFly, buildHook: buildHook };
+})();
+</script>
+
+<script>
+/* =====================================================================
+   DATA
+===================================================================== */
+const LOCATIONS = {
+  "Saltwater — Caribbean & Tropics": [
+    "Bahamas Flats", "Florida Keys", "Belize", "Turks & Caicos",
+    "Cuba — Jardines", "Yucatan — Ascension Bay", "Caribbean (general)"
+  ],
+  "Saltwater — Southeast US": [
+    "Everglades / 10,000 Islands", "Mosquito Lagoon, FL", "Indian River Lagoon, FL",
+    "Tampa Bay, FL", "Apalachicola, FL", "Louisiana Marsh", "Texas Gulf Coast",
+    "Lowcountry SC/GA", "Outer Banks, NC", "Chesapeake Bay"
+  ],
+  "Saltwater — Other US": [
+    "Northeast US (Cape/RI)", "Pacific Northwest", "Baja Mexico", "Hawaii"
+  ],
+  "Freshwater": [
+    "Montana", "Colorado Rockies", "Patagonia", "New Zealand",
+    "Great Lakes Tribs", "Appalachian Streams", "Ozarks", "Alaska"
+  ],
+  "Other": ["Unknown / Mixed"]
+};
+
+const QUESTIONS = [
+  { id: "species", section: "Target", q: "What are you targeting?", type: "select",
+    opts: ["Bonefish", "Permit", "Tarpon", "Redfish", "Snook", "Striped Bass", "Trout", "Bass", "Unknown"] },
+  { id: "rod", section: "Tackle", q: "What rod weight are you throwing?", type: "radio",
+    opts: ["2–4wt", "5–6wt", "7–8wt", "9–10wt+", "Unknown"] },
+  { id: "location", section: "Location", q: "Where are you fishing?", type: "location" },
+  { id: "depth", section: "Depth", q: "How deep is the water?", type: "radio",
+    opts: ["Under 2ft", "2–5ft", "5ft+", "Unknown"] },
+  { id: "light", section: "Light", q: "What are the light conditions?", type: "grid",
+    opts: ["Bright sun", "Overcast", "Low light", "Dawn/Dusk", "Unknown"] },
+  { id: "bottom", section: "Bottom", q: "What's the bottom type?", type: "grid",
+    opts: ["Sandy flat", "Dark coral/rock", "Grass/weed", "Muddy", "Unknown"] },
+  { id: "weed", section: "Guard", q: "Do you need a weed guard?", type: "radio",
+    opts: ["Yes", "No", "Recommend for me"] },
+  { id: "materials", section: "Materials", q: "Materials on hand?", type: "materials" }
+];
+
+const MATERIAL_LIBRARY = {
+  "Thread & Tying": [
+    "Thread 6/0 White", "Thread 6/0 Black", "Thread 8/0 Tan", "Thread 8/0 Olive",
+    "Gel-Spun Thread", "Kevlar Thread"
+  ],
+  "Hooks & Weights": [
+    "Mustad 34007", "Gamakatsu SC15", "Tiemco 811S", "Tungsten Cone",
+    "Brass Bead", "Lead Wire"
+  ],
+  "Eyes": [
+    "Bead Chain Eyes", "Lead Dumbbell Eyes", "Mono Eyes", "3D Stick-On Eyes",
+    "Painted Lead Eyes"
+  ],
+  "Hair & Fur": [
+    "Craft Fur", "Calf Tail", "Bucktail", "Arctic Fox", "Fox Tail",
+    "Bunny Strip", "Zonker Strip", "Deer Hair"
+  ],
+  "Feathers & Hackle": [
+    "Saddle Hackle", "Grizzly Hackle", "Schlappen", "Marabou",
+    "Partridge", "CDC", "Pheasant Tail"
+  ],
+  "Dubbing & Body": [
+    "Ice Dub", "Senyo's Laser Dub", "SLF Dubbing", "EP Shrimp Dub",
+    "Hare's Ear Dubbing", "Antron Dubbing"
+  ],
+  "Chenille & Braid": [
+    "Estaz", "Crystal Chenille", "Polar Chenille", "Diamond Braid",
+    "Bonefish Bitters", "Vernille"
+  ],
+  "Flash & Tinsel": [
+    "Flashabou", "Krystal Flash", "Holographic Tinsel", "Mirage Opal",
+    "Polar Flash", "Mylar Tubing"
+  ],
+  "Synthetics": [
+    "EP Fibers", "Slinky Fiber", "Super Hair", "Puglisi Fibers"
+  ],
+  "Legs & Appendages": [
+    "Rubber Legs", "Sili Legs", "Centipede Legs"
+  ],
+  "Finishing": [
+    "Mono Weed Guard", "Hard Mono", "UV Resin", "Head Cement",
+    "Sally Hansen's Hard as Nails"
+  ]
+};
+
+const PATTERNS = [
+  {
+    id: "crazy_charlie",
+    name: "Crazy Charlie",
+    difficulty: "Easy",
+    time: "15 min",
+    pros: ["Classic flats pattern, always works", "Fast and forgiving to tie"],
+    con: "Limited depth control",
+    techniques: ["Thread base", "Eye mounting", "Chenille wrap", "Whip finish"],
+    materials: [
+      { name: "Mustad 34007 #6", qty: "1", price: 2.50 },
+      { name: "Bead Chain Eyes (Small)", qty: "1 pair", price: 3.00 },
+      { name: "Thread 6/0 White", qty: "spool", price: 4.00 },
+      { name: "Crystal Chenille Pearl", qty: "1 pack", price: 5.50 },
+      { name: "Calf Tail White", qty: "1 piece", price: 6.00 },
+      { name: "Krystal Flash Pearl", qty: "1 pack", price: 4.50 },
+      { name: "Head Cement", qty: "1 bottle", price: 7.00 }
+    ],
+    colors: { body: "#e8d4a0", wing: "#f0ead6", tail: "#f0ead6", eyes: "#b8b8b8", hackle: "#c4a878", head: "#8b6b3a" },
+    rfConfig: {
+      seed: 501, category: 'streamer', hookType: 'streamer', hookSize: 6,
+      beadHead: null,
+      tail: { material: 'fiber', color: 'white', length: 20, count: 6 },
+      body: { material: 'chenille', color: 'cream', taper: 0.4, density: 1 },
+      ribbing: { material: 'tinsel', color: 'silver', wraps: 6 },
+      wingCase: null, thorax: null,
+      wing: { style: 'bucktail', color: 'white', length: 60 },
+      hackle: null,
+      eyes: { style: 'bead-chain', color: 'silver' }
+    }
+  },
+  {
+    id: "gotcha",
+    name: "Gotcha",
+    difficulty: "Medium",
+    time: "25 min",
+    pros: ["Pink flash triggers aggressive strikes", "Excellent for spooky fish"],
+    con: "Takes practice to proportion right",
+    techniques: ["Wing tying", "Flash layering", "Tapered body", "Eye placement"],
+    materials: [
+      { name: "Mustad 34007 #4", qty: "1", price: 2.75 },
+      { name: "Bead Chain Eyes (Med)", qty: "1 pair", price: 3.25 },
+      { name: "Thread 6/0 Pink", qty: "spool", price: 4.00 },
+      { name: "Pearl Diamond Braid", qty: "1 spool", price: 5.00 },
+      { name: "Craft Fur Tan", qty: "1 piece", price: 5.50 },
+      { name: "Krystal Flash Pearl", qty: "1 pack", price: 4.50 },
+      { name: "Pink Thread Head", qty: "—", price: 2.00 },
+      { name: "Head Cement", qty: "1 bottle", price: 7.00 }
+    ],
+    colors: { body: "#f5e8c8", wing: "#d4b08a", tail: "#d4b08a", eyes: "#a8a8a8", hackle: "#ed88a8", head: "#ed88a8" },
+    rfConfig: {
+      seed: 502, category: 'streamer', hookType: 'streamer', hookSize: 4,
+      beadHead: null,
+      tail: { material: 'fiber', color: 'cream', length: 18, count: 5 },
+      body: { material: 'floss', color: 'cream', taper: 0.4, density: 1 },
+      ribbing: { material: 'tinsel', color: 'silver', wraps: 5 },
+      wingCase: null, thorax: null,
+      wing: { style: 'bucktail', color: 'tan', length: 70 },
+      hackle: null,
+      eyes: { style: 'bead-chain', color: 'silver' }
+    }
+  },
+  {
+    id: "ep_spawning_shrimp",
+    name: "EP Spawning Shrimp",
+    difficulty: "Hard",
+    time: "45 min",
+    pros: ["Hyper-realistic shrimp profile", "Deadly on pressured fish"],
+    con: "Expensive materials and complex build",
+    techniques: ["EP fiber blending", "Layered dubbing", "UV resin work", "Eye sculpting", "Rubber leg placement"],
+    materials: [
+      { name: "Gamakatsu SC15 #2", qty: "1", price: 3.50 },
+      { name: "Lead Dumbbell Eyes Med", qty: "1 pair", price: 3.75 },
+      { name: "EP Fibers Tan/Orange", qty: "1 pack", price: 8.00 },
+      { name: "EP Shrimp Dub", qty: "1 pack", price: 7.50 },
+      { name: "Rubber Legs Pumpkin", qty: "1 pack", price: 4.00 },
+      { name: "Krystal Flash Root Beer", qty: "1 pack", price: 4.50 },
+      { name: "Mono Eyes Small", qty: "1 pair", price: 3.00 },
+      { name: "UV Resin", qty: "1 bottle", price: 8.50 },
+      { name: "Thread 8/0 Tan", qty: "spool", price: 4.00 }
+    ],
+    colors: { body: "#d4a878", wing: "#c49968", tail: "#e8b89a", eyes: "#1a1814", hackle: "#a87b4a", head: "#8b6338" },
+    rfConfig: {
+      seed: 503, category: 'streamer', hookType: 'streamer', hookSize: 2,
+      beadHead: null,
+      tail: { material: 'marabou', color: 'tan', length: 50, count: 0 },
+      body: { material: 'dubbing', color: 'hares-ear', taper: 0.6, density: 1.3 },
+      ribbing: null,
+      wingCase: null, thorax: null,
+      wing: { style: 'bucktail', color: 'hares-ear-dark', length: 55 },
+      hackle: { style: 'palmered', color: 'ginger', density: 0.9, length: 20 },
+      eyes: { style: 'dumbbell', color: 'tungsten' }
+    }
+  }
+];
+
+// stepLayers: each step lists which CONFIG keys become visible at that step.
+// The bare hook is always drawn by the underlying renderer, so step 1 is empty.
+const TYING_STEPS = [
+  { title: "Mount the Hook", desc: "Secure the hook firmly in your vise, ensuring the point is protected and the shank is level. Adjust the jaws so you have clear access to the entire shank.", layers: [] },
+  { title: "Lay a Thread Base", desc: "Start your thread behind the eye and wrap a smooth base back to the bend. This foundation prevents materials from spinning on the hook shank.", layers: [] },
+  { title: "Tie In the Eyes", desc: "Position bead chain or dumbbell eyes about one-third back from the hook eye. Use figure-eight wraps to lock them down, then apply a drop of head cement to the thread wraps.", layers: ["eyes"] },
+  { title: "Attach Tail Material", desc: "Select a small bundle of fibers and measure it to about one hook length. Tie it in at the bend of the hook, letting the fibers extend naturally behind the hook.", layers: ["eyes","tail"] },
+  { title: "Wrap the Body", desc: "Tie in your body material at the tail. Advance your thread to the eyes, then spiral the body material forward in tight, touching wraps to build a full profile.", layers: ["eyes","tail","body"] },
+  { title: "Add Ribbing & Hackle", desc: "Counter-wrap the ribbing through the body for durability and segmentation. If the pattern calls for a palmered hackle, tie it in and wrap it forward now.", layers: ["eyes","tail","body","ribbing","hackle"] },
+  { title: "Tie In the Wing", desc: "Lay a sparse wing over the top of the hook in front of the eyes, angling slightly down toward the point. Add a few strands of flash for subtle sparkle if desired.", layers: ["eyes","tail","body","ribbing","hackle","wing"] },
+  { title: "Whip Finish and Cement", desc: "Build a small, neat thread head in front of the eyes. Execute a clean whip finish, trim the thread, and apply a drop of head cement. Your fly is complete.", layers: ["eyes","tail","body","ribbing","hackle","wing","beadHead"] }
+];
+
+const PART_LIST = ["body","wing","tail","eyes","hackle","head"];
+const DENSITIES = ["Sparse","Medium","Full","Flashy"];
+
+/* =====================================================================
+   STATE
+===================================================================== */
+let state = {
+  answers: {},
+  qIdx: 0,
+  selectedPattern: null,
+  custom: {
+    colors: {},
+    densities: { body:"Medium", wing:"Medium", tail:"Medium", eyes:"Medium", hackle:"Medium", head:"Medium" },
+    hookSize: 6,
+    weedGuard: false,
+    activePart: "body"
+  },
+  owned: new Set(),
+  stepIdx: 0
+};
+
+/* =====================================================================
+   NAVIGATION
+===================================================================== */
+function goTo(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+function startFlow() {
+  state.qIdx = 0;
+  goTo("question-screen");
+  renderQuestion();
+}
+
+/* =====================================================================
+   QUESTION FLOW
+===================================================================== */
+function renderQuestion() {
+  const q = QUESTIONS[state.qIdx];
+  const card = document.getElementById("qcard");
+  document.getElementById("qnum").textContent = state.qIdx + 1;
+  document.getElementById("qtotal").textContent = QUESTIONS.length;
+  document.getElementById("qsection").textContent = q.section;
+  document.getElementById("qfill").style.width = ((state.qIdx) / QUESTIONS.length * 100) + "%";
+
+  card.classList.remove("flip-in");
+  void card.offsetWidth;
+  card.classList.add("flip-in");
+
+  let html = `<div class="q-num">${String(state.qIdx+1).padStart(2,"0")} / ${String(QUESTIONS.length).padStart(2,"0")}</div>
+              <div class="q-text">${q.q}</div>`;
+
+  if (q.type === "select") {
+    html += `<select class="opt" id="qInput">
+      <option value="">— Select —</option>
+      ${q.opts.map(o => `<option ${state.answers[q.id]===o?"selected":""}>${o}</option>`).join("")}
+    </select>`;
+  } else if (q.type === "radio") {
+    html += `<div class="q-options">
+      ${q.opts.map(o => `<button class="opt ${state.answers[q.id]===o?"selected":""}" onclick="pickOpt('${q.id}','${o}')">${o}</button>`).join("")}
+    </div>`;
+  } else if (q.type === "grid") {
+    html += `<div class="q-options grid">
+      ${q.opts.map(o => `<button class="opt ${state.answers[q.id]===o?"selected":""}" onclick="pickOpt('${q.id}','${o}')">${o}</button>`).join("")}
+    </div>`;
+  } else if (q.type === "location") {
+    const cur = state.answers.location || "";
+    html += `<select class="opt" id="qInput">
+      <option value="">— Select a location —</option>
+      ${Object.entries(LOCATIONS).map(([group, locs]) =>
+        `<optgroup label="${group}">${locs.map(l => `<option ${cur===l?"selected":""}>${l}</option>`).join("")}</optgroup>`
+      ).join("")}
+    </select>`;
+  } else if (q.type === "materials") {
+    const auto = state.answers.materialsAuto !== false;
+    html += `
+      <label class="mat-toggle">
+        <input type="checkbox" id="autoMats" ${auto?"checked":""} onchange="toggleAutoMats(this.checked)">
+        <span>Let FlyForge choose for me</span>
+      </label>
+      <input type="text" class="mat-search" id="matSearch" placeholder="Search materials..." oninput="filterMats(this.value)" ${auto?"disabled":""}>
+      <div class="mat-list" id="matList"></div>
+    `;
+  }
+
+  html += `<div class="q-nav">
+    <button class="btn-ghost" onclick="prevQ()" ${state.qIdx===0?"style='visibility:hidden'":""}>← Back</button>
+    <button class="btn-primary" id="qNext" onclick="nextQ()">${state.qIdx===QUESTIONS.length-1?"Forge Patterns →":"Next →"}</button>
+  </div>`;
+
+  card.innerHTML = html;
+
+  if (q.type === "select" || q.type === "location") {
+    document.getElementById("qInput").onchange = e => { state.answers[q.id] = e.target.value; };
+  } else if (q.type === "materials") {
+    renderMatChips("");
+  }
+}
+function pickOpt(id, val) {
+  state.answers[id] = val;
+  document.querySelectorAll(".q-options .opt").forEach(b => {
+    b.classList.toggle("selected", b.textContent === val);
+  });
+}
+function toggleAutoMats(v) {
+  state.answers.materialsAuto = v;
+  document.getElementById("matSearch").disabled = v;
+}
+function filterMats(q) { renderMatChips(q); }
+function renderMatChips(filter) {
+  const list = document.getElementById("matList");
+  if (!list) return;
+  const chosen = state.answers.materialsList || [];
+  const f = (filter || "").toLowerCase();
+  let html = "";
+  Object.entries(MATERIAL_LIBRARY).forEach(([cat, items]) => {
+    const matching = items.filter(m => m.toLowerCase().includes(f));
+    if (matching.length === 0) return;
+    html += `<div class="mat-cat">${cat}</div>`;
+    html += `<div class="mat-cat-row">` + matching.map(m =>
+      `<div class="mat-chip ${chosen.includes(m)?"on":""}" onclick="toggleMat('${m.replace(/'/g,"\\'")}')">${m}</div>`
+    ).join("") + `</div>`;
+  });
+  list.innerHTML = html || `<div style="color:var(--text-dim);font-size:11px;padding:10px">No materials match.</div>`;
+}
+function toggleMat(name) {
+  const list = state.answers.materialsList || [];
+  const i = list.indexOf(name);
+  if (i >= 0) list.splice(i,1); else list.push(name);
+  state.answers.materialsList = list;
+  renderMatChips(document.getElementById("matSearch").value);
+}
+function nextQ() {
+  if (state.qIdx < QUESTIONS.length - 1) {
+    state.qIdx++;
+    renderQuestion();
+  } else {
+    document.getElementById("qfill").style.width = "100%";
+    goTo("pattern-screen");
+    renderPatterns();
+  }
+}
+function prevQ() {
+  if (state.qIdx > 0) { state.qIdx--; renderQuestion(); }
+}
+
+/* =====================================================================
+   PATTERN CARDS
+===================================================================== */
+function renderPatterns() {
+  const grid = document.getElementById("patternGrid");
+  grid.innerHTML = PATTERNS.map((p, i) => {
+    const diffClass = p.difficulty === "Easy" ? "diff-easy" : p.difficulty === "Medium" ? "diff-med" : "diff-hard";
+    return `
+      <div class="pattern-card">
+        <div class="difficulty ${diffClass}">${p.difficulty}</div>
+        <div class="pattern-preview"><canvas id="pp_${p.id}" width="720" height="260"></canvas></div>
+        <div class="pattern-name">${p.name}</div>
+        <div class="pattern-sub">${p.time} · ${p.techniques.length} techniques</div>
+        <div class="pros-cons">
+          ${p.pros.map(pr => `<div class="pro">${pr}</div>`).join("")}
+          <div class="con">${p.con}</div>
+        </div>
+        <div class="tech-list">
+          ${p.techniques.map(t => `<span class="tech-tag">${t}</span>`).join("")}
+        </div>
+        <button class="select-btn" onclick="selectPattern('${p.id}')">Select Pattern</button>
+      </div>
+    `;
+  }).join("");
+  // paint each preview canvas with the real renderer
+  PATTERNS.forEach(p => paintPreview(p));
+}
+function paintPreview(p) {
+  const cv = document.getElementById("pp_" + p.id);
+  if (!cv || !window.FLY_RENDERER) return;
+  const ctx = cv.getContext("2d");
+  // light paper background to match flies.html renderer's expected substrate
+  ctx.fillStyle = "#d2d6dc";
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  // the renderer draws with the eye around x≈130-165, y=250, fly extending to x≈600.
+  // center/shift so the whole fly sits in our 720×260 canvas.
+  ctx.save();
+  ctx.translate(20, -110);
+  FLY_RENDERER.renderFly(ctx, p.rfConfig);
+  ctx.restore();
+}
+function selectPattern(id) {
+  const p = PATTERNS.find(x => x.id === id);
+  state.selectedPattern = p;
+  // unified config: every visual property lives here
+  state.custom.config = JSON.parse(JSON.stringify(p.rfConfig));
+  state.custom.reference = JSON.parse(JSON.stringify(p.rfConfig));
+  state.custom.weedGuard = false;
+  state.custom.activePart = "body";
+  state.custom.prevVisible = null;
+  document.getElementById("custTitle").textContent = p.name;
+  goTo("customizer-screen");
+  initCustomizer();
+}
+
+/* =====================================================================
+   SHARED FLY RENDERER
+   renderFly(ctx, config, options) — config contains EVERY visual property.
+   Internally delegates to the embedded FLY_RENDERER (flies.html engine),
+   filtering parts via options.visible, then overlays vise / weed guard /
+   active-part highlight.
+===================================================================== */
+const PART_KEYS = ["body","wing","tail","eyes","hackle","beadHead"];
+// UI part name -> config key
+const PART_MAP = {
+  body: "body", wing: "wing", tail: "tail",
+  eyes: "eyes", hackle: "hackle", head: "beadHead"
+};
+
+function renderFly(ctx, config, options) {
+  options = options || {};
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  // paper background
+  ctx.fillStyle = "#d2d6dc";
+  ctx.fillRect(0, 0, W, H);
+
+  // vise grip (drawn under the fly, in canvas space, constant across steps)
+  if (options.vise) drawViseGrip(ctx, W, H);
+
+  // build a filtered config where hidden parts become null
+  const filtered = Object.assign({}, config);
+  if (options.visible) {
+    for (const k of ["tail","body","ribbing","thorax","wingCase","wing","hackle","beadHead","eyes"]) {
+      if (!options.visible.has(k)) filtered[k] = null;
+    }
+  }
+
+  // fit the renderer's natural draw extent (~x[80..620], y[180..310])
+  // into a 400x300 canvas by scaling + translating
+  ctx.save();
+  ctx.translate(18, 55);
+  ctx.scale(0.66, 0.66);
+  ctx.translate(-70, -180);
+  FLY_RENDERER.renderFly(ctx, filtered);
+  ctx.restore();
+
+  // weed guard overlay (canvas-space, only if body is visible)
+  if (options.weedGuard && (!options.visible || options.visible.has("body"))) {
+    drawWeedGuardOverlay(ctx, W, H);
+  }
+
+  // active-part highlight ring (customizer only)
+  if (options.highlight) {
+    drawPartHighlight(ctx, options.highlight, W, H);
+  }
+}
+
+function drawViseGrip(ctx, W, H) {
+  ctx.save();
+  const baseY = H - 8;
+  // stem
+  const grad = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  grad.addColorStop(0, "#4a4230");
+  grad.addColorStop(1, "#1f1c14");
+  ctx.fillStyle = grad;
+  ctx.fillRect(W * 0.62, H * 0.55, 16, H - H * 0.55);
+  ctx.strokeStyle = "#6a5e40";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(W * 0.62, H * 0.55, 16, H - H * 0.55);
+  // C-clamp jaws (holds the hook near fly center)
+  ctx.fillStyle = "#4a4230";
+  ctx.strokeStyle = "#7a6e50";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(W * 0.56, H * 0.48);
+  ctx.lineTo(W * 0.72, H * 0.48);
+  ctx.lineTo(W * 0.72, H * 0.62);
+  ctx.lineTo(W * 0.58, H * 0.62);
+  ctx.lineTo(W * 0.52, H * 0.54);
+  ctx.lineTo(W * 0.54, H * 0.47);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // knob on the side
+  ctx.fillStyle = "#c4882a";
+  ctx.beginPath();
+  ctx.arc(W * 0.74, H * 0.72, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawWeedGuardOverlay(ctx, W, H) {
+  ctx.save();
+  ctx.strokeStyle = "#2a2a2a";
+  ctx.lineWidth = 1.6;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  // arc from front of hook forward under the point
+  ctx.moveTo(W * 0.22, H * 0.48);
+  ctx.quadraticCurveTo(W * 0.55, H * 0.78, W * 0.70, H * 0.60);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// approximate canvas-space regions for each UI part, used for the customizer
+// active-part highlight ring. These track the scale/translate above.
+const PART_REGIONS = {
+  body:   { x: 0.42, y: 0.46, r: 70 },
+  wing:   { x: 0.28, y: 0.40, r: 55 },
+  tail:   { x: 0.70, y: 0.48, r: 50 },
+  eyes:   { x: 0.22, y: 0.46, r: 22 },
+  hackle: { x: 0.30, y: 0.46, r: 38 },
+  head:   { x: 0.18, y: 0.46, r: 18 }
+};
+function drawPartHighlight(ctx, partName, W, H) {
+  const r = PART_REGIONS[partName];
+  if (!r) return;
+  ctx.save();
+  const cx = W * r.x, cy = H * r.y;
+  const grad = ctx.createRadialGradient(cx, cy, r.r * 0.5, cx, cy, r.r);
+  grad.addColorStop(0, "rgba(196,136,42,0)");
+  grad.addColorStop(0.7, "rgba(196,136,42,0.18)");
+  grad.addColorStop(1, "rgba(196,136,42,0)");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r.r, 0, Math.PI * 2);
+  ctx.fill();
+  // outline ring
+  ctx.strokeStyle = "rgba(196,136,42,0.55)";
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r.r * 0.95, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* =====================================================================
+   CUSTOMIZER
+===================================================================== */
+// density label -> numeric multiplier used by the embedded renderer
+const DENSITY_VALUES = { Sparse: 0.5, Medium: 1.0, Full: 1.4, Flashy: 1.2 };
+function densityLabelFromValue(v) {
+  if (v == null) return "Medium";
+  let best = "Medium", bestD = Infinity;
+  for (const k in DENSITY_VALUES) {
+    const d = Math.abs(DENSITY_VALUES[k] - v);
+    if (d < bestD) { bestD = d; best = k; }
+  }
+  return best;
+}
+
+// ensure the part key exists in config — create a sensible default when the
+// pattern has none (e.g. user clicks "Head" on a pattern with no bead head)
+function ensurePart(cfg, partName) {
+  const key = PART_MAP[partName];
+  if (cfg[key]) return;
+  if (key === "beadHead") cfg[key] = { color: "#d4a53c" };
+  else if (key === "eyes") cfg[key] = { style: "bead-chain", color: "#c4c4c4" };
+  else if (key === "wing") cfg[key] = { style: "bucktail", color: "#f0f0f0", length: 55 };
+  else if (key === "tail") cfg[key] = { material: "fiber", color: "#f0ead6", length: 20, count: 5 };
+  else if (key === "hackle") cfg[key] = { style: "palmered", color: "#b97a38", density: 1, length: 20 };
+  else if (key === "body") cfg[key] = { material: "dubbing", color: "#e8d4a0", taper: 0.5, density: 1 };
+}
+
+function initCustomizer() {
+  const ps = document.getElementById("partSelector");
+  ps.innerHTML = PART_LIST.map(p =>
+    `<button class="part-btn ${state.custom.activePart===p?"active":""}" onclick="setPart('${p}')">${p}</button>`
+  ).join("");
+  renderSwatches();
+  syncColorPickerToActive();
+  document.getElementById("currentPartLabel").textContent = capitalize(state.custom.activePart);
+  document.getElementById("colorPick").oninput = e => {
+    const cfg = state.custom.config;
+    ensurePart(cfg, state.custom.activePart);
+    cfg[PART_MAP[state.custom.activePart]].color = e.target.value;
+    drawCustom();
+  };
+  const hookSlider = document.getElementById("hookSlider");
+  const hookSizes = [2,4,6,8,10,12,14,16];
+  const curIdx = Math.max(0, hookSizes.indexOf(state.custom.config.hookSize || 6));
+  hookSlider.value = curIdx;
+  document.getElementById("hookLbl").textContent = "#" + (state.custom.config.hookSize || 6);
+  hookSlider.oninput = e => {
+    state.custom.config.hookSize = hookSizes[e.target.value];
+    document.getElementById("hookLbl").textContent = "#" + state.custom.config.hookSize;
+    drawCustom();
+  };
+  document.getElementById("weedSwitch").classList.toggle("on", state.custom.weedGuard);
+  drawCustom();
+}
+
+function syncColorPickerToActive() {
+  const cfg = state.custom.config;
+  const key = PART_MAP[state.custom.activePart];
+  const cur = cfg[key] && cfg[key].color;
+  document.getElementById("colorPick").value = toHex(cur) || "#c4882a";
+}
+// accept either a hex string or a named color from the renderer's COLORS table
+function toHex(c) {
+  if (!c) return null;
+  if (typeof c === "string" && c.charAt(0) === "#") return c;
+  // fallback named-color map for common ones so the picker shows something valid
+  const named = {
+    white:"#f0f0f0", black:"#181818", cream:"#eadca9", tan:"#b28a52",
+    olive:"#4e5c24", brown:"#5c3a1e", silver:"#c4c4c4", gold:"#d4a53c",
+    copper:"#a6522a", tungsten:"#2d3138", pheasant:"#8a5a2b",
+    "hares-ear":"#826344", "hares-ear-dark":"#5a3e20", ginger:"#b97a38",
+    grizzly:"#ece8de", peacock:"#263a2b", chartreuse:"#c0d640",
+    red:"#9a1c14", yellow:"#dab020", orange:"#d76f1c", pink:"#d85a7a"
+  };
+  return named[c] || "#c4882a";
+}
+
+function setPart(p) {
+  state.custom.activePart = p;
+  document.querySelectorAll(".part-btn").forEach(b => b.classList.toggle("active", b.textContent === p));
+  document.getElementById("currentPartLabel").textContent = capitalize(p);
+  syncColorPickerToActive();
+  renderSwatches();
+  drawCustom();
+  const canvas = document.getElementById("customCanvas");
+  canvas.classList.remove("hl-flash");
+  void canvas.offsetWidth;
+  canvas.classList.add("hl-flash");
+}
+
+function renderSwatches() {
+  const cfg = state.custom.config;
+  const key = PART_MAP[state.custom.activePart];
+  const curLabel = densityLabelFromValue(cfg[key] && cfg[key].density);
+  document.getElementById("swatches").innerHTML = DENSITIES.map(d =>
+    `<div class="swatch ${curLabel===d?"active":""}" onclick="setDensity('${d}')">${d}</div>`
+  ).join("");
+}
+
+function setDensity(d) {
+  const cfg = state.custom.config;
+  ensurePart(cfg, state.custom.activePart);
+  const key = PART_MAP[state.custom.activePart];
+  cfg[key].density = DENSITY_VALUES[d];
+  renderSwatches();
+  drawCustom();
+}
+
+function toggleWeed() {
+  state.custom.weedGuard = !state.custom.weedGuard;
+  document.getElementById("weedSwitch").classList.toggle("on", state.custom.weedGuard);
+  drawCustom();
+}
+
+function randomizeFly() {
+  const canvas = document.getElementById("customCanvas");
+  canvas.classList.add("spinning");
+  setTimeout(() => canvas.classList.remove("spinning"), 600);
+  const cfg = state.custom.config;
+  cfg.seed = Math.floor(Math.random() * 10000);
+  for (const partName of PART_LIST) {
+    ensurePart(cfg, partName);
+    const key = PART_MAP[partName];
+    cfg[key].color = randomColor();
+    if (cfg[key].density != null) cfg[key].density = DENSITY_VALUES[DENSITIES[Math.floor(Math.random()*DENSITIES.length)]];
+  }
+  syncColorPickerToActive();
+  renderSwatches();
+  drawCustom();
+}
+
+function resetFly() {
+  state.custom.config = JSON.parse(JSON.stringify(state.custom.reference));
+  state.custom.weedGuard = false;
+  document.getElementById("weedSwitch").classList.toggle("on", false);
+  const hookSizes = [2,4,6,8,10,12,14,16];
+  const curIdx = Math.max(0, hookSizes.indexOf(state.custom.config.hookSize || 6));
+  document.getElementById("hookSlider").value = curIdx;
+  document.getElementById("hookLbl").textContent = "#" + (state.custom.config.hookSize || 6);
+  syncColorPickerToActive();
+  renderSwatches();
+  drawCustom();
+}
+
+function randomColor() {
+  const hs = ["#c4882a","#7a8c4e","#e8d4a0","#8b6b3a","#ed88a8","#4a6b8a","#d4a878","#f0ead6","#b85c3c","#a8a8a8","#eadca9","#826344","#4e5c24","#9a1c14"];
+  return hs[Math.floor(Math.random()*hs.length)];
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function drawCustom() {
+  const ctx = document.getElementById("customCanvas").getContext("2d");
+  renderFly(ctx, state.custom.config, {
+    highlight: state.custom.activePart,
+    weedGuard: state.custom.weedGuard
+    // no visible set = render every part
+  });
+}
+
+/* =====================================================================
+   MATERIALS
+===================================================================== */
+function renderMaterials() {
+  const wrap = document.getElementById("matListWrap");
+  const mats = state.selectedPattern.materials;
+  wrap.innerHTML = mats.map((m, i) => `
+    <div class="mat-row" id="matRow${i}">
+      <input type="checkbox" onchange="toggleOwned(${i}, this.checked)">
+      <div>
+        <div class="mat-name">${m.name}</div>
+        <div class="mat-qty">${m.qty}</div>
+      </div>
+      <div class="mat-price">$${m.price.toFixed(2)}</div>
+      <div class="buy-btns">
+        <a href="#" class="buy-btn">FlyShack</a>
+        <a href="#" class="buy-btn">Orvis</a>
+        <a href="#" class="buy-btn">Amazon</a>
+      </div>
+    </div>
+  `).join("");
+  updateMatTotal();
+}
+function toggleOwned(i, v) {
+  if (v) state.owned.add(i); else state.owned.delete(i);
+  document.getElementById("matRow" + i).classList.toggle("owned", v);
+  updateMatTotal();
+}
+function updateMatTotal() {
+  const mats = state.selectedPattern.materials;
+  let total = 0;
+  mats.forEach((m, i) => { if (!state.owned.has(i)) total += m.price; });
+  document.getElementById("matTotal").textContent = "$" + total.toFixed(2);
+}
+function exportShoppingList() {
+  const p = state.selectedPattern;
+  let txt = `FLYFORGE SHOPPING LIST\n${p.name}\n${"=".repeat(40)}\n\n`;
+  p.materials.forEach((m, i) => {
+    if (!state.owned.has(i)) txt += `[ ] ${m.name} — ${m.qty} — $${m.price.toFixed(2)}\n`;
+  });
+  const total = p.materials.reduce((s,m,i) => state.owned.has(i) ? s : s + m.price, 0);
+  txt += `\nEstimated Total: $${total.toFixed(2)}\n`;
+  const blob = new Blob([txt], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `flyforge-${p.id}-shopping.txt`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* =====================================================================
+   TYING VIEW
+===================================================================== */
+function startTying() {
+  state.stepIdx = 0;
+  state.custom.prevVisible = null;
+  document.getElementById("tyTitle").textContent = state.selectedPattern.name;
+  goTo("tying-screen");
+  renderStep();
+}
+let _tyFadeToken = 0;
+function renderStep() {
+  const s = TYING_STEPS[state.stepIdx];
+  document.getElementById("stepNum").textContent = String(state.stepIdx + 1).padStart(2,"0");
+  document.getElementById("stepTitle").textContent = s.title;
+  document.getElementById("stepDesc").textContent = s.desc;
+  document.getElementById("stepCt").textContent = `Step ${state.stepIdx+1} of ${TYING_STEPS.length}`;
+  document.getElementById("tyFill").style.width = ((state.stepIdx + 1) / TYING_STEPS.length * 100) + "%";
+  document.getElementById("stepNextBtn").textContent = state.stepIdx === TYING_STEPS.length - 1 ? "Finish ✓" : "Next →";
+
+  const main = document.getElementById("tyingCanvas");
+  const ctx = main.getContext("2d");
+  const W = main.width, H = main.height;
+  const newVisible = new Set(s.layers);
+  const prevVisible = state.custom.prevVisible;
+  const opts = { vise: true, weedGuard: state.custom.weedGuard };
+
+  if (!prevVisible) {
+    // first step — just draw, no fade
+    renderFly(ctx, state.custom.config, Object.assign({ visible: newVisible }, opts));
+    state.custom.prevVisible = newVisible;
+    return;
+  }
+
+  // cross-fade: draw new state to B, draw old state to A, composite with
+  // A fading out over 400ms so the new parts appear gradually
+  const A = document.createElement("canvas"); A.width = W; A.height = H;
+  const B = document.createElement("canvas"); B.width = W; B.height = H;
+  renderFly(A.getContext("2d"), state.custom.config, Object.assign({ visible: prevVisible }, opts));
+  renderFly(B.getContext("2d"), state.custom.config, Object.assign({ visible: newVisible }, opts));
+
+  const startTime = performance.now();
+  const token = ++_tyFadeToken;
+  function frame(now) {
+    if (token !== _tyFadeToken) return;
+    const t = Math.min(1, (now - startTime) / 400);
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(B, 0, 0);
+    ctx.globalAlpha = 1 - t;
+    ctx.drawImage(A, 0, 0);
+    ctx.globalAlpha = 1;
+    if (t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  state.custom.prevVisible = newVisible;
+}
+function stepNext() {
+  if (state.stepIdx < TYING_STEPS.length - 1) {
+    state.stepIdx++;
+    renderStep();
+  } else {
+    openSaveModal();
+  }
+}
+function stepPrev() {
+  if (state.stepIdx > 0) { state.stepIdx--; renderStep(); }
+}
+
+/* =====================================================================
+   SAVE / MODAL
+===================================================================== */
+function openSaveModal() {
+  const p = state.selectedPattern;
+  document.getElementById("saveName").value = p.name + " (Custom)";
+  const sum = document.getElementById("saveSummary");
+  const a = state.answers;
+  sum.innerHTML = `
+    <div class="row"><span>Pattern</span><span>${p.name}</span></div>
+    <div class="row"><span>Species</span><span>${a.species || "—"}</span></div>
+    <div class="row"><span>Location</span><span>${a.location || "—"}</span></div>
+    <div class="row"><span>Hook</span><span>#${state.custom.hookSize}</span></div>
+    <div class="row"><span>Weed Guard</span><span>${state.custom.weedGuard ? "Yes" : "No"}</span></div>
+    <div class="row"><span>Materials</span><span>${p.materials.length} items</span></div>
+  `;
+  document.getElementById("saveModal").classList.add("active");
+}
+function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+function savePattern() {
+  const name = document.getElementById("saveName").value || "Untitled Fly";
+  const saved = JSON.parse(localStorage.getItem("flyforge_saved") || "[]");
+  saved.push({
+    name,
+    pattern: state.selectedPattern.id,
+    patternName: state.selectedPattern.name,
+    answers: state.answers,
+    custom: { ...state.custom },
+    date: new Date().toISOString()
+  });
+  localStorage.setItem("flyforge_saved", JSON.stringify(saved));
+  closeModal("saveModal");
+  alert("Pattern saved to your collection.");
+  goTo("title-screen");
+}
+function copyShare() {
+  const p = state.selectedPattern;
+  const a = state.answers;
+  let txt = `FlyForge — ${document.getElementById("saveName").value}\n\n`;
+  txt += `Pattern: ${p.name}\nTarget: ${a.species}\nLocation: ${a.location}\n`;
+  txt += `Hook: #${state.custom.hookSize}\nWeed Guard: ${state.custom.weedGuard ? "Yes" : "No"}\n\n`;
+  txt += `Materials:\n`;
+  p.materials.forEach(m => { txt += `  - ${m.name} (${m.qty})\n`; });
+  navigator.clipboard.writeText(txt).then(() => alert("Copied to clipboard."));
+}
+function openSaved() {
+  const saved = JSON.parse(localStorage.getItem("flyforge_saved") || "[]");
+  const list = document.getElementById("savedList");
+  if (saved.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:12px">No saved patterns yet.</div>`;
+  } else {
+    list.innerHTML = saved.map(s => `
+      <div class="saved-item">
+        <div>
+          <div class="nm">${s.name}</div>
+          <div class="dt">${s.patternName} · ${new Date(s.date).toLocaleDateString()}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+  document.getElementById("savedModal").classList.add("active");
+}
+
+// close modal on backdrop click
+document.querySelectorAll(".modal-backdrop").forEach(b => {
+  b.addEventListener("click", e => { if (e.target === b) b.classList.remove("active"); });
+});
+</script>
+</body>
+</html>
