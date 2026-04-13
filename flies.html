@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fly Tying Prototype</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, system-ui, "Segoe UI", sans-serif;
+    background: #1a1d22;
+    color: #d0d4db;
+    font-size: 13px;
+    overflow: hidden;
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 210px 1fr 330px;
+    height: 100vh;
+    gap: 1px;
+    background: #0a0c0f;
+  }
+  .panel {
+    background: #252932;
+    padding: 14px;
+    overflow-y: auto;
+  }
+  .panel h2 {
+    margin: 0 0 12px 0;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #7a8498;
+    font-weight: 700;
+  }
+  .preset {
+    padding: 9px 11px;
+    margin-bottom: 6px;
+    background: #2e323d;
+    border: 1px solid #3a404d;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .preset:hover { background: #3a404d; border-color: #4d5568; }
+  .preset.active { background: #415068; border-color: #6a82a4; }
+  .preset-name { font-weight: 600; color: #eaeef5; font-size: 12px; }
+  .preset-sub { font-size: 10px; color: #7a8498; margin-top: 2px; letter-spacing: 0.02em; }
+
+  .panel-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 20px;
+  }
+  .preview-top {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .preview-top label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: #c0c8d4;
+  }
+  canvas {
+    background: #d2d6dc;
+    border-radius: 6px;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .flylabel {
+    font-size: 15px;
+    font-weight: 600;
+    color: #eaeef5;
+    margin-top: 2px;
+  }
+  .flylabel .sub {
+    font-weight: 400;
+    color: #7a8498;
+    font-size: 12px;
+    margin-left: 10px;
+  }
+
+  .btn {
+    background: #3a404d;
+    border: 1px solid #4a5060;
+    color: #eaeef5;
+    padding: 7px 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    transition: background 0.12s;
+  }
+  .btn:hover { background: #4a5060; }
+  .btn:active { background: #525a6b; }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .io {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    max-width: 700px;
+  }
+  .io textarea {
+    width: 100%;
+    height: 58px;
+    background: #1a1d22;
+    color: #d0d4db;
+    border: 1px solid #3a404d;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    resize: vertical;
+  }
+
+  .field {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2e323d;
+  }
+  .field:last-child { border-bottom: none; }
+  .field-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #7a8498;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .field-title input[type=checkbox] { margin: 0; }
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 11px;
+  }
+  .field-row label {
+    width: 58px;
+    color: #8a94a6;
+    flex-shrink: 0;
+  }
+  .field-row select,
+  .field-row input[type=range],
+  .field-row input[type=text],
+  .field-row input[type=number] {
+    flex: 1;
+    background: #1a1d22;
+    color: #d0d4db;
+    border: 1px solid #3a404d;
+    border-radius: 3px;
+    padding: 3px 4px;
+    font-size: 11px;
+    font-family: inherit;
+    min-width: 0;
+  }
+  .field-row input[type=color] {
+    padding: 0;
+    width: 28px;
+    flex: 0 0 28px;
+    height: 22px;
+    cursor: pointer;
+    border: 1px solid #3a404d;
+    border-radius: 3px;
+    background: #1a1d22;
+  }
+  .field-row .val {
+    width: 34px;
+    text-align: right;
+    color: #b8c0cc;
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+  }
+  .field.disabled { opacity: 0.4; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="panel panel-presets">
+    <h2>Presets</h2>
+    <div id="presets"></div>
+  </div>
+  <div class="panel panel-preview">
+    <div class="preview-top">
+      <label><input type="checkbox" id="testMode"> Texture Test Mode</label>
+    </div>
+    <canvas id="canvas" width="720" height="480"></canvas>
+    <div class="flylabel" id="flylabel"></div>
+    <div class="actions">
+      <button class="btn" id="btnSeed">Randomize seed</button>
+      <button class="btn" id="btnAll">Randomize all</button>
+      <button class="btn" id="btnExport">Export JSON</button>
+    </div>
+    <div class="io">
+      <textarea id="importArea" placeholder="Paste a fly config JSON here..."></textarea>
+      <button class="btn" id="btnImport">Import config</button>
+    </div>
+  </div>
+  <div class="panel panel-editor">
+    <h2>Editor</h2>
+    <div id="editor"></div>
+  </div>
+</div>
+<script>
+'use strict';
+
+/* ============================================================
+   SEEDED PRNG — mulberry32
+   Every render re-seeds from config.seed so the same config
+   draws identically every time. Non-negotiable for tuning.
+   ============================================================ */
+let _state = 1;
+function mulberry32(seed) {
+  _state = seed | 0;
+  return function() {
+    _state = (_state + 0x6D2B79F5) | 0;
+    let t = _state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let rng = mulberry32(1);
+const rand = (lo, hi) => lo + rng() * (hi - lo);
+const randInt = (lo, hi) => Math.floor(lo + rng() * (hi - lo + 1));
+const randPick = arr => arr[Math.floor(rng() * arr.length)];
+
+/* ============================================================
+   TEXTURE_PARAMS — all tunable constants for fuzzy textures.
+   These are the numbers to tweak when a texture looks wrong.
+   Grouped by texture; never hardcode inside drawing functions.
+   ============================================================ */
+const TEXTURE_PARAMS = {
+  dubbing: {
+    baseAlpha: 0.62,
+    // undercoat: longer, darker, lower-alpha fibers — the body of the fuzz
+    undercoat: {
+      fibers: 320,
+      lenMin: 5, lenMax: 11,
+      widthMin: 0.6, widthMax: 1.5,
+      alphaMin: 0.3, alphaMax: 0.62,
+      brightness: -0.13
+    },
+    // tips: shorter, brighter, higher-alpha — the highlights
+    tips: {
+      fibers: 230,
+      lenMin: 3, lenMax: 7,
+      widthMin: 0.5, widthMax: 1.1,
+      alphaMin: 0.5, alphaMax: 0.9,
+      brightness: 0.2
+    },
+    angleJitterDeg: 42,
+    brightJitter: 0.18,
+    // fiber origins cluster near the silhouette edge so the fuzz actually
+    // sticks out past the base shape — otherwise most fibers hide inside.
+    radialMin: 0.55,
+    radialMax: 1.0
+  },
+  dryHackle: {
+    countMin: 34, countMax: 54,
+    lenMin: 16, lenMax: 28,
+    lenJitter: 0.22,
+    angleJitterDeg: 8,
+    curveAmount: 4,
+    widthMin: 0.7, widthMax: 1.15,
+    alpha: 0.94,
+    barredSegments: 7 // for grizzly/furnace barring
+  },
+  softHackle: {
+    countMin: 24, countMax: 40,
+    lenMin: 18, lenMax: 36,
+    lenJitter: 0.28,
+    sweepArcDeg: 130, // total arc over which fibers are distributed
+    sweepAxisOffset: -5, // degrees; negative = swept slightly back over body
+    curveAmount: 12,
+    alphaMin: 0.48, alphaMax: 0.82,
+    widthMin: 0.55, widthMax: 0.95
+  },
+  herl: {
+    baseAlpha: 0.95,
+    fiberDensity: 2.3, // fibers per pixel of length
+    fiberLenMin: 1.0, fiberLenMax: 2.6,
+    fiberWidth: 0.9,
+    iridescence: {
+      highlightAlpha: 0.55,
+      gradientStops: [
+        [0.00, '#1a2e20'],
+        [0.35, '#32522a'],
+        [0.62, '#5a4a25'],
+        [0.88, '#4a2e4a']
+      ]
+    }
+  },
+  marabou: {
+    strandsMin: 46, strandsMax: 72,
+    lenMin: 28, lenMax: 58,
+    lenJitter: 0.4,
+    spreadDeg: 55,
+    sCurveAmount: 0.42,
+    barbsPerStrand: 15,
+    barbLenMin: 1, barbLenMax: 3,
+    alphaMin: 0.38, alphaMax: 0.72,
+    widthMin: 0.55, widthMax: 1.0
+  },
+  bucktail: {
+    countMin: 16, countMax: 26,
+    lenJitter: 0.14,
+    angleJitterDeg: 3,
+    widthMin: 0.8, widthMax: 1.3,
+    alpha: 0.95,
+    brightJitter: 0.1
+  },
+  tailFiber: {
+    countMin: 3, countMax: 7,
+    spreadDeg: 14,
+    widthMin: 0.7, widthMax: 1.1,
+    alpha: 0.94
+  },
+  feather: {
+    barbSpacing: 1.4,
+    barbLenMin: 3, barbLenMax: 7,
+    barbAngleDeg: 36,
+    alpha: 0.85
+  },
+  chenille: {
+    segmentSpacing: 3.2,
+    bumpJitter: 0.18
+  },
+  ribbing: {
+    wireWidth: 1.2,
+    tinselWidth: 2.0,
+    highlightOffset: 0.3
+  }
+};
+
+/* ============================================================
+   COLORS — named color lookup. Add new ones freely.
+   ============================================================ */
+const COLORS = {
+  // naturals
+  dun: '#82817a', 'medium-dun': '#8f8d85', 'light-dun': '#a4a398', 'dark-dun': '#5f5d56',
+  brown: '#5c3a1e', 'dark-brown': '#3a2310', 'light-brown': '#8a5a2a',
+  ginger: '#b97a38', cream: '#eadca9',
+  black: '#181818', white: '#f0f0f0',
+  olive: '#4e5c24', 'olive-dark': '#343d17', 'olive-light': '#6c7a36',
+  tan: '#b28a52',
+  grizzly: '#ece8de', grizzlyBar: '#141414',
+  furnace: '#712d11', furnaceBar: '#141010',
+  // fly-specific
+  peacock: '#263a2b',
+  partridge: '#8c7658', 'partridge-dark': '#564530',
+  pheasant: '#8a5a2b', 'pheasant-dark': '#3e2612', 'pheasant-fiber': '#6e4722',
+  'hares-ear': '#826344', 'hares-ear-dark': '#5a3e20',
+  'rusty-brown': '#72391a',
+  // metallics
+  gold: '#d4a53c', copper: '#a6522a', silver: '#c4c4c4',
+  tungsten: '#2d3138', 'bead-black': '#121418',
+  // brights
+  red: '#9a1c14', yellow: '#dab020', chartreuse: '#c0d640',
+  orange: '#d76f1c', pink: '#d85a7a',
+  'kelly-green': '#2a7a3a', 'royal-blue': '#1e3a7e',
+  // thread/floss
+  thread: '#1c1c1c', 'red-thread': '#8a1c14', 'yellow-thread': '#c39a1a'
+};
+function getColor(c) {
+  if (!c) return '#888';
+  if (typeof c === 'string' && c.charAt(0) === '#') return c;
+  return COLORS[c] || '#888';
+}
+function hexToRgb(h) {
+  h = h.replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+function rgbToHex(r, g, b) {
+  const to2 = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+  return '#' + to2(r) + to2(g) + to2(b);
+}
+function rgbaStr(r, g, b, a) {
+  return 'rgba(' + (r | 0) + ',' + (g | 0) + ',' + (b | 0) + ',' + a + ')';
+}
+function jitterBrightness(hex, amt, jitter) {
+  const [r, g, b] = hexToRgb(hex);
+  const f = 1 + amt + (rng() - 0.5) * 2 * jitter;
+  return [Math.max(0, Math.min(255, r * f)), Math.max(0, Math.min(255, g * f)), Math.max(0, Math.min(255, b * f))];
+}
+function shade(hex, amt) {
+  const [r, g, b] = hexToRgb(hex);
+  const f = 1 + amt;
+  return rgbToHex(r * f, g * f, b * f);
+}
+
+/* ============================================================
+   VISE PARAMS — tunable constants for the minimal jaw tips
+   ============================================================ */
+const VISE_PARAMS = {
+  visibleJawLengthRatio: 0.25,    // fraction of hook shank length
+  jawTaperAngle: 12,              // degrees, how sharply wedges narrow
+  jawGapAtTip: 1,                 // px gap between upper and lower jaw at pinch point
+  steelDark: '#4a4e54',
+  steelLight: '#c8ccd0',
+  outlineColor: '#2a2d31',
+  outlineWidth: 1,
+  highlightOpacity: 0.6,
+  pinchOffsetY: 0                 // vertical offset of pinch point from hook bend center
+};
+
+/* ============================================================
+   GEOMETRY UTILS
+   ============================================================ */
+function polyLen(poly) {
+  let L = 0;
+  for (let i = 1; i < poly.length; i++) {
+    L += Math.hypot(poly[i][0] - poly[i - 1][0], poly[i][1] - poly[i - 1][1]);
+  }
+  return L;
+}
+// Sample a polyline at parameter t in [0,1]. Returns [x, y, angle].
+function samplePoly(poly, t) {
+  if (poly.length < 2) return [poly[0][0], poly[0][1], 0];
+  const total = polyLen(poly);
+  const target = Math.max(0, Math.min(1, t)) * total;
+  let cum = 0;
+  for (let i = 1; i < poly.length; i++) {
+    const dx = poly[i][0] - poly[i - 1][0];
+    const dy = poly[i][1] - poly[i - 1][1];
+    const seg = Math.hypot(dx, dy);
+    if (cum + seg >= target || i === poly.length - 1) {
+      const ft = seg > 0 ? (target - cum) / seg : 0;
+      return [poly[i - 1][0] + dx * ft, poly[i - 1][1] + dy * ft, Math.atan2(dy, dx)];
+    }
+    cum += seg;
+  }
+  const last = poly[poly.length - 1];
+  const prev = poly[poly.length - 2];
+  return [last[0], last[1], Math.atan2(last[1] - prev[1], last[0] - prev[0])];
+}
+// Build a tapered path from (x1,y1,r1) to (x2,y2,r2) as a filled shape.
+function taperPath(ctx, x1, y1, x2, y2, r1, r2) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  ctx.beginPath();
+  ctx.moveTo(x1 + nx * r1, y1 + ny * r1);
+  ctx.lineTo(x2 + nx * r2, y2 + ny * r2);
+  const endAng = Math.atan2(ny, nx);
+  ctx.arc(x2, y2, r2, endAng, endAng + Math.PI, false);
+  ctx.lineTo(x1 - nx * r1, y1 - ny * r1);
+  const startAng = Math.atan2(-ny, -nx);
+  ctx.arc(x1, y1, r1, startAng, startAng + Math.PI, false);
+  ctx.closePath();
+}
+
+/* ============================================================
+   TEXTURE 1: DUBBING — tapered body of radiating fur fibers
+   ============================================================
+   The workhorse. Sells any dry/nymph body. Two passes:
+   undercoat (longer, darker) then tips (shorter, brighter).
+*/
+function drawDubbing(ctx, p) {
+  const P = TEXTURE_PARAMS.dubbing;
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const density = p.density == null ? 1 : p.density;
+  const baseHex = getColor(p.color);
+  const [br, bg, bb] = hexToRgb(baseHex);
+
+  // base silhouette — the core color that fibers sit on top of
+  ctx.save();
+  ctx.fillStyle = rgbaStr(br, bg, bb, P.baseAlpha);
+  taperPath(ctx, x1, y1, x2, y2, r1, r2);
+  ctx.fill();
+
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const spineAng = Math.atan2(dy, dx);
+  const perpAng = spineAng + Math.PI / 2;
+  const jitterRad = P.angleJitterDeg * Math.PI / 180;
+
+  const passes = [P.undercoat, P.tips];
+  for (let pi = 0; pi < passes.length; pi++) {
+    const pass = passes[pi];
+    const n = Math.max(10, Math.floor(pass.fibers * density));
+    for (let i = 0; i < n; i++) {
+      const t = rng();
+      const cx = x1 + dx * t;
+      const cy = y1 + dy * t;
+      const r = r1 + (r2 - r1) * t;
+      // position on the silhouette: random offset perpendicular to spine,
+      // biased toward the outer edge so fibers stick out past the base shape
+      const side = rng() < 0.5 ? -1 : 1;
+      const radialFrac = P.radialMin + rng() * (P.radialMax - P.radialMin);
+      const radial = r * radialFrac;
+      const sx = cx + Math.cos(perpAng) * radial * side;
+      const sy = cy + Math.sin(perpAng) * radial * side;
+      // fiber direction: perpendicular outward ± angle jitter
+      const outwardBase = perpAng + (side > 0 ? 0 : Math.PI);
+      const ang = outwardBase + (rng() - 0.5) * 2 * jitterRad;
+      const fl = pass.lenMin + rng() * (pass.lenMax - pass.lenMin);
+      const ex = sx + Math.cos(ang) * fl;
+      const ey = sy + Math.sin(ang) * fl;
+      const [fr, fg, fbl] = jitterBrightness(baseHex, pass.brightness, P.brightJitter);
+      const alpha = pass.alphaMin + rng() * (pass.alphaMax - pass.alphaMin);
+      ctx.strokeStyle = rgbaStr(fr, fg, fbl, alpha);
+      ctx.lineWidth = pass.widthMin + rng() * (pass.widthMax - pass.widthMin);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   TEXTURE 2: DRY HACKLE — 360° fibers at a point
+   ============================================================
+   Stiff cock hackle. Evenly spaced fibers with small angle
+   jitter, slight curve, and optional barring for grizzly.
+*/
+function drawDryHackle(ctx, p) {
+  const P = TEXTURE_PARAMS.dryHackle;
+  const cx = p.x, cy = p.y;
+  const density = p.density == null ? 1 : p.density;
+  const style = p.style || 'dry'; // 'dry'|'parachute'
+  const baseLen = p.length || 22;
+  const colorName = p.color || 'brown';
+  const col = getColor(colorName);
+  const n = Math.max(6, Math.floor((P.countMin + rng() * (P.countMax - P.countMin)) * density));
+
+  ctx.save();
+  // parachute hackle is horizontal (wound around a post); draw as flattened ring.
+  const flatten = style === 'parachute' ? 0.35 : 1;
+  const arcStart = 0;
+  const arcSpan = Math.PI * 2;
+  const barred = (colorName === 'grizzly' || colorName === 'furnace');
+  const barCol = colorName === 'grizzly' ? COLORS.grizzlyBar : COLORS.furnaceBar;
+
+  for (let i = 0; i < n; i++) {
+    const baseAng = arcStart + (i / n) * arcSpan;
+    const ang = baseAng + (rng() - 0.5) * 2 * P.angleJitterDeg * Math.PI / 180;
+    const fl = baseLen * (1 + (rng() - 0.5) * 2 * P.lenJitter);
+    const dirX = Math.cos(ang);
+    const dirY = Math.sin(ang) * flatten;
+    const ex = cx + dirX * fl;
+    const ey = cy + dirY * fl;
+    // slight curve via quadratic control
+    const midX = cx + dirX * fl * 0.55;
+    const midY = cy + dirY * fl * 0.55;
+    const perpX = -dirY, perpY = dirX;
+    const curve = (rng() - 0.5) * 2 * P.curveAmount;
+    const cpx = midX + perpX * curve;
+    const cpy = midY + perpY * curve;
+    ctx.lineWidth = P.widthMin + rng() * (P.widthMax - P.widthMin);
+    ctx.lineCap = 'round';
+    if (barred) {
+      // draw alternating segments along the fiber
+      const segs = P.barredSegments;
+      let prev = [cx, cy];
+      for (let s = 1; s <= segs; s++) {
+        const tt = s / segs;
+        // quadratic interp
+        const it = 1 - tt;
+        const qx = it * it * cx + 2 * it * tt * cpx + tt * tt * ex;
+        const qy = it * it * cy + 2 * it * tt * cpy + tt * tt * ey;
+        ctx.strokeStyle = (s % 2 === 0) ? barCol : col;
+        ctx.globalAlpha = P.alpha;
+        ctx.beginPath();
+        ctx.moveTo(prev[0], prev[1]);
+        ctx.lineTo(qx, qy);
+        ctx.stroke();
+        prev = [qx, qy];
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.strokeStyle = col;
+      ctx.globalAlpha = P.alpha;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.quadraticCurveTo(cpx, cpy, ex, ey);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   TEXTURE 3: SOFT HACKLE — rear-swept wispy fibers
+   ============================================================
+   Partridge-style wet hackle. Fibers sweep back over body
+   in a ~120° arc, longer and wispier than dry hackle.
+*/
+function drawSoftHackle(ctx, p) {
+  const P = TEXTURE_PARAMS.softHackle;
+  const cx = p.x, cy = p.y;
+  const density = p.density == null ? 1 : p.density;
+  const baseLen = p.length || 26;
+  const col = getColor(p.color || 'brown');
+  // sweepDirection: angle pointing "backwards" over the body (usually +x for our layout)
+  const sweepDir = p.sweepDirection == null ? 0 : p.sweepDirection; // radians
+  const n = Math.max(6, Math.floor((P.countMin + rng() * (P.countMax - P.countMin)) * density));
+
+  const arcRad = P.sweepArcDeg * Math.PI / 180;
+  const axisRad = sweepDir + P.sweepAxisOffset * Math.PI / 180;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const t = (i + rng() * 0.6) / n;
+    const ang = axisRad - arcRad / 2 + t * arcRad;
+    const fl = baseLen * (1 + (rng() - 0.5) * 2 * P.lenJitter);
+    const dirX = Math.cos(ang), dirY = Math.sin(ang);
+    const ex = cx + dirX * fl;
+    const ey = cy + dirY * fl;
+    // curve: soft hackle has more curve than dry hackle
+    const midX = cx + dirX * fl * 0.5;
+    const midY = cy + dirY * fl * 0.5;
+    const perpX = -dirY, perpY = dirX;
+    const curve = (rng() - 0.3) * P.curveAmount; // biased so curve tends one way per fiber
+    const cpx = midX + perpX * curve;
+    const cpy = midY + perpY * curve;
+    const alpha = P.alphaMin + rng() * (P.alphaMax - P.alphaMin);
+    ctx.strokeStyle = col;
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = P.widthMin + rng() * (P.widthMax - P.widthMin);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.quadraticCurveTo(cpx, cpy, ex, ey);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+/* ============================================================
+   TEXTURE 4: PEACOCK HERL — iridescent fuzzy body
+   ============================================================
+   Dark base with a green→bronze→purple gradient along length,
+   overlaid with dense short perpendicular fibers.
+*/
+function drawPeacockHerl(ctx, p) {
+  const P = TEXTURE_PARAMS.herl;
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const density = p.density == null ? 1 : p.density;
+
+  ctx.save();
+  // base gradient
+  const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+  for (const stop of P.iridescence.gradientStops) grad.addColorStop(stop[0], stop[1]);
+  ctx.fillStyle = grad;
+  ctx.globalAlpha = P.baseAlpha;
+  taperPath(ctx, x1, y1, x2, y2, r1, r2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // overlay: dense short perpendicular fibers
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const spineAng = Math.atan2(dy, dx);
+  const perpAng = spineAng + Math.PI / 2;
+  const nFibers = Math.floor(len * P.fiberDensity * density * 2);
+  const stops = P.iridescence.gradientStops;
+
+  for (let i = 0; i < nFibers; i++) {
+    const t = rng();
+    const cx = x1 + dx * t;
+    const cy = y1 + dy * t;
+    const r = r1 + (r2 - r1) * t;
+    const side = rng() < 0.5 ? -1 : 1;
+    const radial = (0.25 + rng() * 0.75) * r;
+    const sx = cx + Math.cos(perpAng) * radial * side;
+    const sy = cy + Math.sin(perpAng) * radial * side;
+    const ang = perpAng + (side > 0 ? 0 : Math.PI) + (rng() - 0.5) * 0.5;
+    const fl = P.fiberLenMin + rng() * (P.fiberLenMax - P.fiberLenMin);
+    const ex = sx + Math.cos(ang) * fl;
+    const ey = sy + Math.sin(ang) * fl;
+    // pick nearest gradient color and brighten a touch for iridescence
+    let baseCol = stops[stops.length - 1][1];
+    for (let k = 0; k < stops.length - 1; k++) {
+      if (t >= stops[k][0] && t < stops[k + 1][0]) { baseCol = stops[k][1]; break; }
+    }
+    const [r_, g_, b_] = hexToRgb(baseCol);
+    const f = 1 + P.iridescence.highlightAlpha + (rng() - 0.5) * 0.3;
+    ctx.strokeStyle = rgbaStr(r_ * f, g_ * f, b_ * f, 0.5 + rng() * 0.35);
+    ctx.lineWidth = P.fiberWidth;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   TEXTURE 5: MARABOU — wispy flowing feather
+   ============================================================
+   Streamer tail/wing. Long bezier strands with fine barbs.
+*/
+function drawMarabou(ctx, p) {
+  const P = TEXTURE_PARAMS.marabou;
+  const cx = p.x, cy = p.y;
+  const baseLen = p.length || 48;
+  const density = p.density == null ? 1 : p.density;
+  const col = getColor(p.color || 'olive');
+  const [br, bg, bb] = hexToRgb(col);
+  // flow direction: where the marabou "points" (default: +x for streamer tail)
+  const flowAng = p.angle == null ? 0 : p.angle;
+  const n = Math.max(10, Math.floor((P.strandsMin + rng() * (P.strandsMax - P.strandsMin)) * density));
+  const spreadRad = P.spreadDeg * Math.PI / 180;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    const ang = flowAng + (t - 0.5) * spreadRad + (rng() - 0.5) * 0.15;
+    const fl = baseLen * (1 + (rng() - 0.5) * 2 * P.lenJitter);
+    // S-curve: two control points
+    const dirX = Math.cos(ang), dirY = Math.sin(ang);
+    const perpX = -dirY, perpY = dirX;
+    const sCurve1 = (rng() - 0.5) * fl * P.sCurveAmount;
+    const sCurve2 = (rng() - 0.5) * fl * P.sCurveAmount;
+    const cp1x = cx + dirX * fl * 0.33 + perpX * sCurve1;
+    const cp1y = cy + dirY * fl * 0.33 + perpY * sCurve1;
+    const cp2x = cx + dirX * fl * 0.67 + perpX * sCurve2;
+    const cp2y = cy + dirY * fl * 0.67 + perpY * sCurve2;
+    const ex = cx + dirX * fl + perpX * (rng() - 0.5) * fl * 0.1;
+    const ey = cy + dirY * fl + perpY * (rng() - 0.5) * fl * 0.1;
+
+    // brightness jitter for depth
+    const bf = 1 + (rng() - 0.5) * 0.2;
+    const alpha = P.alphaMin + rng() * (P.alphaMax - P.alphaMin);
+    ctx.strokeStyle = rgbaStr(br * bf, bg * bf, bb * bf, alpha);
+    ctx.lineWidth = P.widthMin + rng() * (P.widthMax - P.widthMin);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ex, ey);
+    ctx.stroke();
+
+    // sample the curve and add perpendicular barbs
+    const nBarbs = P.barbsPerStrand;
+    for (let b = 1; b < nBarbs; b++) {
+      const tt = b / nBarbs;
+      const it = 1 - tt;
+      // cubic bezier at tt
+      const bx = it * it * it * cx + 3 * it * it * tt * cp1x + 3 * it * tt * tt * cp2x + tt * tt * tt * ex;
+      const by = it * it * it * cy + 3 * it * it * tt * cp1y + 3 * it * tt * tt * cp2y + tt * tt * tt * ey;
+      // tangent
+      const tx = 3 * it * it * (cp1x - cx) + 6 * it * tt * (cp2x - cp1x) + 3 * tt * tt * (ex - cp2x);
+      const ty = 3 * it * it * (cp1y - cy) + 6 * it * tt * (cp2y - cp1y) + 3 * tt * tt * (ey - cp2y);
+      const tlen = Math.hypot(tx, ty) || 1;
+      const bpx = -ty / tlen, bpy = tx / tlen;
+      const side = rng() < 0.5 ? -1 : 1;
+      const blen = P.barbLenMin + rng() * (P.barbLenMax - P.barbLenMin);
+      ctx.lineWidth = 0.45;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(bx + bpx * blen * side, by + bpy * blen * side);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   HOOK — five types, all with spine + bend as polylines
+   ============================================================
+*/
+function buildHook(size, type) {
+  const baseShank = Math.max(60, 300 - (size - 4) * 12);
+  const mul = {
+    standard: 1, nymph: 1.3, scud: 1.15, streamer: 1.7, jig: 1.05
+  }[type] || 1;
+  // cap so even the biggest streamer fits in the canvas width, leaving
+  // room for tail and eye margins
+  const shankLen = Math.min(470, baseShank * mul);
+  const gap = Math.max(10, 30 - (size - 4) * 1);
+  const wireW = Math.max(0.9, 2.6 - (size - 4) * 0.08);
+  const eyeR = wireW + 1.8;
+
+  // eye pushed toward the left to leave room for long tails/wings on streamers
+  const eyeX = type === 'streamer' ? 130 : 165;
+  const eye = { x: eyeX, y: 250, r: eyeR };
+  const startX = eye.x + eyeR + 1;
+  const startY = eye.y;
+  const spine = [];
+
+  if (type === 'scud') {
+    const N = 32;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const x = startX + t * shankLen;
+      const y = startY + Math.sin(t * Math.PI) * 16;
+      spine.push([x, y]);
+    }
+  } else if (type === 'jig') {
+    // kink down at eye then horizontal back
+    const kinkLen = 16;
+    const kinkAng = -Math.PI / 3.2;
+    const kx = startX + Math.cos(kinkAng) * kinkLen;
+    const ky = startY + Math.sin(kinkAng) * kinkLen;
+    spine.push([startX, startY]);
+    const kN = 4;
+    for (let i = 1; i <= kN; i++) {
+      const t = i / kN;
+      spine.push([startX + Math.cos(kinkAng) * kinkLen * t, startY + Math.sin(kinkAng) * kinkLen * t]);
+    }
+    const rest = shankLen - kinkLen;
+    const N = 24;
+    for (let i = 1; i <= N; i++) {
+      const t = i / N;
+      spine.push([kx + t * rest, ky]);
+    }
+  } else {
+    const N = 24;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      spine.push([startX + t * shankLen, startY]);
+    }
+  }
+
+  const shankEnd = spine[spine.length - 1];
+  // bend: semi-circle curving down and back
+  const bend = [];
+  const bcx = shankEnd[0] - gap * 0.1;
+  const bcy = shankEnd[1] + gap * 0.55;
+  const br_ = gap * 0.7;
+  const bN = 22;
+  for (let i = 0; i <= bN; i++) {
+    const t = i / bN;
+    const ang = -Math.PI / 2 + t * Math.PI * 1.22;
+    bend.push([bcx + Math.cos(ang) * br_, bcy + Math.sin(ang) * br_ * 1.05]);
+  }
+
+  return {
+    eye, spine, bend,
+    wireW, gap, shankLen,
+    shankStart: [startX, startY],
+    shankEnd
+  };
+}
+function drawHook(ctx, hook, colorName) {
+  const col = getColor(colorName || 'tungsten');
+  ctx.save();
+  ctx.strokeStyle = col;
+  ctx.lineWidth = hook.wireW;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // shank
+  ctx.beginPath();
+  for (let i = 0; i < hook.spine.length; i++) {
+    const p = hook.spine[i];
+    if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+  }
+  ctx.stroke();
+
+  // bend
+  ctx.beginPath();
+  for (let i = 0; i < hook.bend.length; i++) {
+    const p = hook.bend[i];
+    if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+  }
+  ctx.stroke();
+
+  // point: small extension past end of bend toward shank
+  const last = hook.bend[hook.bend.length - 1];
+  const prev = hook.bend[hook.bend.length - 2];
+  const pdx = last[0] - prev[0], pdy = last[1] - prev[1];
+  const plen = Math.hypot(pdx, pdy) || 1;
+  const ptLen = hook.gap * 0.35;
+  const px = last[0] + (pdx / plen) * ptLen;
+  const py = last[1] + (pdy / plen) * ptLen;
+  ctx.beginPath();
+  ctx.moveTo(last[0], last[1]);
+  ctx.lineTo(px, py);
+  ctx.stroke();
+  // small barb
+  const perp1 = -pdy / plen, perp2 = pdx / plen;
+  ctx.beginPath();
+  ctx.moveTo(last[0] + (px - last[0]) * 0.65, last[1] + (py - last[1]) * 0.65);
+  ctx.lineTo(last[0] + (px - last[0]) * 0.35 + perp1 * hook.gap * 0.12, last[1] + (py - last[1]) * 0.35 + perp2 * hook.gap * 0.12);
+  ctx.stroke();
+
+  // eye — small circle
+  ctx.beginPath();
+  ctx.arc(hook.eye.x, hook.eye.y, hook.eye.r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ============================================================
+   VISE JAW TIPS — minimal, realistic pair of tapered steel jaws
+   ============================================================
+   Only the working tips are drawn. They grip the hook bend and
+   extend off-canvas, giving the impression of a real vise just
+   out of frame. Drawn first (behind hook and all fly materials).
+*/
+function drawViseJaws(ctx, hook) {
+  const VP = VISE_PARAMS;
+
+  // Pinch point: grip the bend at ~40% through the bend curve
+  const bendIdx = Math.floor(hook.bend.length * 0.4);
+  const px = hook.bend[bendIdx][0];
+  const py = hook.bend[bendIdx][1] + VP.pinchOffsetY;
+
+  // Jaw dimensions — scale with hook size
+  const jawLen = hook.shankLen * VP.visibleJawLengthRatio;
+  const taperRad = VP.jawTaperAngle * Math.PI / 180;
+  const baseThick = jawLen * Math.tan(taperRad);
+  const halfGap = VP.jawGapAtTip / 2;
+  const tipHalf = Math.max(0.75, hook.wireW * 0.4);
+
+  // Jaws extend to the right (away from shank/eye), wide end exits canvas
+  const bx = px + jawLen;
+
+  ctx.save();
+
+  [-1, 1].forEach(function(side) {
+    // side = -1: upper jaw, side = +1: lower jaw
+    var innerTipY  = py + side * halfGap;
+    var outerTipY  = innerTipY + side * tipHalf;
+    var innerBaseY = innerTipY;
+    var outerBaseY = innerTipY + side * (baseThick + tipHalf);
+
+    ctx.beginPath();
+    ctx.moveTo(px, innerTipY);
+    ctx.lineTo(bx, innerBaseY);
+    ctx.lineTo(bx, outerBaseY);
+    ctx.lineTo(px, outerTipY);
+    ctx.closePath();
+
+    // Steel gradient across jaw width
+    var topY = Math.min(innerTipY, outerTipY, innerBaseY, outerBaseY);
+    var botY = Math.max(innerTipY, outerTipY, innerBaseY, outerBaseY);
+    var grad = ctx.createLinearGradient(0, topY, 0, botY);
+    grad.addColorStop(0, VP.steelDark);
+    grad.addColorStop(0.45, VP.steelLight);
+    grad.addColorStop(0.55, VP.steelLight);
+    grad.addColorStop(1, VP.steelDark);
+
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.strokeStyle = VP.outlineColor;
+    ctx.lineWidth = VP.outlineWidth;
+    ctx.lineJoin = 'miter';
+    ctx.stroke();
+  });
+
+  // Tiny highlight at pinch point
+  ctx.globalAlpha = VP.highlightOpacity;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(px, py - 1);
+  ctx.lineTo(px + 1, py + 1);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/* ============================================================
+   NON-FUZZY BODY MATERIALS
+   ============================================================
+*/
+// Solid smooth thread body — the baseline.
+function drawThreadBody(ctx, p) {
+  ctx.save();
+  ctx.fillStyle = getColor(p.color || 'thread');
+  taperPath(ctx, p.x1, p.y1, p.x2, p.y2, p.r1, p.r2);
+  ctx.fill();
+  // subtle shade along the underside
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  ctx.beginPath();
+  ctx.moveTo(p.x1 + nx * p.r1 * 0.2, p.y1 + ny * p.r1 * 0.2);
+  ctx.lineTo(p.x2 + nx * p.r2 * 0.2, p.y2 + ny * p.r2 * 0.2);
+  ctx.lineTo(p.x2 + nx * p.r2, p.y2 + ny * p.r2);
+  ctx.lineTo(p.x1 + nx * p.r1, p.y1 + ny * p.r1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+// Segmented chenille — overlapping bumpy circles along spine.
+function drawChenille(ctx, p) {
+  const C = TEXTURE_PARAMS.chenille;
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const col = getColor(p.color || 'olive');
+  const [r_, g_, b_] = hexToRgb(col);
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const steps = Math.max(3, Math.floor(len / C.segmentSpacing));
+  ctx.save();
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const cx = x1 + dx * t;
+    const cy = y1 + dy * t;
+    const r = (r1 + (r2 - r1) * t) * (1 + (rng() - 0.5) * 2 * C.bumpJitter);
+    const grad = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.35, r * 0.1, cx, cy, r);
+    grad.addColorStop(0, rgbaStr(r_ * 1.3, g_ * 1.3, b_ * 1.3, 1));
+    grad.addColorStop(0.55, col);
+    grad.addColorStop(1, rgbaStr(r_ * 0.6, g_ * 0.6, b_ * 0.6, 1));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+// Floss — flat smooth body with satin highlight.
+function drawFloss(ctx, p) {
+  ctx.save();
+  const col = getColor(p.color || 'yellow-thread');
+  taperPath(ctx, p.x1, p.y1, p.x2, p.y2, p.r1, p.r2);
+  ctx.fillStyle = col;
+  ctx.fill();
+  // highlight strip along top
+  const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  const hOff = 0.4;
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.beginPath();
+  ctx.moveTo(p.x1 - nx * p.r1 * hOff, p.y1 - ny * p.r1 * hOff);
+  ctx.lineTo(p.x2 - nx * p.r2 * hOff, p.y2 - ny * p.r2 * hOff);
+  ctx.lineTo(p.x2 - nx * p.r2 * 0.85, p.y2 - ny * p.r2 * 0.85);
+  ctx.lineTo(p.x1 - nx * p.r1 * 0.85, p.y1 - ny * p.r1 * 0.85);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ============================================================
+   RIBBING — diagonal wire/tinsel wraps over a body
+   ============================================================
+*/
+function drawRibbing(ctx, p) {
+  const R = TEXTURE_PARAMS.ribbing;
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const wraps = p.wraps || 6;
+  const material = p.material || 'wire';
+  const col = getColor(p.color || 'gold');
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  ctx.save();
+  ctx.strokeStyle = col;
+  ctx.lineWidth = material === 'tinsel' ? R.tinselWidth : R.wireWidth;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < wraps; i++) {
+    const t = (i + 0.5) / wraps;
+    const cx = x1 + dx * t;
+    const cy = y1 + dy * t;
+    const r = r1 + (r2 - r1) * t;
+    // the wrap appears as a diagonal across the body at this point
+    ctx.beginPath();
+    ctx.moveTo(cx + nx * r + dx / len * 2, cy + ny * r + dy / len * 2);
+    ctx.lineTo(cx - nx * r - dx / len * 2, cy - ny * r - dy / len * 2);
+    ctx.stroke();
+  }
+  if (material === 'tinsel') {
+    // add a thinner highlight
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = R.tinselWidth * 0.35;
+    for (let i = 0; i < wraps; i++) {
+      const t = (i + 0.5) / wraps;
+      const cx = x1 + dx * t;
+      const cy = y1 + dy * t;
+      const r = r1 + (r2 - r1) * t;
+      ctx.beginPath();
+      ctx.moveTo(cx + nx * r * 0.6, cy + ny * r * 0.6);
+      ctx.lineTo(cx - nx * r * 0.3, cy - ny * r * 0.3);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   BEAD HEAD — circle with radial gradient highlight
+   ============================================================
+*/
+function drawBeadHead(ctx, p) {
+  const cx = p.x, cy = p.y, r = p.r;
+  const baseColor = p.color || 'gold';
+  const base = getColor(baseColor);
+  const [br, bg, bb] = hexToRgb(base);
+  ctx.save();
+  const grad = ctx.createRadialGradient(cx - r * 0.4, cy - r * 0.5, r * 0.08, cx, cy, r * 1.05);
+  grad.addColorStop(0, rgbaStr(Math.min(255, br * 1.8 + 40), Math.min(255, bg * 1.8 + 40), Math.min(255, bb * 1.8 + 40), 1));
+  grad.addColorStop(0.35, rgbaStr(br * 1.2, bg * 1.2, bb * 1.2, 1));
+  grad.addColorStop(0.75, base);
+  grad.addColorStop(1, rgbaStr(br * 0.45, bg * 0.45, bb * 0.45, 1));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  // sharp highlight dot
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.beginPath();
+  ctx.arc(cx - r * 0.4, cy - r * 0.45, r * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ============================================================
+   TAILS — fiber, marabou, hair
+   ============================================================
+*/
+// Small fan of fibers off the back of the shank.
+function drawTailFiber(ctx, p) {
+  const P = TEXTURE_PARAMS.tailFiber;
+  const cx = p.x, cy = p.y;
+  const ang = p.angle || 0;
+  const length = p.length || 30;
+  const count = p.count || randInt(P.countMin, P.countMax);
+  const spread = (p.spread == null ? P.spreadDeg : p.spread) * Math.PI / 180;
+  const col = getColor(p.color || 'brown');
+  ctx.save();
+  ctx.strokeStyle = col;
+  ctx.globalAlpha = P.alpha;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0 : i / (count - 1) - 0.5;
+    const fAng = ang + t * spread + (rng() - 0.5) * 0.06;
+    const fl = length * (1 + (rng() - 0.5) * 0.15);
+    const ex = cx + Math.cos(fAng) * fl;
+    const ey = cy + Math.sin(fAng) * fl;
+    ctx.lineWidth = P.widthMin + rng() * (P.widthMax - P.widthMin);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+/* ============================================================
+   WINGS
+   ============================================================
+*/
+// Feather wing: teardrop silhouette with a central quill and fine barbs.
+function drawFeatherWing(ctx, p) {
+  const F = TEXTURE_PARAMS.feather;
+  const cx = p.x, cy = p.y;
+  const ang = p.angle || -Math.PI / 2; // default upright
+  const length = p.length || 50;
+  const width = p.width || length * 0.28;
+  const col = getColor(p.color || 'dun');
+  const [r_, g_, b_] = hexToRgb(col);
+
+  const dirX = Math.cos(ang), dirY = Math.sin(ang);
+  const perpX = -dirY, perpY = dirX;
+  const tipX = cx + dirX * length;
+  const tipY = cy + dirY * length;
+
+  ctx.save();
+  // silhouette
+  ctx.fillStyle = rgbaStr(r_, g_, b_, 0.85);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.quadraticCurveTo(cx + dirX * length * 0.4 + perpX * width, cy + dirY * length * 0.4 + perpY * width, tipX, tipY);
+  ctx.quadraticCurveTo(cx + dirX * length * 0.4 - perpX * width, cy + dirY * length * 0.4 - perpY * width, cx, cy);
+  ctx.closePath();
+  ctx.fill();
+
+  // quill (central spine)
+  ctx.strokeStyle = rgbaStr(r_ * 0.55, g_ * 0.55, b_ * 0.55, 0.9);
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(tipX, tipY);
+  ctx.stroke();
+
+  // barbs
+  const nBarbs = Math.floor(length / F.barbSpacing);
+  ctx.lineWidth = 0.55;
+  for (let i = 1; i < nBarbs; i++) {
+    const t = i / nBarbs;
+    const bx = cx + dirX * length * t;
+    const by = cy + dirY * length * t;
+    const wHere = width * (1 - Math.abs(t - 0.45) * 1.2);
+    const barbAngOff = F.barbAngleDeg * Math.PI / 180;
+    for (const side of [-1, 1]) {
+      const bAng = ang + side * (Math.PI / 2 - barbAngOff);
+      const bl = (F.barbLenMin + rng() * (F.barbLenMax - F.barbLenMin)) * Math.max(0.3, wHere / width);
+      const bf = 1 + (rng() - 0.5) * 0.2;
+      ctx.strokeStyle = rgbaStr(r_ * bf, g_ * bf, b_ * bf, F.alpha);
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(bx + Math.cos(bAng) * bl, by + Math.sin(bAng) * bl);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+// Bucktail wing: bundle of slightly-varying straight hairs.
+function drawBucktailWing(ctx, p) {
+  const B = TEXTURE_PARAMS.bucktail;
+  const cx = p.x, cy = p.y;
+  const ang = p.angle || 0;
+  const length = p.length || 60;
+  const col = getColor(p.color || 'white');
+  const [r_, g_, b_] = hexToRgb(col);
+  const n = Math.floor(B.countMin + rng() * (B.countMax - B.countMin));
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const spread = ((i / n) - 0.5) * 0.25;
+    const fAng = ang + spread + (rng() - 0.5) * B.angleJitterDeg * Math.PI / 180;
+    const fl = length * (1 + (rng() - 0.5) * 2 * B.lenJitter);
+    const bf = 1 + (rng() - 0.5) * 2 * B.brightJitter;
+    ctx.strokeStyle = rgbaStr(r_ * bf, g_ * bf, b_ * bf, B.alpha);
+    ctx.lineWidth = B.widthMin + rng() * (B.widthMax - B.widthMin);
+    const ex = cx + Math.cos(fAng) * fl;
+    const ey = cy + Math.sin(fAng) * fl;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   WING CASE — dark shellback over the thorax of a nymph
+   ============================================================
+*/
+function drawWingCase(ctx, p) {
+  const x1 = p.x1, y1 = p.y1, x2 = p.x2, y2 = p.y2;
+  const r1 = p.r1, r2 = p.r2;
+  const col = getColor(p.color || 'pheasant-dark');
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  // (nx,ny) is "down" (perpendicular pointing below the spine).
+  // Negate it for the "up" direction so the shellback sits on top.
+  const nx = -dy / len, ny = dx / len;
+  ctx.save();
+  ctx.fillStyle = col;
+  // domed shellback: top arc rises above the spine, bottom runs along the spine
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.quadraticCurveTo(
+    x1 + dx * 0.25 - nx * r1 * 1.15,
+    y1 + dy * 0.25 - ny * r1 * 1.15,
+    x1 + dx * 0.5 - nx * (r1 + r2) * 0.55,
+    y1 + dy * 0.5 - ny * (r1 + r2) * 0.55
+  );
+  ctx.quadraticCurveTo(
+    x1 + dx * 0.75 - nx * r2 * 1.15,
+    y1 + dy * 0.75 - ny * r2 * 1.15,
+    x2, y2
+  );
+  ctx.lineTo(x1, y1);
+  ctx.closePath();
+  ctx.fill();
+  // sheen highlight strip along the top edge
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x1 - nx * r1 * 0.3, y1 - ny * r1 * 0.3);
+  ctx.quadraticCurveTo(
+    x1 + dx * 0.5 - nx * (r1 + r2) * 0.5,
+    y1 + dy * 0.5 - ny * (r1 + r2) * 0.5,
+    x2 - nx * r2 * 0.3, y2 - ny * r2 * 0.3
+  );
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ============================================================
+   DUMBBELL / BEAD-CHAIN EYES
+   ============================================================
+*/
+function drawDumbbellEyes(ctx, p) {
+  const cx = p.x, cy = p.y;
+  const w = p.width || 14;
+  const r = w * 0.35;
+  const style = p.style || 'dumbbell';
+  const col = getColor(p.color || 'silver');
+  const [r_, g_, b_] = hexToRgb(col);
+  ctx.save();
+  // small bar connecting eyes (perpendicular to shank)
+  if (style === 'dumbbell') {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = r * 0.55;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - w / 2);
+    ctx.lineTo(cx, cy + w / 2);
+    ctx.stroke();
+  }
+  for (const side of [-1, 1]) {
+    const ex = cx;
+    const ey = cy + side * (w / 2);
+    const grad = ctx.createRadialGradient(ex - r * 0.3, ey - r * 0.3, r * 0.1, ex, ey, r);
+    grad.addColorStop(0, rgbaStr(Math.min(255, r_ * 1.9 + 40), Math.min(255, g_ * 1.9 + 40), Math.min(255, b_ * 1.9 + 40), 1));
+    grad.addColorStop(0.5, col);
+    grad.addColorStop(1, rgbaStr(r_ * 0.4, g_ * 0.4, b_ * 0.4, 1));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(ex, ey, r, 0, Math.PI * 2);
+    ctx.fill();
+    // pupil
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(ex, ey, r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.arc(ex - r * 0.1, ey - r * 0.12, r * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   FLY RENDERER — dispatches all components in back-to-front order
+   ============================================================
+*/
+function renderFly(ctx, cfg) {
+  rng = mulberry32(cfg.seed || 1);
+  const hook = buildHook(cfg.hookSize || 12, cfg.hookType || 'standard');
+
+  // determine body coverage based on category and bead presence
+  const cat = cfg.category || 'dry';
+  const hasBead = !!cfg.beadHead;
+  const beadFrac = hasBead ? 0.08 : 0.0;
+  let bodyStart, bodyEnd, thoraxStart = 0, thoraxEnd = 0, wingHackleAt;
+
+  if (cat === 'nymph') {
+    bodyStart = 0.42;
+    bodyEnd = 0.98;
+    thoraxStart = Math.max(0.10, beadFrac + 0.03);
+    thoraxEnd = 0.42;
+    wingHackleAt = thoraxStart + 0.02;
+  } else if (cat === 'streamer') {
+    bodyStart = Math.max(0.1, beadFrac + 0.02);
+    bodyEnd = 0.98;
+    wingHackleAt = bodyStart;
+  } else if (cat === 'wet') {
+    bodyStart = Math.max(0.12, beadFrac + 0.02);
+    bodyEnd = 0.97;
+    wingHackleAt = bodyStart;
+  } else { // dry
+    bodyStart = 0.18;
+    bodyEnd = 0.97;
+    wingHackleAt = bodyStart + 0.03;
+  }
+
+  // body radius profile
+  const maxRadius = Math.max(3, hook.gap * 0.38);
+  const taper = cfg.body && cfg.body.taper != null ? cfg.body.taper : 0.6;
+  const abdomenR1 = maxRadius * (0.5 + taper * 0.25); // front (head side)
+  const abdomenR2 = maxRadius * (0.25 + taper * 0.15); // rear
+  const thoraxR1 = maxRadius * 0.95;
+  const thoraxR2 = maxRadius * (0.6 + taper * 0.2);
+
+  // === DRAW LAYERS BACK-TO-FRONT ===
+
+  // 0. Vise jaw tips (behind everything)
+  drawViseJaws(ctx, hook);
+
+  // 1. Hook
+  drawHook(ctx, hook);
+
+  // 2. Tail
+  if (cfg.tail) {
+    const tailAt = samplePoly(hook.spine, bodyEnd);
+    const tailAngle = tailAt[2]; // tail extends in the direction of the spine at t
+    const tailLen = (cfg.tail.length || 30);
+    if (cfg.tail.material === 'marabou') {
+      drawMarabou(ctx, {
+        x: tailAt[0], y: tailAt[1],
+        angle: tailAngle, length: tailLen * 1.3,
+        color: cfg.tail.color, density: 1
+      });
+    } else if (cfg.tail.material === 'hair') {
+      drawBucktailWing(ctx, {
+        x: tailAt[0], y: tailAt[1],
+        angle: tailAngle, length: tailLen,
+        color: cfg.tail.color
+      });
+    } else {
+      drawTailFiber(ctx, {
+        x: tailAt[0], y: tailAt[1],
+        angle: tailAngle, length: tailLen,
+        count: cfg.tail.count, color: cfg.tail.color
+      });
+    }
+  }
+
+  // 3. Body / Abdomen
+  if (cfg.body) {
+    const bStart = samplePoly(hook.spine, bodyStart);
+    const bEnd = samplePoly(hook.spine, bodyEnd);
+    // use abdomen-only range for nymphs (front = thoraxEnd instead of bodyStart)
+    const frontT = (cat === 'nymph') ? thoraxEnd : bodyStart;
+    const front = samplePoly(hook.spine, frontT);
+    const rear = samplePoly(hook.spine, bodyEnd);
+    const params = {
+      x1: front[0], y1: front[1],
+      x2: rear[0], y2: rear[1],
+      r1: abdomenR1, r2: abdomenR2,
+      color: cfg.body.color,
+      density: cfg.body.density || 1
+    };
+    const mat = cfg.body.material || 'dubbing';
+    if (mat === 'dubbing') drawDubbing(ctx, params);
+    else if (mat === 'thread') drawThreadBody(ctx, params);
+    else if (mat === 'chenille') drawChenille(ctx, params);
+    else if (mat === 'herl') drawPeacockHerl(ctx, params);
+    else if (mat === 'floss') drawFloss(ctx, params);
+    else drawDubbing(ctx, params);
+  }
+
+  // 4. Ribbing over abdomen
+  if (cfg.ribbing && cfg.body) {
+    const frontT = (cat === 'nymph') ? thoraxEnd : bodyStart;
+    const front = samplePoly(hook.spine, frontT);
+    const rear = samplePoly(hook.spine, bodyEnd);
+    drawRibbing(ctx, {
+      x1: front[0], y1: front[1],
+      x2: rear[0], y2: rear[1],
+      r1: abdomenR1, r2: abdomenR2,
+      wraps: cfg.ribbing.wraps || 6,
+      material: cfg.ribbing.material || 'wire',
+      color: cfg.ribbing.color || 'gold'
+    });
+  }
+
+  // 5. Thorax (nymphs) — drawn bulkier, wing case + legs sit around here
+  if (cat === 'nymph' && cfg.thorax) {
+    const front = samplePoly(hook.spine, thoraxStart);
+    const rear = samplePoly(hook.spine, thoraxEnd);
+    const params = {
+      x1: front[0], y1: front[1],
+      x2: rear[0], y2: rear[1],
+      r1: thoraxR1, r2: thoraxR2,
+      color: cfg.thorax.color,
+      density: cfg.thorax.density || 1.1
+    };
+    const mat = cfg.thorax.material || 'dubbing';
+    if (mat === 'herl') drawPeacockHerl(ctx, params);
+    else drawDubbing(ctx, params);
+  }
+
+  // 6. Wing case — over thorax, drawn after thorax so it covers the top
+  if (cat === 'nymph' && cfg.wingCase) {
+    const front = samplePoly(hook.spine, thoraxStart);
+    const rear = samplePoly(hook.spine, thoraxEnd);
+    drawWingCase(ctx, {
+      x1: front[0], y1: front[1],
+      x2: rear[0], y2: rear[1],
+      r1: thoraxR1, r2: thoraxR2,
+      color: cfg.wingCase.color
+    });
+  }
+
+  // 7. Wing — varies by style
+  if (cfg.wing) {
+    const at = samplePoly(hook.spine, wingHackleAt);
+    const wLen = cfg.wing.length || 40;
+    const style = cfg.wing.style || 'upright-divided';
+    if (style === 'upright-divided') {
+      // two forward-leaning wings
+      drawFeatherWing(ctx, {
+        x: at[0], y: at[1] - 2,
+        angle: -Math.PI / 2 - 0.15, length: wLen, width: wLen * 0.25,
+        color: cfg.wing.color
+      });
+      drawFeatherWing(ctx, {
+        x: at[0], y: at[1] - 2,
+        angle: -Math.PI / 2 + 0.15, length: wLen, width: wLen * 0.25,
+        color: cfg.wing.color
+      });
+    } else if (style === 'parachute-post') {
+      drawFeatherWing(ctx, {
+        x: at[0], y: at[1],
+        angle: -Math.PI / 2, length: wLen * 0.9, width: wLen * 0.18,
+        color: cfg.wing.color
+      });
+    } else if (style === 'down') {
+      // elk hair caddis-style: hair swept back over body
+      drawBucktailWing(ctx, {
+        x: at[0], y: at[1] - 2,
+        angle: 0.15, length: wLen * 1.1,
+        color: cfg.wing.color
+      });
+    } else if (style === 'bucktail') {
+      drawBucktailWing(ctx, {
+        x: at[0], y: at[1] - 2,
+        angle: 0, length: wLen * 1.2,
+        color: cfg.wing.color
+      });
+    } else if (style === 'feather') {
+      drawFeatherWing(ctx, {
+        x: at[0], y: at[1],
+        angle: 0, length: wLen * 1.1, width: wLen * 0.28,
+        color: cfg.wing.color
+      });
+    }
+  }
+
+  // 8. Hackle
+  if (cfg.hackle) {
+    const at = samplePoly(hook.spine, wingHackleAt);
+    const hLen = (cfg.hackle.length || 0) || Math.max(14, hook.gap * 0.9);
+    const style = cfg.hackle.style || 'dry';
+    if (style === 'palmered') {
+      // palmered: hackle wound along the entire body length (woolly bugger,
+      // elk hair caddis). Sample multiple positions and drop small tufts.
+      const steps = 7;
+      const pStart = (cat === 'nymph') ? thoraxEnd : bodyStart;
+      for (let k = 0; k < steps; k++) {
+        const tt = pStart + (bodyEnd - pStart) * (k + 0.5) / steps;
+        const pt = samplePoly(hook.spine, tt);
+        drawDryHackle(ctx, {
+          x: pt[0], y: pt[1],
+          length: hLen * 0.75,
+          color: cfg.hackle.color,
+          density: (cfg.hackle.density || 1) * 0.45,
+          style: 'dry'
+        });
+      }
+    } else if (style === 'soft') {
+      // soft hackle: single point, fibers sweep back over the body toward the tail
+      drawSoftHackle(ctx, {
+        x: at[0], y: at[1],
+        length: hLen, color: cfg.hackle.color,
+        density: cfg.hackle.density || 1,
+        sweepDirection: at[2]
+      });
+    } else {
+      drawDryHackle(ctx, {
+        x: at[0], y: at[1],
+        length: hLen, color: cfg.hackle.color,
+        density: cfg.hackle.density || 1,
+        style: style === 'parachute' ? 'parachute' : 'dry'
+      });
+    }
+  }
+
+  // 9. Bead head (drawn over body front, in front of hackle for realism)
+  if (cfg.beadHead) {
+    const beadR = Math.max(4, hook.gap * 0.42);
+    drawBeadHead(ctx, {
+      x: hook.shankStart[0] + beadR * 0.7,
+      y: hook.shankStart[1],
+      r: beadR,
+      color: cfg.beadHead.color
+    });
+  }
+
+  // 10. Dumbbell / bead-chain eyes (streamers)
+  if (cfg.eyes) {
+    const beadR = Math.max(5, hook.gap * 0.5);
+    drawDumbbellEyes(ctx, {
+      x: hook.shankStart[0] + beadR * 0.6,
+      y: hook.shankStart[1],
+      width: beadR * 2,
+      color: cfg.eyes.color,
+      style: cfg.eyes.style
+    });
+  }
+}
+
+/* ============================================================
+   TEXTURE TEST MODE — draws all fuzzy textures side-by-side
+   ============================================================
+*/
+function renderTextureTest(ctx, seed) {
+  rng = mulberry32(seed || 1);
+  ctx.fillStyle = '#d2d6dc';
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  const labelFont = '12px -apple-system, system-ui, sans-serif';
+  ctx.fillStyle = '#2a2d33';
+  ctx.font = labelFont;
+  ctx.textAlign = 'center';
+
+  // 2x3 grid of texture samples
+  const cellW = ctx.canvas.width / 3;
+  const cellH = ctx.canvas.height / 2;
+
+  // 1. Dubbing (hares ear)
+  rng = mulberry32(seed);
+  drawDubbing(ctx, {
+    x1: cellW * 0.5 - 70, y1: cellH * 0.5,
+    x2: cellW * 0.5 + 70, y2: cellH * 0.5,
+    r1: 14, r2: 9, color: 'hares-ear', density: 1.2
+  });
+  ctx.fillText('Dubbing (hares ear)', cellW * 0.5, cellH - 12);
+
+  // 2. Dry hackle (grizzly)
+  rng = mulberry32(seed + 1);
+  drawDryHackle(ctx, {
+    x: cellW * 1.5, y: cellH * 0.5,
+    length: 36, color: 'grizzly', density: 1.1
+  });
+  ctx.fillText('Dry hackle (grizzly)', cellW * 1.5, cellH - 12);
+
+  // 3. Soft hackle (partridge brown)
+  rng = mulberry32(seed + 2);
+  drawSoftHackle(ctx, {
+    x: cellW * 2.5 - 35, y: cellH * 0.5 + 5,
+    length: 38, color: 'brown', density: 1.2,
+    sweepDirection: 0
+  });
+  ctx.fillText('Soft hackle (partridge)', cellW * 2.5, cellH - 12);
+
+  // 4. Peacock herl body
+  rng = mulberry32(seed + 3);
+  drawPeacockHerl(ctx, {
+    x1: cellW * 0.5 - 70, y1: cellH * 1.5,
+    x2: cellW * 0.5 + 70, y2: cellH * 1.5,
+    r1: 12, r2: 8, density: 1.2
+  });
+  ctx.fillText('Peacock herl', cellW * 0.5, cellH * 2 - 12);
+
+  // 5. Marabou tail
+  rng = mulberry32(seed + 4);
+  drawMarabou(ctx, {
+    x: cellW * 1.5 - 50, y: cellH * 1.5,
+    length: 95, color: 'olive', density: 1, angle: 0
+  });
+  ctx.fillText('Marabou (olive)', cellW * 1.5, cellH * 2 - 12);
+
+  // 6. Dubbing + ribbing combo
+  rng = mulberry32(seed + 5);
+  drawDubbing(ctx, {
+    x1: cellW * 2.5 - 70, y1: cellH * 1.5,
+    x2: cellW * 2.5 + 70, y2: cellH * 1.5,
+    r1: 12, r2: 7, color: 'olive', density: 1.1
+  });
+  drawRibbing(ctx, {
+    x1: cellW * 2.5 - 70, y1: cellH * 1.5,
+    x2: cellW * 2.5 + 70, y2: cellH * 1.5,
+    r1: 12, r2: 7, wraps: 7, material: 'wire', color: 'gold'
+  });
+  ctx.fillText('Dubbing + wire ribbing', cellW * 2.5, cellH * 2 - 12);
+}
+
+/* ============================================================
+   PRESETS — 12 classic patterns
+   ============================================================
+*/
+const PRESETS = [
+  {
+    name: 'Adams',
+    sub: 'Dry · 14',
+    config: {
+      seed: 101,
+      category: 'dry',
+      hookType: 'standard',
+      hookSize: 14,
+      beadHead: null,
+      tail: { material: 'fiber', color: 'grizzly', length: 32, count: 6 },
+      body: { material: 'dubbing', color: 'medium-dun', taper: 0.55, density: 1.1 },
+      ribbing: null,
+      wingCase: null,
+      thorax: null,
+      wing: { style: 'upright-divided', color: 'grizzly', length: 34 },
+      hackle: { style: 'dry', color: 'grizzly', density: 1, length: 26 },
+      eyes: null
+    }
+  },
+  {
+    name: 'Royal Wulff',
+    sub: 'Dry · 12',
+    config: {
+      seed: 102,
+      category: 'dry',
+      hookType: 'standard',
+      hookSize: 12,
+      beadHead: null,
+      tail: { material: 'hair', color: 'dark-brown', length: 38, count: 12 },
+      body: { material: 'herl', color: 'peacock', taper: 0.5, density: 1 },
+      ribbing: null,
+      wingCase: null,
+      thorax: null,
+      wing: { style: 'upright-divided', color: 'white', length: 38 },
+      hackle: { style: 'dry', color: 'brown', density: 1.1, length: 28 },
+      eyes: null
+    }
+  },
+  {
+    name: 'Elk Hair Caddis',
+    sub: 'Dry · 14',
+    config: {
+      seed: 103,
+      category: 'dry',
+      hookType: 'standard',
+      hookSize: 14,
+      beadHead: null,
+      tail: null,
+      body: { material: 'dubbing', color: 'hares-ear', taper: 0.45, density: 1 },
+      ribbing: { material: 'wire', color: 'gold', wraps: 6 },
+      wingCase: null,
+      thorax: null,
+      wing: { style: 'down', color: 'tan', length: 40 },
+      hackle: { style: 'palmered', color: 'brown', density: 0.8, length: 20 },
+      eyes: null
+    }
+  },
+  {
+    name: 'Parachute Adams',
+    sub: 'Dry · 14',
+    config: {
+      seed: 104,
+      category: 'dry',
+      hookType: 'standard',
+      hookSize: 14,
+      beadHead: null,
+      tail: { material: 'fiber', color: 'dun', length: 30, count: 6 },
+      body: { material: 'dubbing', color: 'medium-dun', taper: 0.5, density: 1.1 },
+      ribbing: null,
+      wingCase: null,
+      thorax: null,
+      wing: { style: 'parachute-post', color: 'white', length: 32 },
+      hackle: { style: 'parachute', color: 'grizzly', density: 1.2, length: 28 },
+      eyes: null
+    }
+  },
+  {
+    name: 'Pheasant Tail Nymph',
+    sub: 'Nymph · 14',
+    config: {
+      seed: 201,
+      category: 'nymph',
+      hookType: 'nymph',
+      hookSize: 14,
+      beadHead: { color: 'copper' },
+      tail: { material: 'fiber', color: 'pheasant', length: 20, count: 5 },
+      body: { material: 'dubbing', color: 'pheasant', taper: 0.4, density: 1.1 },
+      ribbing: { material: 'wire', color: 'copper', wraps: 6 },
+      wingCase: { color: 'pheasant-dark' },
+      thorax: { material: 'herl', color: 'peacock', density: 1.2 },
+      wing: null,
+      hackle: { style: 'soft', color: 'pheasant', density: 0.8, length: 18 },
+      eyes: null
+    }
+  },
+  {
+    name: "Hare's Ear Nymph",
+    sub: 'Nymph · 12',
+    config: {
+      seed: 202,
+      category: 'nymph',
+      hookType: 'nymph',
+      hookSize: 12,
+      beadHead: { color: 'gold' },
+      tail: { material: 'fiber', color: 'hares-ear-dark', length: 22, count: 6 },
+      body: { material: 'dubbing', color: 'hares-ear', taper: 0.5, density: 1.2 },
+      ribbing: { material: 'tinsel', color: 'gold', wraps: 6 },
+      wingCase: { color: 'dark-brown' },
+      thorax: { material: 'dubbing', color: 'hares-ear-dark', density: 1.4 },
+      wing: null,
+      hackle: { style: 'soft', color: 'hares-ear-dark', density: 0.7, length: 16 },
+      eyes: null
+    }
+  },
+  {
+    name: 'Copper John',
+    sub: 'Nymph · 16',
+    config: {
+      seed: 203,
+      category: 'nymph',
+      hookType: 'nymph',
+      hookSize: 16,
+      beadHead: { color: 'tungsten' },
+      tail: { material: 'fiber', color: 'dark-brown', length: 16, count: 4 },
+      body: { material: 'thread', color: 'copper', taper: 0.35, density: 1 },
+      ribbing: { material: 'wire', color: 'copper', wraps: 9 },
+      wingCase: { color: 'black' },
+      thorax: { material: 'herl', color: 'peacock', density: 1.3 },
+      wing: null,
+      hackle: null,
+      eyes: null
+    }
+  },
+  {
+    name: 'Prince Nymph',
+    sub: 'Nymph · 12',
+    config: {
+      seed: 204,
+      category: 'nymph',
+      hookType: 'nymph',
+      hookSize: 12,
+      beadHead: { color: 'gold' },
+      tail: { material: 'fiber', color: 'dark-brown', length: 20, count: 4 },
+      body: { material: 'herl', color: 'peacock', taper: 0.45, density: 1.1 },
+      ribbing: { material: 'tinsel', color: 'gold', wraps: 5 },
+      wingCase: null,
+      thorax: { material: 'herl', color: 'peacock', density: 1.2 },
+      wing: { style: 'feather', color: 'white', length: 22 },
+      hackle: { style: 'soft', color: 'brown', density: 0.9, length: 18 },
+      eyes: null
+    }
+  },
+  {
+    name: 'Zebra Midge',
+    sub: 'Nymph · 20',
+    config: {
+      seed: 205,
+      category: 'nymph',
+      hookType: 'nymph',
+      hookSize: 20,
+      beadHead: { color: 'silver' },
+      tail: null,
+      body: { material: 'thread', color: 'black', taper: 0.3, density: 1 },
+      ribbing: { material: 'wire', color: 'silver', wraps: 8 },
+      wingCase: null,
+      thorax: null,
+      wing: null,
+      hackle: null,
+      eyes: null
+    }
+  },
+  {
+    name: 'Woolly Bugger',
+    sub: 'Streamer · 8',
+    config: {
+      seed: 301,
+      category: 'streamer',
+      hookType: 'streamer',
+      hookSize: 8,
+      beadHead: { color: 'black' },
+      tail: { material: 'marabou', color: 'olive', length: 60, count: 0 },
+      body: { material: 'chenille', color: 'olive', taper: 0.3, density: 1 },
+      ribbing: { material: 'wire', color: 'copper', wraps: 7 },
+      wingCase: null,
+      thorax: null,
+      wing: null,
+      hackle: { style: 'palmered', color: 'olive-dark', density: 0.7, length: 18 },
+      eyes: null
+    }
+  },
+  {
+    name: 'Clouser Minnow',
+    sub: 'Streamer · 6',
+    config: {
+      seed: 302,
+      category: 'streamer',
+      hookType: 'streamer',
+      hookSize: 6,
+      beadHead: null,
+      tail: null,
+      body: { material: 'thread', color: 'white', taper: 0.3, density: 1 },
+      ribbing: { material: 'tinsel', color: 'silver', wraps: 6 },
+      wingCase: null,
+      thorax: null,
+      wing: { style: 'bucktail', color: 'chartreuse', length: 75 },
+      hackle: null,
+      eyes: { style: 'dumbbell', color: 'silver' }
+    }
+  },
+  {
+    name: 'Muddler Minnow',
+    sub: 'Streamer · 8',
+    config: {
+      seed: 303,
+      category: 'streamer',
+      hookType: 'streamer',
+      hookSize: 8,
+      beadHead: null,
+      tail: { material: 'fiber', color: 'brown', length: 25, count: 5 },
+      body: { material: 'floss', color: 'gold', taper: 0.4, density: 1 },
+      ribbing: { material: 'tinsel', color: 'gold', wraps: 5 },
+      wingCase: null,
+      thorax: null,
+      wing: { style: 'bucktail', color: 'tan', length: 70 },
+      hackle: { style: 'dry', color: 'tan', density: 1.4, length: 28 },
+      eyes: null
+    }
+  }
+];
+
+/* ============================================================
+   UI — editor generation + wiring
+   ============================================================
+*/
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const editorEl = document.getElementById('editor');
+const presetsEl = document.getElementById('presets');
+const labelEl = document.getElementById('flylabel');
+const testModeEl = document.getElementById('testMode');
+
+let currentConfig = JSON.parse(JSON.stringify(PRESETS[0].config));
+let currentPresetName = PRESETS[0].name;
+
+function render() {
+  ctx.save();
+  ctx.fillStyle = '#d2d6dc';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+  if (testModeEl.checked) {
+    renderTextureTest(ctx, currentConfig.seed || 1);
+    labelEl.innerHTML = 'Texture Test <span class="sub">seed ' + (currentConfig.seed || 1) + '</span>';
+  } else {
+    renderFly(ctx, currentConfig);
+    const sizeStr = '#' + currentConfig.hookSize;
+    const catStr = currentConfig.category;
+    labelEl.innerHTML = currentPresetName + ' <span class="sub">' + sizeStr + ' · ' + catStr + '</span>';
+  }
+}
+
+/* -------- Preset cards -------- */
+function buildPresets() {
+  presetsEl.innerHTML = '';
+  PRESETS.forEach((p, idx) => {
+    const el = document.createElement('div');
+    el.className = 'preset' + (p.name === currentPresetName ? ' active' : '');
+    el.innerHTML = '<div class="preset-name">' + p.name + '</div><div class="preset-sub">' + p.sub + '</div>';
+    el.addEventListener('click', () => {
+      currentConfig = JSON.parse(JSON.stringify(p.config));
+      currentPresetName = p.name;
+      buildPresets();
+      buildEditor();
+      render();
+    });
+    presetsEl.appendChild(el);
+  });
+}
+
+/* -------- Editor builder -------- */
+const HOOK_TYPES = ['standard', 'nymph', 'scud', 'streamer', 'jig'];
+const CATEGORIES = ['dry', 'nymph', 'streamer', 'wet'];
+const BODY_MATERIALS = ['dubbing', 'thread', 'chenille', 'herl', 'floss'];
+const THORAX_MATERIALS = ['dubbing', 'herl'];
+const RIB_MATERIALS = ['wire', 'tinsel'];
+const HACKLE_STYLES = ['dry', 'parachute', 'soft', 'palmered'];
+const WING_STYLES = ['upright-divided', 'parachute-post', 'down', 'bucktail', 'feather'];
+const TAIL_MATERIALS = ['fiber', 'marabou', 'hair'];
+const EYE_STYLES = ['dumbbell', 'bead-chain', 'painted'];
+const BEAD_COLORS = ['gold', 'copper', 'silver', 'black', 'tungsten'];
+const COLOR_NAMES = Object.keys(COLORS);
+
+function makeField(title, toggle, body, onToggle) {
+  const el = document.createElement('div');
+  el.className = 'field';
+  const titleEl = document.createElement('div');
+  titleEl.className = 'field-title';
+  if (toggle) {
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = toggle.checked;
+    cb.addEventListener('change', () => { onToggle(cb.checked); buildEditor(); render(); });
+    titleEl.appendChild(cb);
+  }
+  const labelEl2 = document.createElement('span');
+  labelEl2.textContent = title;
+  titleEl.appendChild(labelEl2);
+  el.appendChild(titleEl);
+  if (body) el.appendChild(body);
+  if (toggle && !toggle.checked) el.classList.add('disabled');
+  return el;
+}
+function row(label, input, valSpan) {
+  const el = document.createElement('div');
+  el.className = 'field-row';
+  const l = document.createElement('label');
+  l.textContent = label;
+  el.appendChild(l);
+  el.appendChild(input);
+  if (valSpan) el.appendChild(valSpan);
+  return el;
+}
+function makeSelect(options, value, onChange) {
+  const sel = document.createElement('select');
+  options.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o;
+    opt.textContent = o;
+    if (o === value) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => { onChange(sel.value); render(); });
+  return sel;
+}
+function makeColorSelect(value, onChange) {
+  return makeSelect(COLOR_NAMES, value, onChange);
+}
+function makeSlider(min, max, step, value, onChange) {
+  const inp = document.createElement('input');
+  inp.type = 'range';
+  inp.min = min; inp.max = max; inp.step = step; inp.value = value;
+  const val = document.createElement('span');
+  val.className = 'val';
+  val.textContent = value;
+  inp.addEventListener('input', () => {
+    val.textContent = inp.value;
+    onChange(parseFloat(inp.value));
+    render();
+  });
+  return { input: inp, val: val };
+}
+
+function buildEditor() {
+  editorEl.innerHTML = '';
+  const c = currentConfig;
+
+  // --- Core ---
+  {
+    const body = document.createElement('div');
+    const seedSlider = makeSlider(1, 9999, 1, c.seed || 1, v => c.seed = v);
+    body.appendChild(row('seed', seedSlider.input, seedSlider.val));
+    body.appendChild(row('category', makeSelect(CATEGORIES, c.category, v => { c.category = v; buildEditor(); }), null));
+    body.appendChild(row('hook', makeSelect(HOOK_TYPES, c.hookType, v => c.hookType = v), null));
+    const sizeSlider = makeSlider(4, 24, 2, c.hookSize, v => c.hookSize = v);
+    body.appendChild(row('size', sizeSlider.input, sizeSlider.val));
+    editorEl.appendChild(makeField('Core', null, body));
+  }
+
+  // --- Bead head ---
+  {
+    const body = document.createElement('div');
+    if (c.beadHead) {
+      body.appendChild(row('color', makeSelect(BEAD_COLORS, c.beadHead.color, v => c.beadHead.color = v), null));
+    }
+    editorEl.appendChild(makeField('Bead Head', { checked: !!c.beadHead }, body, on => {
+      c.beadHead = on ? { color: 'gold' } : null;
+    }));
+  }
+
+  // --- Tail ---
+  {
+    const body = document.createElement('div');
+    if (c.tail) {
+      body.appendChild(row('material', makeSelect(TAIL_MATERIALS, c.tail.material, v => c.tail.material = v), null));
+      body.appendChild(row('color', makeColorSelect(c.tail.color, v => c.tail.color = v), null));
+      const lenS = makeSlider(5, 100, 1, c.tail.length, v => c.tail.length = v);
+      body.appendChild(row('length', lenS.input, lenS.val));
+      const countS = makeSlider(0, 16, 1, c.tail.count || 0, v => c.tail.count = v);
+      body.appendChild(row('count', countS.input, countS.val));
+    }
+    editorEl.appendChild(makeField('Tail', { checked: !!c.tail }, body, on => {
+      c.tail = on ? { material: 'fiber', color: 'brown', length: 30, count: 6 } : null;
+    }));
+  }
+
+  // --- Body ---
+  {
+    const body = document.createElement('div');
+    if (c.body) {
+      body.appendChild(row('material', makeSelect(BODY_MATERIALS, c.body.material, v => c.body.material = v), null));
+      body.appendChild(row('color', makeColorSelect(c.body.color, v => c.body.color = v), null));
+      const taperS = makeSlider(0, 1, 0.05, c.body.taper, v => c.body.taper = v);
+      body.appendChild(row('taper', taperS.input, taperS.val));
+      const densS = makeSlider(0.3, 2, 0.1, c.body.density, v => c.body.density = v);
+      body.appendChild(row('density', densS.input, densS.val));
+    }
+    editorEl.appendChild(makeField('Body', { checked: !!c.body }, body, on => {
+      c.body = on ? { material: 'dubbing', color: 'olive', taper: 0.5, density: 1 } : null;
+    }));
+  }
+
+  // --- Ribbing ---
+  {
+    const body = document.createElement('div');
+    if (c.ribbing) {
+      body.appendChild(row('material', makeSelect(RIB_MATERIALS, c.ribbing.material, v => c.ribbing.material = v), null));
+      body.appendChild(row('color', makeColorSelect(c.ribbing.color, v => c.ribbing.color = v), null));
+      const wrapsS = makeSlider(2, 14, 1, c.ribbing.wraps, v => c.ribbing.wraps = v);
+      body.appendChild(row('wraps', wrapsS.input, wrapsS.val));
+    }
+    editorEl.appendChild(makeField('Ribbing', { checked: !!c.ribbing }, body, on => {
+      c.ribbing = on ? { material: 'wire', color: 'gold', wraps: 6 } : null;
+    }));
+  }
+
+  // --- Thorax ---
+  if (c.category === 'nymph') {
+    const body = document.createElement('div');
+    if (c.thorax) {
+      body.appendChild(row('material', makeSelect(THORAX_MATERIALS, c.thorax.material, v => c.thorax.material = v), null));
+      body.appendChild(row('color', makeColorSelect(c.thorax.color, v => c.thorax.color = v), null));
+      const densS = makeSlider(0.5, 2, 0.1, c.thorax.density, v => c.thorax.density = v);
+      body.appendChild(row('density', densS.input, densS.val));
+    }
+    editorEl.appendChild(makeField('Thorax', { checked: !!c.thorax }, body, on => {
+      c.thorax = on ? { material: 'dubbing', color: 'hares-ear-dark', density: 1.2 } : null;
+    }));
+  }
+
+  // --- Wing case ---
+  if (c.category === 'nymph') {
+    const body = document.createElement('div');
+    if (c.wingCase) {
+      body.appendChild(row('color', makeColorSelect(c.wingCase.color, v => c.wingCase.color = v), null));
+    }
+    editorEl.appendChild(makeField('Wing Case', { checked: !!c.wingCase }, body, on => {
+      c.wingCase = on ? { color: 'pheasant-dark' } : null;
+    }));
+  }
+
+  // --- Wing ---
+  {
+    const body = document.createElement('div');
+    if (c.wing) {
+      body.appendChild(row('style', makeSelect(WING_STYLES, c.wing.style, v => c.wing.style = v), null));
+      body.appendChild(row('color', makeColorSelect(c.wing.color, v => c.wing.color = v), null));
+      const lenS = makeSlider(10, 100, 1, c.wing.length, v => c.wing.length = v);
+      body.appendChild(row('length', lenS.input, lenS.val));
+    }
+    editorEl.appendChild(makeField('Wing', { checked: !!c.wing }, body, on => {
+      c.wing = on ? { style: 'upright-divided', color: 'dun', length: 34 } : null;
+    }));
+  }
+
+  // --- Hackle ---
+  {
+    const body = document.createElement('div');
+    if (c.hackle) {
+      body.appendChild(row('style', makeSelect(HACKLE_STYLES, c.hackle.style, v => c.hackle.style = v), null));
+      body.appendChild(row('color', makeColorSelect(c.hackle.color, v => c.hackle.color = v), null));
+      const densS = makeSlider(0.3, 2, 0.1, c.hackle.density || 1, v => c.hackle.density = v);
+      body.appendChild(row('density', densS.input, densS.val));
+      const lenS = makeSlider(6, 50, 1, c.hackle.length || 22, v => c.hackle.length = v);
+      body.appendChild(row('length', lenS.input, lenS.val));
+    }
+    editorEl.appendChild(makeField('Hackle', { checked: !!c.hackle }, body, on => {
+      c.hackle = on ? { style: 'dry', color: 'brown', density: 1, length: 22 } : null;
+    }));
+  }
+
+  // --- Eyes ---
+  if (c.category === 'streamer') {
+    const body = document.createElement('div');
+    if (c.eyes) {
+      body.appendChild(row('style', makeSelect(EYE_STYLES, c.eyes.style, v => c.eyes.style = v), null));
+      body.appendChild(row('color', makeSelect(['silver', 'gold', 'black', 'tungsten', 'red'], c.eyes.color, v => c.eyes.color = v), null));
+    }
+    editorEl.appendChild(makeField('Eyes', { checked: !!c.eyes }, body, on => {
+      c.eyes = on ? { style: 'dumbbell', color: 'silver' } : null;
+    }));
+  }
+}
+
+/* -------- Buttons -------- */
+document.getElementById('btnSeed').addEventListener('click', () => {
+  currentConfig.seed = Math.floor(Math.random() * 9999) + 1;
+  currentPresetName = currentPresetName + ' *';
+  buildEditor();
+  render();
+});
+
+document.getElementById('btnAll').addEventListener('click', () => {
+  currentConfig = randomizeAll();
+  currentPresetName = 'Random';
+  buildPresets();
+  buildEditor();
+  render();
+});
+
+document.getElementById('btnExport').addEventListener('click', () => {
+  const json = JSON.stringify(currentConfig, null, 2);
+  navigator.clipboard && navigator.clipboard.writeText(json);
+  document.getElementById('importArea').value = json;
+});
+
+document.getElementById('btnImport').addEventListener('click', () => {
+  try {
+    const parsed = JSON.parse(document.getElementById('importArea').value);
+    currentConfig = parsed;
+    currentPresetName = 'Imported';
+    buildPresets();
+    buildEditor();
+    render();
+  } catch (e) {
+    alert('Invalid JSON: ' + e.message);
+  }
+});
+
+testModeEl.addEventListener('change', render);
+
+/* -------- Randomize all -------- */
+function randomizeAll() {
+  const sysRng = Math.random;
+  const pickS = arr => arr[Math.floor(sysRng() * arr.length)];
+  const category = pickS(['dry', 'nymph', 'streamer', 'wet']);
+  const cfg = {
+    seed: Math.floor(sysRng() * 9999) + 1,
+    category,
+    hookType: category === 'streamer' ? 'streamer' : (category === 'nymph' ? pickS(['nymph', 'scud', 'jig']) : 'standard'),
+    hookSize: category === 'streamer' ? pickS([4, 6, 8]) : (category === 'nymph' ? pickS([12, 14, 16, 18]) : pickS([12, 14, 16, 18, 20])),
+    beadHead: null,
+    tail: null,
+    body: null,
+    ribbing: null,
+    wingCase: null,
+    thorax: null,
+    wing: null,
+    hackle: null,
+    eyes: null
+  };
+  const naturals = ['dun', 'brown', 'olive', 'tan', 'black', 'grizzly', 'ginger', 'cream', 'hares-ear'];
+  const brights = ['red', 'yellow', 'chartreuse', 'orange', 'pink', 'olive', 'black', 'white'];
+
+  if (category === 'nymph') {
+    cfg.beadHead = sysRng() < 0.85 ? { color: pickS(BEAD_COLORS) } : null;
+    cfg.tail = { material: 'fiber', color: pickS(['pheasant', 'brown', 'dun', 'hares-ear-dark']), length: 16 + Math.floor(sysRng() * 12), count: 4 + Math.floor(sysRng() * 4) };
+    cfg.body = { material: pickS(['dubbing', 'dubbing', 'thread', 'herl']), color: pickS(naturals), taper: 0.3 + sysRng() * 0.4, density: 0.9 + sysRng() * 0.5 };
+    cfg.ribbing = { material: pickS(['wire', 'tinsel']), color: pickS(['gold', 'copper', 'silver']), wraps: 5 + Math.floor(sysRng() * 5) };
+    cfg.wingCase = sysRng() < 0.7 ? { color: pickS(['pheasant-dark', 'dark-brown', 'black']) } : null;
+    cfg.thorax = { material: pickS(['dubbing', 'herl']), color: sysRng() < 0.5 ? 'peacock' : pickS(naturals), density: 1.1 + sysRng() * 0.4 };
+    cfg.hackle = sysRng() < 0.6 ? { style: 'soft', color: pickS(['partridge', 'brown', 'pheasant', 'dun']), density: 0.7 + sysRng() * 0.4, length: 14 + Math.floor(sysRng() * 10) } : null;
+  } else if (category === 'streamer') {
+    cfg.tail = sysRng() < 0.7 ? { material: 'marabou', color: pickS(brights), length: 50 + Math.floor(sysRng() * 20), count: 0 } : null;
+    cfg.body = { material: pickS(['chenille', 'dubbing', 'thread', 'floss']), color: pickS(brights), taper: 0.3 + sysRng() * 0.3, density: 1 };
+    cfg.ribbing = sysRng() < 0.6 ? { material: pickS(['wire', 'tinsel']), color: pickS(['gold', 'silver', 'copper']), wraps: 5 + Math.floor(sysRng() * 4) } : null;
+    cfg.wing = sysRng() < 0.85 ? { style: pickS(['bucktail', 'feather']), color: pickS(brights), length: 55 + Math.floor(sysRng() * 25) } : null;
+    cfg.hackle = sysRng() < 0.4 ? { style: 'palmered', color: pickS(naturals), density: 0.7 + sysRng() * 0.4, length: 16 + Math.floor(sysRng() * 6) } : null;
+    cfg.eyes = sysRng() < 0.5 ? { style: pickS(['dumbbell', 'bead-chain']), color: pickS(['silver', 'gold', 'black']) } : null;
+    if (!cfg.eyes && sysRng() < 0.4) cfg.beadHead = { color: pickS(BEAD_COLORS) };
+  } else if (category === 'wet') {
+    cfg.tail = sysRng() < 0.6 ? { material: 'fiber', color: pickS(naturals), length: 22 + Math.floor(sysRng() * 10), count: 4 + Math.floor(sysRng() * 4) } : null;
+    cfg.body = { material: pickS(['dubbing', 'floss', 'herl']), color: pickS(naturals), taper: 0.4 + sysRng() * 0.3, density: 1 };
+    cfg.ribbing = sysRng() < 0.7 ? { material: pickS(['wire', 'tinsel']), color: pickS(['gold', 'copper']), wraps: 5 + Math.floor(sysRng() * 4) } : null;
+    cfg.hackle = { style: 'soft', color: pickS(['partridge', 'brown', 'dun', 'pheasant']), density: 0.8 + sysRng() * 0.4, length: 18 + Math.floor(sysRng() * 10) };
+  } else { // dry
+    cfg.tail = { material: 'fiber', color: pickS(['grizzly', 'dun', 'brown', 'ginger']), length: 24 + Math.floor(sysRng() * 12), count: 5 + Math.floor(sysRng() * 4) };
+    cfg.body = { material: pickS(['dubbing', 'dubbing', 'herl']), color: pickS(naturals), taper: 0.45 + sysRng() * 0.3, density: 1 + sysRng() * 0.3 };
+    cfg.ribbing = sysRng() < 0.3 ? { material: 'wire', color: pickS(['gold', 'copper']), wraps: 5 + Math.floor(sysRng() * 3) } : null;
+    cfg.wing = sysRng() < 0.8 ? { style: pickS(['upright-divided', 'parachute-post', 'down']), color: pickS(['white', 'dun', 'tan', 'grizzly']), length: 28 + Math.floor(sysRng() * 14) } : null;
+    cfg.hackle = { style: cfg.wing && cfg.wing.style === 'parachute-post' ? 'parachute' : 'dry', color: pickS(['grizzly', 'brown', 'dun', 'ginger', 'furnace']), density: 0.9 + sysRng() * 0.4, length: 20 + Math.floor(sysRng() * 10) };
+  }
+  return cfg;
+}
+
+/* -------- Init -------- */
+buildPresets();
+buildEditor();
+render();
+</script>
+</body>
+</html>

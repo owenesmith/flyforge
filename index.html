@@ -535,7 +535,7 @@
   </div>
   <div class="custom-wrap">
     <div class="canvas-panel">
-      <canvas id="customCanvas" width="400" height="300"></canvas>
+      <canvas id="customCanvas" width="560" height="300"></canvas>
     </div>
     <div class="controls-panel">
       <h3>Fly Parts</h3>
@@ -612,7 +612,7 @@
   </div>
   <div class="tying-wrap">
     <div class="tying-canvas">
-      <canvas id="tyingCanvas" width="400" height="300"></canvas>
+      <canvas id="tyingCanvas" width="560" height="300"></canvas>
       <div class="your-design-label">Your Design</div>
     </div>
     <div class="tying-steps">
@@ -765,17 +765,17 @@ const TEXTURE_PARAMS = {
      NEW: Bunny strip / crosscut / flash textures
      ============================================================ */
   bunnyStrip: {
-    strandCount: 58,
-    lenMin: 36, lenMax: 62,
-    lenJitter: 0.28,
-    spreadDeg: 38,
-    sCurveAmount: 0.30,
-    widthMin: 0.6, widthMax: 1.4,
-    alphaMin: 0.55, alphaMax: 0.88,
+    strandCount: 130,
+    lenMin: 40, lenMax: 80,
+    lenJitter: 0.25,
+    spreadDeg: 20,
+    sCurveAmount: 0.16,
+    widthMin: 0.5, widthMax: 1.3,
+    alphaMin: 0.5, alphaMax: 0.9,
     barSegments: 5,
-    barDarkness: 0.35,
-    undercoat: { count: 180, lenMin: 8, lenMax: 22, widthMin: 0.4, widthMax: 1.0, alphaMin: 0.22, alphaMax: 0.5, brightness: -0.2 },
-    guardHairs: { count: 22, lenMin: 52, lenMax: 72, widthMin: 0.3, widthMax: 0.55, alpha: 0.35 }
+    barDarkness: 0.28,
+    undercoat: { count: 320, lenMin: 10, lenMax: 28, widthMin: 0.4, widthMax: 1.1, alphaMin: 0.2, alphaMax: 0.55, brightness: -0.22 },
+    guardHairs: { count: 40, lenMin: 60, lenMax: 95, widthMin: 0.3, widthMax: 0.6, alpha: 0.30 }
   },
   bunnyPalmered: {
     tuftsPerPixel: 0.075,
@@ -789,23 +789,25 @@ const TEXTURE_PARAMS = {
     undercoat: { fibersPerTuft: 22, lenMin: 4, lenMax: 11, widthMin: 0.3, widthMax: 0.8, alphaMin: 0.18, alphaMax: 0.42, brightness: -0.2 }
   },
   crosscutCollar: {
-    outerFibers: 210,
-    lenMin: 14, lenMax: 30,
-    lenJitter: 0.25,
-    angleJitterDeg: 38,
-    curveAmount: 10,
-    widthMin: 0.5, widthMax: 1.3,
-    alphaMin: 0.45, alphaMax: 0.85,
-    undercoat: { fibers: 150, lenMin: 6, lenMax: 16, widthMin: 0.4, widthMax: 0.9, alphaMin: 0.2, alphaMax: 0.48, brightness: -0.2 },
-    guardHairs: { count: 36, lenMin: 26, lenMax: 42, widthMin: 0.3, widthMax: 0.6, alpha: 0.4, curveAmount: 14 }
+    outerFibers: 440,
+    lenMin: 18, lenMax: 40,
+    lenJitter: 0.30,
+    angleJitterDeg: 44,
+    curveAmount: 13,
+    widthMin: 0.5, widthMax: 1.4,
+    alphaMin: 0.48, alphaMax: 0.88,
+    undercoat: { fibers: 300, lenMin: 8, lenMax: 22, widthMin: 0.4, widthMax: 1.0, alphaMin: 0.22, alphaMax: 0.52, brightness: -0.25 },
+    guardHairs: { count: 55, lenMin: 30, lenMax: 50, widthMin: 0.3, widthMax: 0.65, alpha: 0.36, curveAmount: 16 }
   },
   crystalFlash: {
     defaultCount: 5,
     width: 0.7,
-    shimmerWidth: 1.6,
-    shimmerAlpha: 0.28,
-    shimmerSpacing: 7,
-    spreadDeg: 10
+    shimmerWidth: 1.8,
+    shimmerAlpha: 0.35,
+    shimmerSpacing: 6,
+    spreadDeg: 12,
+    wavyAmplitude: 3,
+    wavyFrequency: 0.08
   }
 };
 
@@ -829,8 +831,11 @@ const COLORS = {
   'kelly-green':'#2a7a3a','royal-blue':'#1e3a7e',
   thread:'#1c1c1c','red-thread':'#8a1c14','yellow-thread':'#c39a1a',
   // Bunny Slider specific
-  rust:'#A0582E','rust-bar':'#2B1408',
-  'olive-crosscut':'#6B7A40','flash-black':'#151515'
+  rust:'#c44a1e','rust-tips':'#d85528','rust-bar':'#8a2e14','rust-hide':'#4a1808',
+  'olive-crosscut':'#5a6b2e','olive-tips':'#7a8a3e','olive-shadow':'#3a4820',
+  'flash-purple':'#3a2850','flash-highlight':'#8a6ab0',
+  'eye-black':'#0a0a0c','eye-highlight':'#4a4a52',
+  'hook-steel':'#b8bcc0','hook-shadow':'#5a5e64'
 };
 function getColor(c) { if (!c) return '#888'; if (typeof c==='string'&&c.charAt(0)==='#') return c; return COLORS[c]||'#888'; }
 function hexToRgb(h) { h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
@@ -838,6 +843,23 @@ function rgbToHex(r,g,b) { const t=v=>Math.max(0,Math.min(255,Math.round(v))).to
 function rgbaStr(r,g,b,a) { return 'rgba('+(r|0)+','+(g|0)+','+(b|0)+','+a+')'; }
 function jitterBrightness(hex,amt,jitter) { const[r,g,b]=hexToRgb(hex); const f=1+amt+(rng()-0.5)*2*jitter; return [Math.max(0,Math.min(255,r*f)),Math.max(0,Math.min(255,g*f)),Math.max(0,Math.min(255,b*f))]; }
 function shade(hex,amt) { const[r,g,b]=hexToRgb(hex); const f=1+amt; return rgbToHex(r*f,g*f,b*f); }
+
+/* ============================================================
+   VISE PARAMS — tunable constants for the minimal jaw tips
+   ============================================================ */
+const VISE_PARAMS = {
+  entryAngleDeg: 315,             // stem exits toward lower-left; jaws angle up-right
+  visibleJawLen: 135,             // px visible jaw length (1.5× previous)
+  stemLen: 400,                   // px of stem — extends well off canvas
+  jawThickAtBase: 27,             // px jaw thickness at wide end (1.5×)
+  jawThickAtTip: 6,               // px jaw thickness at pinch tip (1.5×)
+  jawGapAtTip: 2,                 // px gap between upper and lower jaw at pinch
+  steelDark: '#4a4e54',
+  steelLight: '#c8ccd0',
+  outlineColor: '#2a2d31',
+  outlineWidth: 1,
+  highlightOpacity: 0.7
+};
 
 /* ============================================================
    GEOMETRY UTILS
@@ -1087,15 +1109,33 @@ function drawDumbbellEyes(ctx,p) {
   const cx=p.x,cy=p.y,w=p.width||14,r=w*0.35; const style=p.style||'dumbbell';
   const col=getColor(p.color||'silver'); const[r_,g_,b_]=hexToRgb(col);
   ctx.save();
-  if(style==='dumbbell'){ctx.strokeStyle=col; ctx.lineWidth=r*0.55; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(cx,cy-w/2); ctx.lineTo(cx,cy+w/2); ctx.stroke();}
+  if(style==='dumbbell'){
+    // Thread wraps at mounting point (figure-8 pattern)
+    for(let i=0;i<7;i++){
+      const off=(i-3)*1.6;
+      ctx.strokeStyle=rgbaStr(22,22,22,0.65+rng()*0.2);
+      ctx.lineWidth=0.9+rng()*0.4;
+      ctx.beginPath(); ctx.moveTo(cx+off-2,cy-w/2+r*0.6); ctx.lineTo(cx+off+2,cy+w/2-r*0.6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+off+2,cy-w/2+r*0.6); ctx.lineTo(cx+off-2,cy+w/2-r*0.6); ctx.stroke();
+    }
+    // Connecting bar
+    ctx.strokeStyle=rgbaStr(r_,g_,b_,0.45); ctx.lineWidth=r*0.3; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx,cy-w/2); ctx.lineTo(cx,cy+w/2); ctx.stroke();
+  }
   for(const side of [-1,1]){const ex=cx,ey=cy+side*(w/2);
-    const grad=ctx.createRadialGradient(ex-r*0.3,ey-r*0.3,r*0.1,ex,ey,r);
-    grad.addColorStop(0,rgbaStr(Math.min(255,r_*1.9+40),Math.min(255,g_*1.9+40),Math.min(255,b_*1.9+40),1));
-    grad.addColorStop(0.5,col); grad.addColorStop(1,rgbaStr(r_*0.4,g_*0.4,b_*0.4,1));
+    // Matte black sphere with subtle sheen
+    const grad=ctx.createRadialGradient(ex-r*0.25,ey-r*0.25,r*0.05,ex+r*0.1,ey+r*0.1,r);
+    grad.addColorStop(0,rgbaStr(Math.min(255,r_+30),Math.min(255,g_+30),Math.min(255,b_+30),1));
+    grad.addColorStop(0.35,col);
+    grad.addColorStop(0.75,rgbaStr(r_*0.55,g_*0.55,b_*0.55,1));
+    grad.addColorStop(1,rgbaStr(r_*0.25,g_*0.25,b_*0.25,1));
     ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(ex,ey,r,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(ex,ey,r*0.35,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.arc(ex-r*0.1,ey-r*0.12,r*0.12,0,Math.PI*2); ctx.fill();}
+    // Rim shadow
+    ctx.strokeStyle=rgbaStr(0,0,0,0.3); ctx.lineWidth=0.7;
+    ctx.beginPath(); ctx.arc(ex,ey,r,0,Math.PI*2); ctx.stroke();
+    // Glossy highlight dot (upper-left)
+    ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(ex-r*0.3,ey-r*0.3,r*0.16,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.beginPath(); ctx.arc(ex-r*0.15,ey-r*0.15,r*0.28,0,Math.PI*2); ctx.fill();}
   ctx.restore();
 }
 
@@ -1122,17 +1162,137 @@ function buildHook(size,type) {
 }
 function drawHook(ctx,hook,colorName) {
   const col=getColor(colorName||'tungsten');
-  ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=hook.wireW; ctx.lineCap='round'; ctx.lineJoin='round';
+  const[hr,hg,hb]=hexToRgb(col);
+  const isSteel=(col==='#b8bcc0'||colorName==='hook-steel');
+  ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+  // Shadow pass for steel (wider, darker)
+  if(isSteel){
+    ctx.strokeStyle=rgbaStr(hr*0.6,hg*0.6,hb*0.6,0.7); ctx.lineWidth=hook.wireW+1;
+    ctx.beginPath(); for(let i=0;i<hook.spine.length;i++){const p=hook.spine[i]; if(i===0) ctx.moveTo(p[0],p[1]+0.4); else ctx.lineTo(p[0],p[1]+0.4);} ctx.stroke();
+  }
+  // Main shank
+  ctx.strokeStyle=col; ctx.lineWidth=hook.wireW;
   ctx.beginPath(); for(let i=0;i<hook.spine.length;i++){const p=hook.spine[i]; if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]);} ctx.stroke();
+  // Bend — darker for steel curves
+  if(isSteel){
+    ctx.strokeStyle=rgbaStr(hr*0.65,hg*0.65,hb*0.65,0.8); ctx.lineWidth=hook.wireW+0.5;
+    ctx.beginPath(); for(let i=0;i<hook.bend.length;i++){const p=hook.bend[i]; if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]);} ctx.stroke();
+  }
+  ctx.strokeStyle=col; ctx.lineWidth=hook.wireW;
   ctx.beginPath(); for(let i=0;i<hook.bend.length;i++){const p=hook.bend[i]; if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]);} ctx.stroke();
+  // Point and barb — crisp
   const last=hook.bend[hook.bend.length-1],prev=hook.bend[hook.bend.length-2];
-  const pdx=last[0]-prev[0],pdy=last[1]-prev[1],plen=Math.hypot(pdx,pdy)||1; const ptLen=hook.gap*0.35;
+  const pdx=last[0]-prev[0],pdy=last[1]-prev[1],plen=Math.hypot(pdx,pdy)||1; const ptLen=hook.gap*0.38;
   const px=last[0]+(pdx/plen)*ptLen,py=last[1]+(pdy/plen)*ptLen;
+  ctx.strokeStyle=isSteel?rgbaStr(hr*0.8,hg*0.8,hb*0.8,1):col; ctx.lineWidth=hook.wireW;
   ctx.beginPath(); ctx.moveTo(last[0],last[1]); ctx.lineTo(px,py); ctx.stroke();
   const perp1=-pdy/plen,perp2=pdx/plen;
+  ctx.lineWidth=hook.wireW*0.85;
   ctx.beginPath(); ctx.moveTo(last[0]+(px-last[0])*0.65,last[1]+(py-last[1])*0.65);
-  ctx.lineTo(last[0]+(px-last[0])*0.35+perp1*hook.gap*0.12,last[1]+(py-last[1])*0.35+perp2*hook.gap*0.12); ctx.stroke();
-  ctx.beginPath(); ctx.arc(hook.eye.x,hook.eye.y,hook.eye.r,0,Math.PI*2); ctx.stroke(); ctx.restore();
+  ctx.lineTo(last[0]+(px-last[0])*0.3+perp1*hook.gap*0.14,last[1]+(py-last[1])*0.3+perp2*hook.gap*0.14); ctx.stroke();
+  // Eye ring
+  ctx.strokeStyle=col; ctx.lineWidth=hook.wireW;
+  ctx.beginPath(); ctx.arc(hook.eye.x,hook.eye.y,hook.eye.r,0,Math.PI*2); ctx.stroke();
+  // Top highlight for steel
+  if(isSteel){
+    ctx.strokeStyle=rgbaStr(255,255,255,0.22); ctx.lineWidth=0.6;
+    ctx.beginPath(); for(let i=0;i<hook.spine.length;i++){const p=hook.spine[i]; if(i===0) ctx.moveTo(p[0],p[1]-hook.wireW*0.35); else ctx.lineTo(p[0],p[1]-hook.wireW*0.35);} ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   VISE — single unified piece: stem + jaws gripping the hook eye.
+   Enters from lower-left, angles up to clamp the hook eye area.
+   Drawn first (behind hook and all fly materials).
+   ============================================================ */
+function drawViseJaws(ctx, hook) {
+  const VP = VISE_PARAMS;
+
+  // Pinch point: the hook eye (left side, where you tie the line)
+  const pinchX = hook.eye.x;
+  const pinchY = hook.eye.y;
+
+  // Jaw axis direction: from lower-left up to the hook eye
+  const entryAng = VP.entryAngleDeg * Math.PI / 180;  // 225° = lower-left
+  const axDx = Math.cos(entryAng), axDy = Math.sin(entryAng);
+  const perpDx = -axDy, perpDy = axDx;
+
+  const jawLen = VP.visibleJawLen;
+  const stemLen = VP.stemLen;
+  const halfGap = VP.jawGapAtTip / 2;
+  const tipThick = VP.jawThickAtTip / 2;
+  const baseThick = VP.jawThickAtBase / 2;
+
+  // Base of jaws (where they widen, toward lower-left from pinch)
+  const baseX = pinchX - axDx * jawLen;
+  const baseY = pinchY - axDy * jawLen;
+  // Stem extends further down-left from jaw base
+  const stemX = baseX - axDx * stemLen;
+  const stemY = baseY - axDy * stemLen;
+
+  ctx.save();
+
+  // --- STEM (shaft extending off-canvas to lower-left) ---
+  ctx.strokeStyle = VP.steelDark;
+  ctx.lineWidth = 14;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(stemX, stemY);
+  ctx.lineTo(baseX, baseY);
+  ctx.stroke();
+  // stem highlight
+  ctx.strokeStyle = VP.steelLight;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(stemX + perpDx*1.5, stemY + perpDy*1.5);
+  ctx.lineTo(baseX + perpDx*1.5, baseY + perpDy*1.5);
+  ctx.stroke();
+
+  // --- JAWS (upper and lower, tapered from base to tip) ---
+  [-1, 1].forEach(function(side) {
+    var tipInnerX = pinchX + perpDx * halfGap * side;
+    var tipInnerY = pinchY + perpDy * halfGap * side;
+    var tipOuterX = pinchX + perpDx * (halfGap + tipThick) * side;
+    var tipOuterY = pinchY + perpDy * (halfGap + tipThick) * side;
+    var baseInnerX = baseX + perpDx * halfGap * side;
+    var baseInnerY = baseY + perpDy * halfGap * side;
+    var baseOuterX = baseX + perpDx * (halfGap + baseThick) * side;
+    var baseOuterY = baseY + perpDy * (halfGap + baseThick) * side;
+
+    ctx.beginPath();
+    ctx.moveTo(tipInnerX, tipInnerY);
+    ctx.lineTo(baseInnerX, baseInnerY);
+    ctx.lineTo(baseOuterX, baseOuterY);
+    ctx.lineTo(tipOuterX, tipOuterY);
+    ctx.closePath();
+
+    var grad = ctx.createLinearGradient(
+      pinchX + perpDx * halfGap * side, pinchY + perpDy * halfGap * side,
+      pinchX + perpDx * (halfGap + baseThick) * side, pinchY + perpDy * (halfGap + baseThick) * side
+    );
+    grad.addColorStop(0, VP.steelDark);
+    grad.addColorStop(0.35, VP.steelLight);
+    grad.addColorStop(0.65, VP.steelLight);
+    grad.addColorStop(1, VP.steelDark);
+
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.strokeStyle = VP.outlineColor;
+    ctx.lineWidth = VP.outlineWidth;
+    ctx.lineJoin = 'miter';
+    ctx.stroke();
+  });
+
+  // Highlight dot at pinch
+  ctx.globalAlpha = VP.highlightOpacity;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(pinchX, pinchY, 1.5, 0, Math.PI*2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  ctx.restore();
 }
 
 /* ============================================================
@@ -1145,78 +1305,121 @@ function drawBunnyStripTail(ctx, p) {
   const baseLen = p.length || 55, density = p.density || 1;
   const baseCol = getColor(p.color || 'rust');
   const barCol = getColor(p.barColor || 'rust-bar');
+  const hideCol = getColor(p.hideColor || p.barColor || 'rust-bar');
+  const tipCol = p.tipColor ? getColor(p.tipColor) : baseCol;
   const baseRGB = hexToRgb(baseCol), barRGB = hexToRgb(barCol);
+  const hideRGB = hexToRgb(hideCol), tipRGB = hexToRgb(tipCol);
   const n = Math.floor(P.strandCount * density);
   const spreadRad = P.spreadDeg * Math.PI / 180;
+  const dX = Math.cos(flowAng), dY = Math.sin(flowAng);
+  const pX = -dY, pY = dX; // perpendicular
   ctx.save(); ctx.lineCap = 'round';
 
-  // hide strip center line
-  ctx.strokeStyle = rgbaStr(barRGB[0]*0.8, barRGB[1]*0.8, barRGB[2]*0.8, 0.3);
-  ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + Math.cos(flowAng) * baseLen * 0.85, cy + Math.sin(flowAng) * baseLen * 0.85);
+  // Bulbous envelope: the strip swells in the middle, tapers at both ends.
+  // widthAt(t) returns the half-width of the fur envelope at position t along strip
+  function widthAt(t) {
+    // Gaussian-ish swell peaking at t≈0.35, tapering to thin tip
+    const peak = 0.35, sigma = 0.35;
+    const swell = Math.exp(-((t-peak)*(t-peak))/(2*sigma*sigma));
+    return 4 + swell * baseLen * 0.14;
+  }
+
+  // Hide spine along top of strip (dark leather)
+  ctx.strokeStyle = rgbaStr(hideRGB[0], hideRGB[1], hideRGB[2], 0.45);
+  ctx.lineWidth = 3.0;
+  ctx.beginPath();
+  for (let i = 0; i <= 12; i++) {
+    const t = i/12; if (t > 0.92) break;
+    const sx = cx + dX*baseLen*t + pX*widthAt(t)*0.12;
+    const sy = cy + dY*baseLen*t + pY*widthAt(t)*0.12;
+    if (i===0) ctx.moveTo(sx,sy); else ctx.lineTo(sx,sy);
+  }
   ctx.stroke();
 
-  // UNDERCOAT — shorter, darker, denser
+  // UNDERCOAT — distributed along strip envelope, darker, denser
   const uc = P.undercoat;
   for (let i = 0; i < Math.floor(uc.count * density); i++) {
+    const ot = rng();
+    const taper = 1 - ot * 0.5;
+    if (rng() > taper + 0.1) continue;
+    const w = widthAt(ot);
+    const lateralOff = (rng()-0.5) * 2 * w * 0.6;
+    const ox = cx + dX*baseLen*ot + pX*lateralOff;
+    const oy = cy + dY*baseLen*ot + pY*lateralOff;
     const ang = flowAng + (rng() - 0.5) * spreadRad * 1.2;
-    const fl = uc.lenMin + rng() * (uc.lenMax - uc.lenMin);
-    const ex = cx + Math.cos(ang) * fl, ey = cy + Math.sin(ang) * fl;
+    const fl = (uc.lenMin + rng() * (uc.lenMax - uc.lenMin)) * taper;
     const [fr,fg,fb] = jitterBrightness(baseCol, uc.brightness, 0.15);
     const alpha = uc.alphaMin + rng() * (uc.alphaMax - uc.alphaMin);
     ctx.strokeStyle = rgbaStr(fr, fg, fb, alpha);
     ctx.lineWidth = uc.widthMin + rng() * (uc.widthMax - uc.widthMin);
-    ctx.beginPath(); ctx.moveTo(cx + (rng()-0.5)*4, cy + (rng()-0.5)*4);
-    ctx.lineTo(ex, ey); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox + (rng()-0.5)*2, oy + (rng()-0.5)*2);
+    ctx.lineTo(ox + Math.cos(ang)*fl, oy + Math.sin(ang)*fl); ctx.stroke();
   }
 
-  // MAIN STRANDS — barred S-curved fibers
+  // MAIN STRANDS — barred S-curved fibers, bulbous silhouette
   for (let i = 0; i < n; i++) {
     const t = i / (n - 1);
-    const ang = flowAng + (t - 0.5) * spreadRad + (rng() - 0.5) * 0.15;
-    const fl = baseLen * (1 + (rng() - 0.5) * 2 * P.lenJitter);
+    const originFrac = t * 0.8 + rng() * 0.2;
+    const taper = 1 - originFrac * 0.45;
+    const w = widthAt(originFrac);
+    const lateralOff = (rng()-0.5) * 2 * w * 0.5;
+    const ox = cx + dX*baseLen*originFrac + pX*lateralOff;
+    const oy = cy + dY*baseLen*originFrac + pY*lateralOff;
+    // Fibers sweep rearward with vertical spread proportional to envelope width
+    const vertSpread = spreadRad * (w / (baseLen*0.14+4));
+    const ang = flowAng + (rng() - 0.5) * vertSpread;
+    // Longer fibers in the bulge, shorter at tip
+    const fl = baseLen * (0.08 + rng()*0.25 + w*0.003) * taper * (1 + (rng()-0.5)*2*P.lenJitter);
     const dirX = Math.cos(ang), dirY = Math.sin(ang);
     const perpX = -dirY, perpY = dirX;
-    const sc1 = (rng()-0.5) * fl * P.sCurveAmount, sc2 = (rng()-0.5) * fl * P.sCurveAmount;
-    const cp1x = cx + dirX*fl*0.33 + perpX*sc1, cp1y = cy + dirY*fl*0.33 + perpY*sc1;
-    const cp2x = cx + dirX*fl*0.67 + perpX*sc2, cp2y = cy + dirY*fl*0.67 + perpY*sc2;
-    const ex = cx + dirX*fl, ey = cy + dirY*fl;
+    const sc1 = (rng()-0.5)*fl*P.sCurveAmount, sc2 = (rng()-0.5)*fl*P.sCurveAmount;
+    const cp1x = ox+dirX*fl*0.33+perpX*sc1, cp1y = oy+dirY*fl*0.33+perpY*sc1;
+    const cp2x = ox+dirX*fl*0.67+perpX*sc2, cp2y = oy+dirY*fl*0.67+perpY*sc2;
+    const endX = ox+dirX*fl, endY = oy+dirY*fl;
     const alpha = P.alphaMin + rng() * (P.alphaMax - P.alphaMin);
-    const lw = P.widthMin + rng() * (P.widthMax - P.widthMin);
-    const bf = 1 + (rng() - 0.5) * 0.15;
+    const lw = (P.widthMin + rng() * (P.widthMax - P.widthMin)) * taper;
+    const colorT = originFrac * 0.4;
+    const cr = baseRGB[0]+(tipRGB[0]-baseRGB[0])*colorT;
+    const cg = baseRGB[1]+(tipRGB[1]-baseRGB[1])*colorT;
+    const cb = baseRGB[2]+(tipRGB[2]-baseRGB[2])*colorT;
+    const bf = 1 + (rng()-0.5)*0.15;
     const segs = P.barSegments + randInt(-1, 1);
     const barOff = rng() * 0.12;
     ctx.lineWidth = lw;
     for (let s = 0; s < segs * 2; s++) {
-      const t0 = Math.min(1, s / (segs*2) + barOff/segs);
-      const t1 = Math.min(1, (s+1) / (segs*2) + barOff/segs);
+      const t0 = Math.min(1, s/(segs*2) + barOff/segs);
+      const t1 = Math.min(1, (s+1)/(segs*2) + barOff/segs);
       if (t0 >= 1) break;
       const isBar = s % 2 === 1;
-      const rgb = isBar ? barRGB : baseRGB;
-      ctx.strokeStyle = rgbaStr(rgb[0]*bf, rgb[1]*bf, rgb[2]*bf, isBar ? alpha*0.9 : alpha);
+      const rgb = isBar ? barRGB : [cr, cg, cb];
+      ctx.strokeStyle = rgbaStr(rgb[0]*bf, rgb[1]*bf, rgb[2]*bf, isBar ? alpha*0.85 : alpha);
       ctx.beginPath();
       const subN = 3;
       for (let ss = 0; ss <= subN; ss++) {
-        const tt = t0 + (t1-t0) * (ss/subN); const it = 1-tt;
-        const x = it*it*it*cx + 3*it*it*tt*cp1x + 3*it*tt*tt*cp2x + tt*tt*tt*ex;
-        const y = it*it*it*cy + 3*it*it*tt*cp1y + 3*it*tt*tt*cp2y + tt*tt*tt*ey;
+        const tt = t0 + (t1-t0)*(ss/subN); const it = 1-tt;
+        const x = it*it*it*ox + 3*it*it*tt*cp1x + 3*it*tt*tt*cp2x + tt*tt*tt*endX;
+        const y = it*it*it*oy + 3*it*it*tt*cp1y + 3*it*tt*tt*cp2y + tt*tt*tt*endY;
         if (ss===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       }
       ctx.stroke();
     }
   }
 
-  // GUARD HAIRS — extra-long wisps
+  // GUARD HAIRS — extra-long wisps, heavier in the bulge
   const gh = P.guardHairs;
   for (let i = 0; i < Math.floor(gh.count * density); i++) {
-    const ang = flowAng + (rng() - 0.5) * spreadRad * 0.5;
-    const fl = gh.lenMin + rng() * (gh.lenMax - gh.lenMin);
-    const [fr,fg,fb] = jitterBrightness(baseCol, 0.2, 0.15);
+    const origF = 0.15 + rng()*0.75;
+    const w = widthAt(origF);
+    const lateralOff = (rng()-0.5) * 2 * w * 0.4;
+    const ox = cx + dX*baseLen*origF + pX*lateralOff;
+    const oy = cy + dY*baseLen*origF + pY*lateralOff;
+    const ang = flowAng + (rng()-0.5)*spreadRad*0.5;
+    const fl = (gh.lenMin + rng()*(gh.lenMax-gh.lenMin)) * (1 + w*0.01);
+    const [fr,fg,fb] = jitterBrightness(tipCol, 0.12, 0.15);
     ctx.strokeStyle = rgbaStr(fr, fg, fb, gh.alpha);
-    ctx.lineWidth = gh.widthMin + rng() * (gh.widthMax - gh.widthMin);
-    ctx.beginPath(); ctx.moveTo(cx+(rng()-0.5)*3, cy+(rng()-0.5)*3);
-    ctx.lineTo(cx+Math.cos(ang)*fl, cy+Math.sin(ang)*fl); ctx.stroke();
+    ctx.lineWidth = gh.widthMin + rng()*(gh.widthMax-gh.widthMin);
+    ctx.beginPath(); ctx.moveTo(ox+(rng()-0.5)*3, oy+(rng()-0.5)*3);
+    ctx.lineTo(ox+Math.cos(ang)*fl, oy+Math.sin(ang)*fl); ctx.stroke();
   }
   ctx.restore();
 }
@@ -1314,61 +1517,96 @@ function drawCrosscutCollar(ctx, p) {
   const cx = p.x, cy = p.y, radius = p.radius || 16;
   const density = p.density || 1;
   const col = getColor(p.color || 'olive-crosscut');
+  const tipCol = p.tipColor ? getColor(p.tipColor) : col;
+  const shadowCol = p.shadowColor ? getColor(p.shadowColor) : col;
   const [br,bg,bb] = hexToRgb(col);
+  const [tr,tg,tb] = hexToRgb(tipCol);
+  const [sr_,sg,sb] = hexToRgb(shadowCol);
   ctx.save(); ctx.lineCap = 'round';
 
-  // base mass
-  ctx.fillStyle = rgbaStr(br*0.6, bg*0.6, bb*0.6, 0.35);
-  ctx.beginPath(); ctx.arc(cx, cy, radius*0.7, 0, Math.PI*2); ctx.fill();
+  // Swept teardrop shape: half-circle on left, tapered extension right.
+  // rearExt controls how far the collar extends to the right
+  const rearExt = radius * 1.8;
 
-  // UNDERCOAT
+  // base mass — elongated teardrop dark core
+  ctx.fillStyle = rgbaStr(sr_*0.65, sg*0.65, sb*0.65, 0.38);
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius*0.7, Math.PI*0.5, Math.PI*1.5, false);
+  ctx.lineTo(cx + rearExt*0.7, cy);
+  ctx.closePath();
+  ctx.fill();
+
+  // Helper: generate a fiber angle biased rearward (to the right)
+  function sweptAngle() {
+    // ~60% of fibers flow rightward, ~25% up/down, ~15% forward-left
+    const r = rng();
+    if (r < 0.60) return (rng()-0.5)*0.9;                  // rightward ±~50°
+    if (r < 0.85) return (rng()<0.5?-1:1)*(0.8+rng()*0.8); // up/down ~45-90°
+    return Math.PI + (rng()-0.5)*0.7;                       // forward/left (face)
+  }
+
+  // Helper: fiber origin distributed in the teardrop footprint
+  function sweptOrigin() {
+    const ang = sweptAngle();
+    const isRight = Math.cos(ang) > 0;
+    const maxR = isRight ? rearExt * 0.35 : radius * 0.35;
+    const rr = rng() * maxR;
+    const ox = cx + Math.cos(ang) * rr * (isRight ? 0.5 : 0.3);
+    const oy = cy + Math.sin(ang) * rr * 0.3;
+    return [ox, oy];
+  }
+
+  // UNDERCOAT — shadow color, short dense fibers, swept rearward
   const uc = P.undercoat;
   for (let i = 0; i < Math.floor(uc.fibers * density); i++) {
-    const ang = rng()*Math.PI*2;
+    const ang = sweptAngle();
     const fl = uc.lenMin + rng()*(uc.lenMax-uc.lenMin);
-    const startR = radius*0.15 + rng()*radius*0.25;
-    const sx = cx+Math.cos(ang)*startR, sy = cy+Math.sin(ang)*startR;
-    const ex = cx+Math.cos(ang)*(startR+fl), ey = cy+Math.sin(ang)*(startR+fl);
-    const [fr,fg,fb] = jitterBrightness(col, uc.brightness, 0.12);
+    const [ox, oy] = sweptOrigin();
+    const ex = ox+Math.cos(ang)*fl, ey = oy+Math.sin(ang)*fl;
+    const [fr,fg,fb] = jitterBrightness(shadowCol, uc.brightness, 0.12);
     const alpha = uc.alphaMin + rng()*(uc.alphaMax-uc.alphaMin);
     ctx.strokeStyle = rgbaStr(fr,fg,fb,alpha);
     ctx.lineWidth = uc.widthMin + rng()*(uc.widthMax-uc.widthMin);
-    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ex,ey); ctx.stroke();
   }
 
-  // MAIN FIBERS — curved
+  // MAIN FIBERS — curved, two-tone, swept rearward
   const n = Math.floor(P.outerFibers * density);
-  const jitRad = P.angleJitterDeg * Math.PI / 180;
   for (let i = 0; i < n; i++) {
-    const baseAng = (i/n)*Math.PI*2;
-    const ang = baseAng + (rng()-0.5)*2*jitRad;
-    const fl = P.lenMin + rng()*(P.lenMax-P.lenMin);
-    const startR = radius*0.12;
-    const sx = cx+Math.cos(ang)*startR, sy = cy+Math.sin(ang)*startR;
+    const ang = sweptAngle();
+    // Fibers going right are longer (rearward flow)
+    const rightBias = Math.max(0, Math.cos(ang));
+    const fl = (P.lenMin + rng()*(P.lenMax-P.lenMin)) * (1 + rightBias * 0.6);
+    const [ox, oy] = sweptOrigin();
     const dirX = Math.cos(ang), dirY = Math.sin(ang);
     const perpX = -dirY, perpY = dirX;
     const curve = (rng()-0.5)*2*P.curveAmount;
-    const midX = sx+dirX*fl*0.5+perpX*curve, midY = sy+dirY*fl*0.5+perpY*curve;
-    const ex = sx+dirX*fl, ey = sy+dirY*fl;
-    const bf = 1+(rng()-0.5)*0.2;
+    const midX = ox+dirX*fl*0.5+perpX*curve, midY = oy+dirY*fl*0.5+perpY*curve;
+    const ex = ox+dirX*fl, ey = oy+dirY*fl;
     const alpha = P.alphaMin + rng()*(P.alphaMax-P.alphaMin);
-    ctx.strokeStyle = rgbaStr(br*bf, bg*bf, bb*bf, alpha);
+    const fiberT = rng();
+    const fr = br + (tr-br)*fiberT*0.7;
+    const fg = bg + (tg-bg)*fiberT*0.7;
+    const fb_ = bb + (tb-bb)*fiberT*0.7;
+    const bf = 1+(rng()-0.5)*0.2;
+    ctx.strokeStyle = rgbaStr(fr*bf, fg*bf, fb_*bf, alpha);
     ctx.lineWidth = P.widthMin + rng()*(P.widthMax-P.widthMin);
-    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.quadraticCurveTo(midX,midY,ex,ey); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox,oy); ctx.quadraticCurveTo(midX,midY,ex,ey); ctx.stroke();
   }
 
-  // GUARD HAIRS — extra-long wispy
+  // GUARD HAIRS — extra-long wispy, tip color, swept right
   const gh = P.guardHairs;
   for (let i = 0; i < Math.floor(gh.count * density); i++) {
-    const ang = rng()*Math.PI*2;
-    const fl = gh.lenMin + rng()*(gh.lenMax-gh.lenMin);
+    const ang = sweptAngle();
+    const rightBias = Math.max(0, Math.cos(ang));
+    const fl = (gh.lenMin + rng()*(gh.lenMax-gh.lenMin)) * (1 + rightBias * 0.5);
     const dirX = Math.cos(ang), dirY = Math.sin(ang);
     const perpX = -dirY, perpY = dirX;
     const curve = (rng()-0.5)*2*gh.curveAmount;
     const midX = cx+dirX*fl*0.5+perpX*curve, midY = cy+dirY*fl*0.5+perpY*curve;
     const ex = cx+dirX*fl, ey = cy+dirY*fl;
     const bf = 1+(rng()-0.5)*0.15;
-    ctx.strokeStyle = rgbaStr(br*bf, bg*bf, bb*bf, gh.alpha);
+    ctx.strokeStyle = rgbaStr(tr*bf, tg*bf, tb*bf, gh.alpha);
     ctx.lineWidth = gh.widthMin + rng()*(gh.widthMax-gh.widthMin);
     ctx.beginPath(); ctx.moveTo(cx,cy); ctx.quadraticCurveTo(midX,midY,ex,ey); ctx.stroke();
   }
@@ -1382,25 +1620,46 @@ function drawCrystalFlashStrands(ctx, p) {
   const P = TEXTURE_PARAMS.crystalFlash;
   const cx = p.x, cy = p.y, ang = p.angle || 0;
   const length = p.length || 50, count = p.count || P.defaultCount;
-  const col = getColor(p.color || 'flash-black');
+  const col = getColor(p.color || 'flash-purple');
+  const hlCol = p.highlightColor ? getColor(p.highlightColor) : '#8a6ab0';
   const [r,g,b] = hexToRgb(col);
+  const [hlr,hlg,hlb] = hexToRgb(hlCol);
   const spreadRad = P.spreadDeg * Math.PI / 180;
+  const amp = P.wavyAmplitude || 3;
+  const freq = P.wavyFrequency || 0.08;
   ctx.save(); ctx.lineCap = 'round';
-  for (let i = 0; i < count; i++) {
-    const fAng = ang + (i/count - 0.5)*spreadRad + (rng()-0.5)*0.08;
-    const fl = length * (0.82 + rng()*0.36);
-    const ex = cx + Math.cos(fAng)*fl, ey = cy + Math.sin(fAng)*fl;
-    ctx.strokeStyle = rgbaStr(r,g,b,0.65);
-    ctx.lineWidth = P.width;
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(ex,ey); ctx.stroke();
-    // shimmer
-    const nSh = Math.floor(fl / P.shimmerSpacing);
-    for (let s = 1; s < nSh; s++) {
-      const t = s/nSh;
-      const sx = cx+(ex-cx)*t, sy = cy+(ey-cy)*t;
-      ctx.strokeStyle = 'rgba(255,255,255,' + (P.shimmerAlpha*(0.4+rng()*0.6)) + ')';
-      ctx.lineWidth = P.shimmerWidth;
-      ctx.beginPath(); ctx.moveTo(sx-1.5,sy-1); ctx.lineTo(sx+1.5,sy+1); ctx.stroke();
+  // Draw strands on both sides (above and below body)
+  for (let side = -1; side <= 1; side += 2) {
+    const nSide = Math.ceil(count / 2);
+    for (let i = 0; i < nSide; i++) {
+      const fAng = ang + (i/nSide - 0.5)*spreadRad + (rng()-0.5)*0.06;
+      const fl = length * (0.85 + rng()*0.28);
+      const dirX = Math.cos(fAng), dirY = Math.sin(fAng);
+      const perpX = -dirY*side, perpY = dirX*side;
+      // Wavy path
+      ctx.strokeStyle = rgbaStr(r, g, b, 0.50 + rng()*0.18);
+      ctx.lineWidth = 0.5 + rng()*0.5;
+      ctx.beginPath();
+      const steps = Math.max(20, Math.floor(fl / 15));
+      for (let s = 0; s <= steps; s++) {
+        const t = s/steps;
+        const wave = Math.sin(t*fl*freq*Math.PI*2)*amp*(0.5+rng()*0.5);
+        const wx = cx + dirX*fl*t + perpX*wave;
+        const wy = cy + dirY*fl*t + perpY*wave + side*3;
+        if (s===0) ctx.moveTo(wx, wy); else ctx.lineTo(wx, wy);
+      }
+      ctx.stroke();
+      // Holographic highlight dots along strand
+      const nSh = Math.floor(fl / P.shimmerSpacing);
+      for (let s = 1; s < nSh; s++) {
+        if (rng() > 0.55) continue;
+        const t = s/nSh;
+        const wave = Math.sin(t*fl*freq*Math.PI*2)*amp*0.5;
+        const sx = cx + dirX*fl*t + perpX*wave;
+        const sy = cy + dirY*fl*t + perpY*wave + side*3;
+        ctx.fillStyle = rgbaStr(hlr, hlg, hlb, P.shimmerAlpha*(0.5+rng()*0.5));
+        ctx.beginPath(); ctx.arc(sx, sy, 0.7+rng()*0.7, 0, Math.PI*2); ctx.fill();
+      }
     }
   }
   ctx.restore();
@@ -1411,7 +1670,7 @@ function drawCrystalFlashStrands(ctx, p) {
    ============================================================ */
 function drawWeedGuardMono(ctx, hook) {
   ctx.save();
-  ctx.strokeStyle = '#888888'; ctx.lineWidth = 1.4; ctx.lineCap = 'round'; ctx.setLineDash([]);
+  ctx.strokeStyle = 'rgba(216,221,226,0.7)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([]);
   const eyeX = hook.eye.x + hook.eye.r, eyeY = hook.eye.y;
   const last = hook.bend[hook.bend.length-1], prev = hook.bend[hook.bend.length-2];
   const pdx=last[0]-prev[0], pdy=last[1]-prev[1], plen=Math.hypot(pdx,pdy)||1;
@@ -1446,19 +1705,28 @@ function renderFly(ctx, cfg) {
   const thoraxR1 = maxRadius * 0.95;
   const thoraxR2 = maxRadius * (0.6 + taper * 0.2);
 
+  // 0. Vise jaw tips (behind everything)
+  drawViseJaws(ctx, hook);
+
   // 1. Hook
-  drawHook(ctx, hook);
+  drawHook(ctx, hook, cfg.hookColor);
 
   // 2. Weed guard
   if (cfg.weedGuard) drawWeedGuardMono(ctx, hook);
 
-  // 3. Tail
+  // 3. Crystal flash (behind fur layers)
+  if (cfg.flash) {
+    const flashAt = samplePoly(hook.spine, wingHackleAt + 0.08);
+    drawCrystalFlashStrands(ctx, { x:flashAt[0], y:flashAt[1], angle:flashAt[2], length:cfg.flash.length||50, color:cfg.flash.color, highlightColor:cfg.flash.highlightColor, count:cfg.flash.count||5 });
+  }
+
+  // 4. Tail
   if (cfg.tail) {
     const tailAt = samplePoly(hook.spine, bodyEnd);
     const tailAngle = tailAt[2];
     const tailLen = cfg.tail.length || 30;
     if (cfg.tail.material === 'bunnyStrip') {
-      drawBunnyStripTail(ctx, { x:tailAt[0], y:tailAt[1], angle:tailAngle, length:tailLen, color:cfg.tail.color, barColor:cfg.tail.barColor, density:cfg.tail.density||1 });
+      drawBunnyStripTail(ctx, { x:tailAt[0], y:tailAt[1], angle:tailAngle, length:tailLen, color:cfg.tail.color, barColor:cfg.tail.barColor, hideColor:cfg.tail.hideColor, tipColor:cfg.tail.tipColor, density:cfg.tail.density||1 });
     } else if (cfg.tail.material === 'marabou') {
       drawMarabou(ctx, { x:tailAt[0], y:tailAt[1], angle:tailAngle, length:tailLen*1.3, color:cfg.tail.color, density:1 });
     } else if (cfg.tail.material === 'hair') {
@@ -1483,7 +1751,24 @@ function renderFly(ctx, cfg) {
     else drawDubbing(ctx, params);
   }
 
-  // 5. Ribbing
+  // 5a. Hook point/barb redraw above fur (hero detail)
+  {
+    const col=getColor(cfg.hookColor||'tungsten');
+    const last=hook.bend[hook.bend.length-1],prev=hook.bend[hook.bend.length-2];
+    const pdx=last[0]-prev[0],pdy=last[1]-prev[1],plen=Math.hypot(pdx,pdy)||1;
+    const ptLen=hook.gap*0.38;
+    const px=last[0]+(pdx/plen)*ptLen,py=last[1]+(pdy/plen)*ptLen;
+    ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.strokeStyle=col; ctx.lineWidth=hook.wireW;
+    ctx.beginPath(); ctx.moveTo(last[0],last[1]); ctx.lineTo(px,py); ctx.stroke();
+    const perp1=-pdy/plen,perp2=pdx/plen;
+    ctx.lineWidth=hook.wireW*0.85;
+    ctx.beginPath(); ctx.moveTo(last[0]+(px-last[0])*0.65,last[1]+(py-last[1])*0.65);
+    ctx.lineTo(last[0]+(px-last[0])*0.3+perp1*hook.gap*0.14,last[1]+(py-last[1])*0.3+perp2*hook.gap*0.14); ctx.stroke();
+    ctx.restore();
+  }
+
+  // 5b. Ribbing
   if (cfg.ribbing && cfg.body) {
     const frontT = (cat==='nymph') ? thoraxEnd : bodyStart;
     const front = samplePoly(hook.spine, frontT), rear = samplePoly(hook.spine, bodyEnd);
@@ -1503,16 +1788,10 @@ function renderFly(ctx, cfg) {
     drawWingCase(ctx, { x1:front[0], y1:front[1], x2:rear[0], y2:rear[1], r1:thoraxR1, r2:thoraxR2, color:cfg.wingCase.color });
   }
 
-  // 8. Crystal flash
-  if (cfg.flash) {
-    const at = samplePoly(hook.spine, wingHackleAt + 0.08);
-    drawCrystalFlashStrands(ctx, { x:at[0], y:at[1], angle:at[2], length:cfg.flash.length||50, color:cfg.flash.color, count:cfg.flash.count||5 });
-  }
-
   // 9. Collar (crosscut bunny)
   if (cfg.collar) {
     const at = samplePoly(hook.spine, wingHackleAt + 0.02);
-    drawCrosscutCollar(ctx, { x:at[0], y:at[1], radius:maxRadius*0.85, color:cfg.collar.color, density:cfg.collar.density||1 });
+    drawCrosscutCollar(ctx, { x:at[0], y:at[1], radius:maxRadius*1.05, color:cfg.collar.color, tipColor:cfg.collar.tipColor, shadowColor:cfg.collar.shadowColor, density:cfg.collar.density||1 });
   }
 
   // 10. Wing
@@ -1541,10 +1820,248 @@ function renderFly(ctx, cfg) {
   if (cfg.beadHead) { const beadR=Math.max(4,hook.gap*0.42); drawBeadHead(ctx,{x:hook.shankStart[0]+beadR*0.7,y:hook.shankStart[1],r:beadR,color:cfg.beadHead.color}); }
 
   // 13. Eyes — lead (dumbbell) renders 20% larger than bead-chain for visual weight
-  if (cfg.eyes) { const sizeMul=cfg.eyes.style==='dumbbell'?1.2:1.0; const beadR=Math.max(5,hook.gap*0.5)*sizeMul; drawDumbbellEyes(ctx,{x:hook.shankStart[0]+beadR*0.6,y:hook.shankStart[1],width:beadR*2,color:cfg.eyes.color,style:cfg.eyes.style}); }
+  if (cfg.eyes) { const sizeMul=cfg.eyes.style==='dumbbell'?1.35:1.0; const beadR=Math.max(5,hook.gap*0.52)*sizeMul; drawDumbbellEyes(ctx,{x:hook.shankStart[0]+beadR*0.6,y:hook.shankStart[1],width:beadR*2.1,color:cfg.eyes.color,style:cfg.eyes.style}); }
 }
 
-return { renderFly, buildHook };
+/* ============================================================
+   TRACED FLY RENDERER — draws from traced polygon/path data
+   instead of the parametric hook-spine pipeline.
+   ============================================================ */
+const TRACED_FLY_DATA = {"sections":[{"id":"collar","points":[{"x":261,"y":287},{"x":271,"y":267},{"x":288,"y":255},{"x":317,"y":243},{"x":342,"y":238},{"x":354,"y":239},{"x":362,"y":259},{"x":369,"y":283},{"x":369,"y":315},{"x":358,"y":331},{"x":338,"y":337},{"x":308,"y":332},{"x":282,"y":324},{"x":272,"y":318},{"x":267,"y":306},{"x":264,"y":296}],"guides":[],"filled":true,"props":{"baseColor":"#5a6b2e","tipColor":"#7a8a3e","shadowColor":"#3a4820","density":991,"fiberLen":25,"fiberLenVar":15,"fiberWidth":0.3,"sweepAngle":0,"opacity":0.85}},{"id":"body","points":[],"guides":[],"filled":false,"props":{"baseColor":"#c44a1e","tipColor":"#d85528","barColor":"#8a2e14","density":300,"fiberLen":15,"fiberLenVar":10,"fiberWidth":0.9,"sweepAngle":0,"barFreq":5,"opacity":0.85}},{"id":"tail","points":[{"x":334,"y":255},{"x":360,"y":240},{"x":376,"y":231},{"x":411,"y":231},{"x":435,"y":239},{"x":461,"y":245},{"x":489,"y":256},{"x":517,"y":267},{"x":536,"y":281},{"x":544,"y":286},{"x":516,"y":286},{"x":479,"y":285},{"x":444,"y":286},{"x":423,"y":286},{"x":391,"y":280},{"x":369,"y":278},{"x":347,"y":285},{"x":337,"y":285},{"x":337,"y":272},{"x":336,"y":263}],"guides":[],"filled":true,"props":{"baseColor":"#c44a1e","tipColor":"#d85528","barColor":"#8a2e14","hideColor":"#4a1808","density":771,"fiberLen":20,"fiberLenVar":2,"fiberWidth":0.9,"sweepAngle":-145,"barFreq":3,"hideSpine":true,"opacity":0.85}},{"id":"flash","points":[],"strands":[[{"x":542,"y":287},{"x":464,"y":300},{"x":412,"y":299},{"x":368,"y":290},{"x":354,"y":290},{"x":354,"y":290}],[{"x":339,"y":237},{"x":365,"y":217},{"x":365,"y":232}],[{"x":374,"y":231},{"x":402,"y":222},{"x":403,"y":228}],[{"x":414,"y":236},{"x":456,"y":222},{"x":456,"y":222}],[{"x":431,"y":243},{"x":455,"y":234},{"x":456,"y":234}],[{"x":462,"y":248},{"x":483,"y":245},{"x":483,"y":245}],[{"x":493,"y":261},{"x":529,"y":262},{"x":529,"y":262}],[{"x":510,"y":267},{"x":540,"y":266},{"x":540,"y":266}],[{"x":508,"y":277},{"x":539,"y":279},{"x":539,"y":279}],[{"x":431,"y":288},{"x":503,"y":277},{"x":503,"y":277}],[{"x":376,"y":281},{"x":428,"y":288},{"x":428,"y":288}]],"guides":[],"filled":true,"props":{"baseColor":"#3a2850","hlColor":"#8a6ab0","count":31,"waviness":3,"strokeW":0.7,"opacity":0.55}},{"id":"hook","points":[{"x":214,"y":313},{"x":306,"y":290},{"x":319,"y":278},{"x":325,"y":264},{"x":327,"y":254},{"x":328,"y":243},{"x":324,"y":236},{"x":320,"y":230},{"x":311,"y":228},{"x":305,"y":227},{"x":299,"y":228},{"x":293,"y":230},{"x":286,"y":232},{"x":282,"y":235},{"x":276,"y":238},{"x":274,"y":240}],"guides":[],"filled":true,"props":{"color":"#b8bcc0","wireW":2.8,"shadow":true}},{"id":"weedguard","points":[],"guides":[],"filled":false,"props":{"color":"#d8dde2","strokeW":2,"opacity":0.7}}],"eyeL":{"x":253,"y":298},"eyeR":{"x":257,"y":312},"seed":42};
+
+function _trPointInPoly(p,poly){
+  var x=p.x,y=p.y,inside=false;
+  for(var i=0,j=poly.length-1;i<poly.length;j=i++){
+    var xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))inside=!inside;
+  }
+  return inside;
+}
+function _trBBox(pts){
+  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  pts.forEach(function(p){x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y);});
+  return {x:x0,y:y0,w:x1-x0,h:y1-y0};
+}
+function _trFlowAt(x,y,guides,defaultAngle){
+  if(!guides||guides.length===0)return (defaultAngle||0)*Math.PI/180;
+  var twx=0,twy=0,tw=0;
+  guides.forEach(function(g){
+    for(var i=0;i<g.length-1;i++){
+      var ax=g[i].x,ay=g[i].y,bx=g[i+1].x,by=g[i+1].y;
+      var dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy);if(len<1)continue;
+      var t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(len*len)));
+      var px=ax+t*dx,py=ay+t*dy,d=Math.hypot(x-px,y-py)+1;
+      var w=1/(d*d);twx+=dx/len*w;twy+=dy/len*w;tw+=w;
+    }
+  });
+  if(tw<0.0001)return (defaultAngle||0)*Math.PI/180;
+  return Math.atan2(twy/tw,twx/tw);
+}
+
+// Smooth cubic spline through points (Catmull-Rom → cubic bezier)
+function _trSmoothPath(ctx, pts, closed) {
+  if (pts.length < 2) return;
+  if (pts.length === 2) { ctx.moveTo(pts[0].x,pts[0].y); ctx.lineTo(pts[1].x,pts[1].y); return; }
+  const tension = 0.3;
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i === 0 ? (closed ? pts.length-1 : 0) : i-1];
+    const p1 = pts[i], p2 = pts[i+1];
+    const p3 = pts[i+2 < pts.length ? i+2 : (closed ? (i+2)%pts.length : pts.length-1)];
+    const cp1x = p1.x + (p2.x - p0.x) * tension;
+    const cp1y = p1.y + (p2.y - p0.y) * tension;
+    const cp2x = p2.x - (p3.x - p1.x) * tension;
+    const cp2y = p2.y - (p3.y - p1.y) * tension;
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+  }
+}
+
+// visibleSet: null = draw all, or a Set of section ids to draw
+function renderTracedFly(ctx, data, seedVal, visibleSet) {
+  rng = mulberry32(seedVal || data.seed || 42);
+  const D = data || TRACED_FLY_DATA;
+  const vis = visibleSet; // null = all
+
+  const order = ['hook','weedguard','flash','body','tail','collar'];
+
+  order.forEach(function(secId) {
+    // Step visibility: map traced section ids to TYING_STEPS layer keys
+    // hook always shows (it's the base). Other sections map to layer keys.
+    if (vis) {
+      const layerMap = {hook:null, weedguard:'weedGuard', flash:'flash', body:'body', tail:'tail', collar:'collar'};
+      const layerKey = layerMap[secId];
+      // null = always show (hook). Otherwise check if layer is in the visible set.
+      if (layerKey !== null && !vis.has(layerKey)) return;
+    }
+    const sec = D.sections.find(function(s){return s.id===secId;});
+    if (!sec || sec.points.length < 2) return;
+    const P = sec.props;
+
+    if (secId === 'hook') {
+      // Smooth spline hook with sharp point at end
+      ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+      if (P.shadow) {
+        ctx.strokeStyle='rgba(90,94,100,0.5)'; ctx.lineWidth=(P.wireW||2.5)+1.5;
+        ctx.beginPath(); _trSmoothPath(ctx, sec.points.map(function(p){return{x:p.x,y:p.y+0.5};}), false); ctx.stroke();
+      }
+      ctx.strokeStyle=P.color||'#b8bcc0'; ctx.lineWidth=P.wireW||2.5;
+      ctx.beginPath(); _trSmoothPath(ctx, sec.points, false); ctx.stroke();
+      // Highlight along top
+      ctx.strokeStyle='rgba(255,255,255,0.22)'; ctx.lineWidth=0.7;
+      ctx.beginPath(); _trSmoothPath(ctx, sec.points.map(function(p){return{x:p.x,y:p.y-1};}), false); ctx.stroke();
+      // Sharp point: last 2 points form a crisp tapered tip
+      if (sec.points.length >= 2) {
+        const tip = sec.points[sec.points.length-1], prev = sec.points[sec.points.length-2];
+        const ang = Math.atan2(tip.y-prev.y, tip.x-prev.x);
+        const tipLen = 6;
+        ctx.strokeStyle=P.color||'#b8bcc0'; ctx.lineWidth=P.wireW*0.6||1.5;
+        ctx.beginPath(); ctx.moveTo(tip.x, tip.y);
+        ctx.lineTo(tip.x+Math.cos(ang)*tipLen, tip.y+Math.sin(ang)*tipLen); ctx.stroke();
+        // Barb
+        const barbAng = ang + 2.6;
+        ctx.lineWidth = P.wireW*0.45||1;
+        ctx.beginPath(); ctx.moveTo(tip.x+Math.cos(ang)*tipLen*0.5, tip.y+Math.sin(ang)*tipLen*0.5);
+        ctx.lineTo(tip.x+Math.cos(ang)*tipLen*0.5+Math.cos(barbAng)*3, tip.y+Math.sin(ang)*tipLen*0.5+Math.sin(barbAng)*3);
+        ctx.stroke();
+      }
+      // Hook eye ring at start
+      if (sec.points.length >= 1) {
+        const eyePt = sec.points[0];
+        ctx.strokeStyle=P.color||'#b8bcc0'; ctx.lineWidth=P.wireW*0.8||2;
+        ctx.beginPath(); ctx.arc(eyePt.x, eyePt.y, 4, 0, Math.PI*2); ctx.stroke();
+      }
+      ctx.restore();
+      return;
+    }
+
+    if (secId === 'weedguard') {
+      if (sec.points.length < 2) return;
+      ctx.save(); ctx.lineCap='round';
+      ctx.strokeStyle=P.color||'#d8dde2'; ctx.globalAlpha=P.opacity||0.7; ctx.lineWidth=P.strokeW||2;
+      ctx.beginPath(); _trSmoothPath(ctx, sec.points, false); ctx.stroke();
+      ctx.restore();
+      return;
+    }
+
+    if (secId === 'flash') {
+      ctx.save(); ctx.lineCap='round';
+      const baseRGB=hexToRgb(P.baseColor||'#3a2850');
+      const hlRGB=hexToRgb(P.hlColor||'#8a6ab0');
+      // Flash stores multiple strands in sec.strands (array of arrays)
+      // Fall back to sec.points as a single strand for legacy data
+      const strands = sec.strands && sec.strands.length > 0 ? sec.strands : (sec.points.length > 1 ? [sec.points] : []);
+      strands.forEach(function(strand) {
+        if (strand.length < 2) return;
+        // Draw main strand as smooth wavy path
+        ctx.strokeStyle=rgbaStr(baseRGB[0],baseRGB[1],baseRGB[2],P.opacity||0.5);
+        ctx.lineWidth=(P.strokeW||0.7)*(0.6+rng()*0.6);
+        ctx.beginPath(); _trSmoothPath(ctx, strand, false); ctx.stroke();
+        // Shimmer highlights along strand
+        for (let k=1; k<strand.length-1; k++) {
+          if (rng()>0.5) continue;
+          ctx.fillStyle=rgbaStr(hlRGB[0],hlRGB[1],hlRGB[2],0.3+rng()*0.2);
+          ctx.beginPath();ctx.arc(strand[k].x+(rng()-0.5)*3,strand[k].y+(rng()-0.5)*3,0.6+rng()*0.8,0,Math.PI*2);ctx.fill();
+        }
+      });
+      ctx.restore();
+      return;
+    }
+
+    // Filled fur sections: collar, body, tail
+    if (sec.points.length < 3) return;
+    const bbox = _trBBox(sec.points);
+    const baseRGB = hexToRgb(P.baseColor||'#888');
+    const tipRGB = P.tipColor ? hexToRgb(P.tipColor) : baseRGB;
+    const barRGB = P.barColor ? hexToRgb(P.barColor) : null;
+    const n = P.density || 200;
+    // Expand bbox for soft edge overflow fibers
+    const overflow = Math.max(P.fiberLen || 15, 20);
+    const softBBox = {x:bbox.x-overflow*0.3, y:bbox.y-overflow*0.3, w:bbox.w+overflow*0.6, h:bbox.h+overflow*0.6};
+
+    ctx.save(); ctx.lineCap='round';
+
+    // Soft base fill (no hard polygon clip — just a blurred tint)
+    ctx.fillStyle=rgbaStr(baseRGB[0]*0.5,baseRGB[1]*0.5,baseRGB[2]*0.5,0.2);
+    ctx.beginPath();
+    sec.points.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+    ctx.closePath(); ctx.fill();
+
+    // Hide spine for tail
+    if(P.hideSpine && sec.points.length>=2){
+      const hideRGB=hexToRgb(P.hideColor||'#4a1808');
+      ctx.strokeStyle=rgbaStr(hideRGB[0],hideRGB[1],hideRGB[2],0.4);
+      ctx.lineWidth=3;ctx.beginPath();
+      const topN=Math.ceil(sec.points.length/2);
+      for(let i=0;i<topN;i++){if(i===0)ctx.moveTo(sec.points[i].x,sec.points[i].y);else ctx.lineTo(sec.points[i].x,sec.points[i].y);}
+      ctx.stroke();
+    }
+
+    // Generate fibers — ~85% inside polygon, ~15% near edges (soft overflow)
+    const defAngle = P.sweepAngle || 0;
+    let attempts=0;
+    for(let i=0;i<n;i++){
+      const px=softBBox.x+rng()*softBBox.w, py=softBBox.y+rng()*softBBox.h;
+      const inside = _trPointInPoly({x:px,y:py},sec.points);
+      if(!inside) {
+        // Allow ~15% of fibers to be near-edge overflow for soft look
+        // Find distance to nearest polygon edge
+        let minD=1e9;
+        for(let j=0;j<sec.points.length;j++){
+          const a=sec.points[j], b=sec.points[(j+1)%sec.points.length];
+          const dx=b.x-a.x,dy=b.y-a.y,len2=dx*dx+dy*dy;
+          if(len2<1){minD=Math.min(minD,Math.hypot(px-a.x,py-a.y));continue;}
+          const t=Math.max(0,Math.min(1,((px-a.x)*dx+(py-a.y)*dy)/len2));
+          minD=Math.min(minD,Math.hypot(px-(a.x+t*dx),py-(a.y+t*dy)));
+        }
+        if(minD>overflow*0.35||rng()>0.18){i--;attempts++;if(attempts>n*5)break;continue;}
+      }
+      attempts=0;
+      const angle=_trFlowAt(px,py,sec.guides,defAngle)+(rng()-0.5)*0.6;
+      const len=(P.fiberLen||15)+(rng()-0.5)*2*(P.fiberLenVar||10);
+      const ex=px+Math.cos(angle)*len, ey=py+Math.sin(angle)*len;
+      const perpX=-Math.sin(angle),perpY=Math.cos(angle);
+      const sc=(rng()-0.5)*len*0.15;
+      const mx=px+Math.cos(angle)*len*0.5+perpX*sc;
+      const my=py+Math.sin(angle)*len*0.5+perpY*sc;
+      const t=rng();
+      let cr=baseRGB[0]+(tipRGB[0]-baseRGB[0])*t*0.6;
+      let cg=baseRGB[1]+(tipRGB[1]-baseRGB[1])*t*0.6;
+      let cb=baseRGB[2]+(tipRGB[2]-baseRGB[2])*t*0.6;
+      const bf=1+(rng()-0.5)*0.2;
+      if(barRGB&&P.barFreq&&rng()<0.3){cr=barRGB[0];cg=barRGB[1];cb=barRGB[2];}
+      // Fibers outside polygon get reduced opacity for soft edge
+      const edgeAlpha = inside ? (P.opacity||0.8) : (P.opacity||0.8)*0.4;
+      ctx.strokeStyle=rgbaStr(cr*bf,cg*bf,cb*bf,edgeAlpha);
+      ctx.lineWidth=(P.fiberWidth||1)*(0.6+rng()*0.8);
+      ctx.beginPath();ctx.moveTo(px,py);ctx.quadraticCurveTo(mx,my,ex,ey);ctx.stroke();
+    }
+    ctx.restore();
+  });
+
+  // Eyes (only if visible)
+  if((!vis || vis.has('eyes')) && D.eyeL && D.eyeR){
+    [D.eyeL, D.eyeR].forEach(function(ep){
+      ctx.save();
+      const r=7;
+      const grad=ctx.createRadialGradient(ep.x-r*0.25,ep.y-r*0.25,r*0.05,ep.x+r*0.1,ep.y+r*0.1,r);
+      grad.addColorStop(0,'#2a2a2e');grad.addColorStop(0.35,'#0a0a0c');grad.addColorStop(0.75,'#050506');grad.addColorStop(1,'#020203');
+      ctx.fillStyle=grad;ctx.beginPath();ctx.arc(ep.x,ep.y,r,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=0.7;ctx.beginPath();ctx.arc(ep.x,ep.y,r,0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.45)';ctx.beginPath();ctx.arc(ep.x-r*0.3,ep.y-r*0.3,r*0.18,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    });
+    ctx.save();
+    const exx=(D.eyeL.x+D.eyeR.x)/2, eyy=(D.eyeL.y+D.eyeR.y)/2;
+    for(let i=0;i<5;i++){
+      const off=(i-2)*1.4;
+      ctx.strokeStyle='rgba(22,22,22,0.6)';ctx.lineWidth=0.8;
+      ctx.beginPath();ctx.moveTo(exx+off-2,D.eyeL.y);ctx.lineTo(exx+off+2,D.eyeR.y);ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+return { renderFly, renderTracedFly, buildHook, drawViseJaws, drawHook, drawDumbbellEyes, drawWeedGuardMono, VISE_PARAMS, TEXTURE_PARAMS, COLORS, TRACED_FLY_DATA, hexToRgb, rgbaStr, jitterBrightness, mulberry32 };
 })();
 </script>
 
@@ -1635,12 +2152,13 @@ const BUNNY_SLIDER = {
   techniques:["Thread base","Weed guard loop","Figure-8 eye wrap","Bunny strip palmering","Crosscut collar","UV cure finish"],
   rfConfig: {
     seed: 42, category:'streamer', hookType:'streamer', hookSize:2,
+    hookColor: '#b8bcc0',
     weedGuard: true,
-    tail: { material:'bunnyStrip', color:'#A0582E', barColor:'#2B1408', length:55, density:1 },
-    body: { material:'bunnyPalmered', color:'#A0582E', barColor:'#2B1408', taper:0.5, density:1.2 },
-    collar: { color:'#6B7A40', density:1.3 },
-    flash: { color:'#151515', count:5, length:45 },
-    eyes: { style:'bead-chain', color:'#1A1A1A' },
+    tail: { material:'bunnyStrip', color:'#c44a1e', barColor:'#8a2e14', hideColor:'#4a1808', tipColor:'#d85528', length:300, density:1.6 },
+    body: { material:'bunnyPalmered', color:'#c44a1e', barColor:'#8a2e14', taper:0.5, density:1.4 },
+    collar: { color:'#5a6b2e', tipColor:'#7a8a3e', shadowColor:'#3a4820', density:2.2 },
+    flash: { color:'#3a2850', highlightColor:'#8a6ab0', count:6, length:700 },
+    eyes: { style:'dumbbell', color:'#0a0a0c' },
     ribbing:null, thorax:null, wingCase:null, wing:null, hackle:null, beadHead:null
   }
 };
@@ -1815,9 +2333,9 @@ function runAlgorithm() {
   // Adjust eyes based on season
   const cfg = JSON.parse(JSON.stringify(BUNNY_SLIDER.rfConfig));
   if (sr.eyes === 'lead') {
-    cfg.eyes = { style:'dumbbell', color:'#1A1A1A' };
+    cfg.eyes = { style:'dumbbell', color:'#0a0a0c' };
   } else {
-    cfg.eyes = { style:'bead-chain', color:'#1A1A1A' };
+    cfg.eyes = { style:'bead-chain', color:'#0a0a0c' };
   }
   state.algorithmResult = sr;
   state.computedConfig = cfg;
@@ -1862,9 +2380,18 @@ function renderPatterns() {
   if (cv) {
     const ctx = cv.getContext("2d");
     ctx.fillStyle = "#ECEBE6"; ctx.fillRect(0,0,cv.width,cv.height);
-    ctx.save(); ctx.translate(20,-110);
-    FLY_RENDERER.renderFly(ctx, state.computedConfig || p.rfConfig);
-    ctx.restore();
+    if (FLY_RENDERER.TRACED_FLY_DATA) {
+      var scX2=cv.width/800, scY2=cv.height/500, sc2=Math.min(scX2,scY2)*1.38;
+      ctx.save();
+      ctx.translate(cv.width/2-400*sc2, cv.height/2-280*sc2);
+      ctx.scale(sc2, sc2);
+      FLY_RENDERER.renderTracedFly(ctx, FLY_RENDERER.TRACED_FLY_DATA, 42);
+      ctx.restore();
+    } else {
+      ctx.save(); ctx.translate(136,21); ctx.scale(0.435,0.435);
+      FLY_RENDERER.renderFly(ctx, state.computedConfig || p.rfConfig);
+      ctx.restore();
+    }
   }
 }
 
@@ -1886,8 +2413,8 @@ function selectPattern() {
 ===================================================================== */
 const ALL_LAYER_KEYS = ["tail","body","ribbing","thorax","wingCase","wing","hackle","beadHead","eyes","collar","flash","weedGuard"];
 const PART_REGIONS = {
-  body:{x:0.42,y:0.46,r:70}, collar:{x:0.26,y:0.44,r:40},
-  tail:{x:0.70,y:0.48,r:50}, eyes:{x:0.22,y:0.46,r:22}, flash:{x:0.35,y:0.48,r:35}
+  body:{x:0.40,y:0.49,r:42}, collar:{x:0.25,y:0.49,r:25},
+  tail:{x:0.62,y:0.49,r:45}, eyes:{x:0.22,y:0.49,r:14}, flash:{x:0.30,y:0.49,r:22}
 };
 
 function renderFlyWrapped(ctx, config, options) {
@@ -1900,36 +2427,27 @@ function renderFlyWrapped(ctx, config, options) {
     for (const k of ALL_LAYER_KEYS) { if (!options.visible.has(k)) filtered[k] = null; }
     if (!options.visible.has("weedGuard")) filtered.weedGuard = false;
   }
-  ctx.save(); ctx.translate(18,55); ctx.scale(0.66,0.66); ctx.translate(-70,-180);
-  FLY_RENDERER.renderFly(ctx, filtered);
-  ctx.restore();
+  // Use traced renderer if traced data is available
+  if (FLY_RENDERER.TRACED_FLY_DATA) {
+    ctx.save();
+    var scX = W / 800, scY = H / 500, sc = Math.min(scX, scY) * 1.38;
+    ctx.translate(W/2 - 400*sc, H/2 - 280*sc);
+    ctx.scale(sc, sc);
+    // Pass visible layers for step-by-step
+    var visSet = options.visible || null;
+    FLY_RENDERER.renderTracedFly(ctx, FLY_RENDERER.TRACED_FLY_DATA, 42, visSet);
+    ctx.restore();
+  } else {
+    ctx.save(); ctx.translate(110,120); ctx.scale(0.375,0.375); ctx.translate(-70,-180);
+    FLY_RENDERER.renderFly(ctx, filtered);
+    ctx.restore();
+  }
   if (options.highlight) drawPartHL(ctx, options.highlight, W, H);
 }
 
 function drawVise(ctx, W, H) {
-  // TODO: DynaKing Barracuda vise illustration — replace this procedural
-  // approximation with a traced reference of the actual DynaKing Barracuda
-  // side profile (correct jaw-to-post proportions, lever cam, rotary barrel).
-  // Current rendering is a simplified stand-in matching general proportions.
-  ctx.save();
-  // post
-  const grad = ctx.createLinearGradient(0, H*0.55, 0, H);
-  grad.addColorStop(0,'#8A8580'); grad.addColorStop(1,'#5A5550');
-  ctx.fillStyle = grad;
-  ctx.fillRect(W*0.62, H*0.55, 14, H-H*0.55);
-  ctx.strokeStyle='#9A9590'; ctx.lineWidth=0.8;
-  ctx.strokeRect(W*0.62, H*0.55, 14, H-H*0.55);
-  // jaw body
-  ctx.fillStyle='#7A7670'; ctx.strokeStyle='#9A9590'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(W*0.57,H*0.49); ctx.lineTo(W*0.71,H*0.49);
-  ctx.lineTo(W*0.71,H*0.60); ctx.lineTo(W*0.59,H*0.60);
-  ctx.lineTo(W*0.53,H*0.53); ctx.lineTo(W*0.55,H*0.48); ctx.closePath();
-  ctx.fill(); ctx.stroke();
-  // lever
-  ctx.fillStyle='#6A6560';
-  ctx.beginPath(); ctx.arc(W*0.73,H*0.70,5,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='#8A8580'; ctx.stroke();
-  ctx.restore();
+  // No-op: vise is now fully drawn by drawViseJaws inside renderFly
+  // (stem + jaws as one unified piece in internal coordinates).
 }
 function drawPartHL(ctx, partName, W, H) {
   const r = PART_REGIONS[partName]; if (!r) return;
@@ -1978,8 +2496,8 @@ function syncColor() {
 }
 function toHex(c) {
   if(!c) return null; if(typeof c==='string'&&c.charAt(0)==='#') return c;
-  const named={rust:'#A0582E','olive-crosscut':'#6B7A40','flash-black':'#151515',white:'#f0f0f0',black:'#181818',cream:'#eadca9',tan:'#b28a52',olive:'#4e5c24',brown:'#5c3a1e',silver:'#c4c4c4',gold:'#d4a53c'};
-  return named[c]||"#A0582E";
+  const named={rust:'#c44a1e','olive-crosscut':'#5a6b2e','flash-purple':'#3a2850',white:'#f0f0f0',black:'#181818',cream:'#eadca9',tan:'#b28a52',olive:'#4e5c24',brown:'#5c3a1e',silver:'#c4c4c4',gold:'#d4a53c','hook-steel':'#b8bcc0','eye-black':'#0a0a0c'};
+  return named[c]||"#c44a1e";
 }
 function setPart(p) {
   state.custom.activePart=p;
@@ -2333,6 +2851,655 @@ function openSaved() {
   document.getElementById("savedModal").classList.add("active");
 }
 document.querySelectorAll(".modal-backdrop").forEach(b=>{b.addEventListener("click",e=>{if(e.target===b) b.classList.remove("active");});});
+</script>
+
+<!-- ================================================================
+   FLY TRACER — hidden dev page at #/tune or Shift+T
+   ================================================================ -->
+<style>
+#tune-screen{display:none;position:fixed;inset:0;z-index:9999;background:#1a1a1e;color:#d4d4d8;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;}
+#tune-screen.active{display:flex;}
+#tune-screen *{box-sizing:border-box;}
+.tune-left{width:290px;min-width:290px;height:100vh;overflow-y:auto;padding:8px;border-right:1px solid #333;}
+.tune-center{flex:1;height:100vh;position:relative;background:#222;overflow:hidden;cursor:crosshair;}
+.tune-exit{position:absolute;top:6px;right:10px;color:#888;text-decoration:none;font-size:11px;z-index:10;}
+.tune-exit:hover{color:#fff;}
+.tune-toolbar{position:absolute;top:6px;left:10px;display:flex;gap:4px;z-index:10;flex-wrap:wrap;max-width:60%;}
+.tb{padding:4px 8px;background:#333;color:#ccc;border:1px solid #555;border-radius:3px;cursor:pointer;font-family:inherit;font-size:10px;}
+.tb:hover{background:#444;color:#fff;}
+.tb.active{background:#3a6b4a;border-color:#5a8b6a;color:#fff;}
+.tb.accent{background:#3a6b4a;border-color:#5a8b6a;color:#fff;}
+.tg{border:1px solid #333;border-radius:4px;margin-bottom:5px;}
+.tg-h{padding:5px 7px;background:#252528;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;font-weight:600;font-size:11px;color:#aaa;}
+.tg-h:hover{color:#fff;}
+.tg.collapsed .tg-b{display:none;}
+.tg-b{padding:5px 7px;}
+.tr{display:flex;align-items:center;gap:3px;margin-bottom:3px;min-height:20px;}
+.tr label{flex:0 0 100px;color:#999;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tr input[type=range]{flex:1;min-width:50px;height:14px;accent-color:#7B9E87;}
+.tr input[type=color]{width:24px;height:18px;border:1px solid #444;border-radius:3px;padding:0;background:none;cursor:pointer;}
+.tr input[type=number]{width:50px;background:#222;border:1px solid #444;color:#ddd;border-radius:3px;padding:1px 3px;font-family:inherit;font-size:10px;}
+.tr .v{min-width:30px;text-align:right;color:#7B9E87;font-size:10px;}
+.tr input[type=checkbox]{accent-color:#7B9E87;}
+#tuneCanvas{position:absolute;top:0;left:0;}
+.tune-info{position:absolute;bottom:8px;left:10px;color:#666;font-size:10px;z-index:10;pointer-events:none;}
+</style>
+
+<div id="tune-screen">
+  <div class="tune-left" id="tunePanel"></div>
+  <div class="tune-center" id="tuneCenterCol">
+    <div class="tune-toolbar" id="tuneToolbar"></div>
+    <a href="#" class="tune-exit" onclick="closeTune();return false;">← Exit</a>
+    <canvas id="tuneCanvas"></canvas>
+    <div class="tune-info" id="tuneInfo"></div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   FLY TRACER v3 — trace-to-render fly editor
+   Canvas starts with vise only. Upload photo, drag to position it,
+   trace sections as paths or closed shapes, fill with fibers,
+   draw freehand sweep guides to control fiber flow.
+   ===================================================================== */
+(function(){
+"use strict";
+var R=FLY_RENDERER;
+var tuneActive=false;
+
+/* ========== Reference image state ========== */
+var refImg=null, refX=0, refY=0, refScale=1, refOpacity=0.45, showRef=true;
+
+/* ========== Sections ========== */
+// type:'path' = open stroke (hook, flash, weedguard)
+// type:'fill' = closed polygon filled with fibers (collar, body, tail)
+var SECTIONS=[
+  {id:'collar',label:'Olive Collar',type:'fill',color:'#7a7',
+   points:[],guides:[],filled:false,
+   props:{baseColor:'#5a6b2e',tipColor:'#7a8a3e',shadowColor:'#3a4820',
+          density:400,fiberLen:25,fiberLenVar:15,fiberWidth:1.0,
+          sweepAngle:0,opacity:0.85}},
+  {id:'body',label:'Rust Body',type:'fill',color:'#c74',
+   points:[],guides:[],filled:false,
+   props:{baseColor:'#c44a1e',tipColor:'#d85528',barColor:'#8a2e14',
+          density:300,fiberLen:15,fiberLenVar:10,fiberWidth:0.9,
+          sweepAngle:0,barFreq:5,opacity:0.85}},
+  {id:'tail',label:'Rust Tail',type:'fill',color:'#e85',
+   points:[],guides:[],filled:false,
+   props:{baseColor:'#c44a1e',tipColor:'#d85528',barColor:'#8a2e14',hideColor:'#4a1808',
+          density:250,fiberLen:50,fiberLenVar:30,fiberWidth:1.0,
+          sweepAngle:0,barFreq:5,hideSpine:true,opacity:0.85}},
+  {id:'flash',label:'Flash',type:'strands',color:'#a7e',
+   points:[],strands:[],guides:[],filled:false,
+   props:{baseColor:'#3a2850',hlColor:'#8a6ab0',count:6,waviness:3,strokeW:0.7,opacity:0.55}},
+  {id:'hook',label:'Hook',type:'path',color:'#ccc',
+   points:[],guides:[],filled:false,
+   props:{color:'#b8bcc0',wireW:2.8,shadow:true}},
+  {id:'weedguard',label:'Weed Guard',type:'path',color:'#8cf',
+   points:[],guides:[],filled:false,
+   props:{color:'#d8dde2',strokeW:2,opacity:0.7}},
+];
+
+var eyeL={x:150,y:220},eyeR={x:150,y:240}; // two dumbbell eyes
+var activeSec=0;
+var tool='trace'; // trace, move, guide, image
+var dragging=null; // {type:'point'|'eye'|'image', sec, idx, startX, startY, origX, origY}
+var seed=42;
+var showOutlines=true, showFill=true;
+
+/* ========== Geometry helpers ========== */
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+function pointInPoly(p,poly){
+  // ray-casting
+  var x=p.x,y=p.y,inside=false;
+  for(var i=0,j=poly.length-1;i<poly.length;j=i++){
+    var xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))inside=!inside;
+  }
+  return inside;
+}
+function polyBBox(pts){
+  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  pts.forEach(function(p){x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y);});
+  return {x:x0,y:y0,w:x1-x0,h:y1-y0};
+}
+// Get flow direction at a point using guide strokes (returns angle in radians)
+function flowAt(x,y,guides){
+  if(!guides||guides.length===0)return 0;
+  var totalWx=0,totalWy=0,totalW=0;
+  guides.forEach(function(g){
+    // For each guide stroke, find closest segment and get its direction
+    for(var i=0;i<g.length-1;i++){
+      var ax=g[i].x,ay=g[i].y,bx=g[i+1].x,by=g[i+1].y;
+      var dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy);
+      if(len<1)continue;
+      // project point onto segment
+      var t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(len*len)));
+      var px=ax+t*dx,py=ay+t*dy;
+      var d=Math.hypot(x-px,y-py)+1;
+      var w=1/(d*d); // inverse-square weighting
+      totalWx+=dx/len*w; totalWy+=dy/len*w; totalW+=w;
+    }
+  });
+  if(totalW<0.0001)return 0;
+  return Math.atan2(totalWy/totalW,totalWx/totalW);
+}
+
+/* ========== Seeded RNG for fiber generation ========== */
+var _rng;
+function resetRng(){_rng=R.mulberry32(seed);}
+function rng(){return _rng();}
+
+/* ========== Canvas ========== */
+function resizeCanvas(){
+  var ct=document.getElementById('tuneCenterCol');if(!ct)return;
+  var cv=document.getElementById('tuneCanvas');
+  cv.width=ct.clientWidth;cv.height=ct.clientHeight;
+  schedRender();
+}
+
+/* ========== RENDERING ========== */
+function render(){
+  var cv=document.getElementById('tuneCanvas');if(!cv)return;
+  var ctx=cv.getContext('2d');
+  var W=cv.width,H=cv.height;
+  resetRng();
+
+  ctx.fillStyle='#ECEBE6';ctx.fillRect(0,0,W,H);
+
+  // --- Reference image (draggable/scalable) ---
+  if(showRef&&refImg){
+    ctx.save();ctx.globalAlpha=refOpacity;
+    ctx.drawImage(refImg,refX,refY,refImg.width*refScale,refImg.height*refScale);
+    ctx.restore();
+  }
+
+  // --- Vise (always drawn using the renderer's function in canvas coords) ---
+  // Build a minimal hook object positioned at a fixed canvas location for the vise
+  var viseHook=R.buildHook(2,'streamer');
+  ctx.save();
+  // Position the vise hook eye at canvas center-left
+  var vhScale=0.35;
+  ctx.translate(W*0.18,H*0.45);ctx.scale(vhScale,vhScale);ctx.translate(-viseHook.eye.x,-viseHook.eye.y);
+  R.drawViseJaws(ctx,viseHook);
+  ctx.restore();
+
+  // --- Filled sections ---
+  if(showFill){
+    SECTIONS.forEach(function(sec){
+      if(!sec.filled||sec.points.length<3)return;
+      if(sec.type==='fill') renderFilledSection(ctx,sec);
+      if(sec.type==='path') renderPathSection(ctx,sec);
+    });
+  }
+
+  // --- Eye markers ---
+  [eyeL,eyeR].forEach(function(ep){
+    ctx.save();ctx.fillStyle='#0a0a0c';ctx.strokeStyle='#444';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(ep.x,ep.y,7,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.beginPath();ctx.arc(ep.x-2,ep.y-2,2,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+
+  // --- Outlines & points ---
+  if(showOutlines){
+    SECTIONS.forEach(function(sec,si){
+      var hasContent = sec.points.length>0 || (sec.strands&&sec.strands.length>0);
+      if(!hasContent)return;
+      ctx.save();
+      var isAct=si===activeSec;
+      ctx.strokeStyle=isAct?'#fff':sec.color;
+      ctx.lineWidth=isAct?2:1;
+      ctx.setLineDash(isAct?[]:[4,3]);
+
+      if(sec.type==='strands'){
+        // Draw each completed strand as a separate open path
+        (sec.strands||[]).forEach(function(strand){
+          if(strand.length<2)return;
+          ctx.beginPath();
+          strand.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+          ctx.stroke();
+          strand.forEach(function(p){
+            ctx.fillStyle=isAct?'#fff':'rgba(255,255,255,0.3)';
+            ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fill();
+          });
+        });
+        // Draw active strand being traced
+        if(sec._activeStrand&&sec._activeStrand.length>0){
+          ctx.strokeStyle='#ff0';ctx.lineWidth=1.5;ctx.setLineDash([]);
+          ctx.beginPath();
+          sec._activeStrand.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+          ctx.stroke();
+          sec._activeStrand.forEach(function(p){
+            ctx.fillStyle='#ff0';ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();
+          });
+        }
+      } else {
+        ctx.beginPath();
+        sec.points.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+        if(sec.type==='fill'&&sec.points.length>2)ctx.closePath();
+        ctx.stroke();
+        // Points
+        sec.points.forEach(function(p){
+          ctx.fillStyle=isAct?'#fff':'rgba(255,255,255,0.4)';
+          ctx.beginPath();ctx.arc(p.x,p.y,isAct?4:2.5,0,Math.PI*2);ctx.fill();
+        });
+      }
+      ctx.setLineDash([]);
+      // Label
+      var labelPt = sec.points.length>0 ? sec.points[0] : (sec.strands&&sec.strands[0]&&sec.strands[0][0]);
+      if(labelPt){
+        ctx.fillStyle=sec.color;ctx.font='10px monospace';
+        ctx.fillText(sec.label,labelPt.x+8,labelPt.y-8);
+      }
+      // Guide strokes
+      sec.guides.forEach(function(g){
+        ctx.strokeStyle='rgba(255,255,0,0.5)';ctx.lineWidth=2;ctx.setLineDash([2,2]);
+        ctx.beginPath();
+        g.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+        ctx.stroke();ctx.setLineDash([]);
+        // Arrow at end
+        if(g.length>=2){
+          var last=g[g.length-1],prev=g[g.length-2];
+          var a=Math.atan2(last.y-prev.y,last.x-prev.x);
+          ctx.fillStyle='rgba(255,255,0,0.7)';
+          ctx.beginPath();ctx.moveTo(last.x,last.y);
+          ctx.lineTo(last.x-8*Math.cos(a-0.4),last.y-8*Math.sin(a-0.4));
+          ctx.lineTo(last.x-8*Math.cos(a+0.4),last.y-8*Math.sin(a+0.4));
+          ctx.fill();
+        }
+      });
+      ctx.restore();
+    });
+  }
+
+  // Info bar
+  var info=document.getElementById('tuneInfo');
+  if(info){
+    var s=SECTIONS[activeSec];
+    info.textContent=s.label+' | '+s.points.length+' pts | '+s.guides.length+' guides | tool: '+tool;
+  }
+}
+
+/* ---- Render a filled fur section ---- */
+function renderFilledSection(ctx,sec){
+  if(sec.points.length<3)return;
+  var P=sec.props;
+  var bbox=polyBBox(sec.points);
+  var baseRGB=R.hexToRgb(P.baseColor);
+  var tipRGB=P.tipColor?R.hexToRgb(P.tipColor):baseRGB;
+  var barRGB=P.barColor?R.hexToRgb(P.barColor):null;
+  var n=P.density||200;
+  ctx.save();ctx.lineCap='round';
+
+  // Clip to polygon
+  ctx.beginPath();
+  sec.points.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+  ctx.closePath();
+
+  // Dark base fill
+  ctx.fillStyle=R.rgbaStr(baseRGB[0]*0.5,baseRGB[1]*0.5,baseRGB[2]*0.5,0.3);
+  ctx.fill();
+
+  // Hide spine for tail
+  if(P.hideSpine&&sec.points.length>=2){
+    ctx.strokeStyle=R.rgbaStr.apply(null,R.hexToRgb(P.hideColor||'#4a1808').concat([0.4]));
+    ctx.lineWidth=3;ctx.beginPath();
+    // Draw along the top edge of the polygon (first half of points)
+    var topN=Math.ceil(sec.points.length/2);
+    for(var i=0;i<topN;i++){
+      if(i===0)ctx.moveTo(sec.points[i].x,sec.points[i].y);
+      else ctx.lineTo(sec.points[i].x,sec.points[i].y);
+    }
+    ctx.stroke();
+  }
+
+  // Generate fibers within polygon
+  for(var i=0;i<n;i++){
+    // Random point inside bounding box, reject if outside polygon
+    var px=bbox.x+rng()*bbox.w, py=bbox.y+rng()*bbox.h;
+    if(!pointInPoly({x:px,y:py},sec.points)){i--;if(rng()<0.01)break;continue;} // prevent infinite loop on thin shapes
+
+    // Flow direction from guide strokes
+    var angle=flowAt(px,py,sec.guides);
+    // Add some jitter
+    angle+=(rng()-0.5)*0.6;
+
+    var len=P.fiberLen+(rng()-0.5)*2*P.fiberLenVar;
+    var ex=px+Math.cos(angle)*len, ey=py+Math.sin(angle)*len;
+
+    // S-curve
+    var perpX=-Math.sin(angle),perpY=Math.cos(angle);
+    var sc=(rng()-0.5)*len*0.15;
+    var mx=px+Math.cos(angle)*len*0.5+perpX*sc;
+    var my=py+Math.sin(angle)*len*0.5+perpY*sc;
+
+    // Color: blend base to tip along fiber
+    var t=rng();
+    var cr=baseRGB[0]+(tipRGB[0]-baseRGB[0])*t*0.6;
+    var cg=baseRGB[1]+(tipRGB[1]-baseRGB[1])*t*0.6;
+    var cb=baseRGB[2]+(tipRGB[2]-baseRGB[2])*t*0.6;
+    var bf=1+(rng()-0.5)*0.2;
+
+    // Barring
+    if(barRGB&&P.barFreq&&rng()<0.3){
+      cr=barRGB[0];cg=barRGB[1];cb=barRGB[2];
+    }
+
+    ctx.strokeStyle=R.rgbaStr(cr*bf,cg*bf,cb*bf,P.opacity||0.8);
+    ctx.lineWidth=(P.fiberWidth||1)*(0.6+rng()*0.8);
+    ctx.beginPath();ctx.moveTo(px,py);ctx.quadraticCurveTo(mx,my,ex,ey);ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ---- Render a path section (hook, flash, weedguard) ---- */
+function renderPathSection(ctx,sec){
+  if(sec.points.length<2)return;
+  var P=sec.props;
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+
+  if(sec.id==='hook'){
+    // Steel hook stroke
+    if(P.shadow){
+      ctx.strokeStyle='rgba(90,94,100,0.5)';ctx.lineWidth=(P.wireW||2.5)+1.5;
+      ctx.beginPath();sec.points.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y+0.5);else ctx.lineTo(p.x,p.y+0.5);});ctx.stroke();
+    }
+    ctx.strokeStyle=P.color||'#b8bcc0';ctx.lineWidth=P.wireW||2.5;
+    ctx.beginPath();sec.points.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});ctx.stroke();
+    // Highlight
+    ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=0.8;
+    ctx.beginPath();sec.points.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y-1);else ctx.lineTo(p.x,p.y-1);});ctx.stroke();
+  } else if(sec.id==='flash'){
+    var baseRGB=R.hexToRgb(P.baseColor||'#3a2850');
+    var hlRGB=R.hexToRgb(P.hlColor||'#8a6ab0');
+    var count=P.count||6;
+    for(var s=-1;s<=1;s+=2){
+      for(var i=0;i<Math.ceil(count/2);i++){
+        ctx.strokeStyle=R.rgbaStr(baseRGB[0],baseRGB[1],baseRGB[2],P.opacity||0.5);
+        ctx.lineWidth=(P.strokeW||0.7)*(0.5+rng()*0.8);
+        ctx.beginPath();
+        sec.points.forEach(function(p,pi){
+          var off=s*(3+rng()*3+i*2);
+          var wave=Math.sin(pi*0.5)*(P.waviness||3)*rng();
+          var px=p.x+wave,py=p.y+off;
+          if(pi===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+        });
+        ctx.stroke();
+        // Shimmer dots
+        sec.points.forEach(function(p,pi){
+          if(rng()>0.4)return;
+          ctx.fillStyle=R.rgbaStr(hlRGB[0],hlRGB[1],hlRGB[2],0.35);
+          ctx.beginPath();ctx.arc(p.x+rng()*4-2,p.y+s*(3+i*2)+rng()*2,0.8+rng(),0,Math.PI*2);ctx.fill();
+        });
+      }
+    }
+  } else if(sec.id==='weedguard'){
+    ctx.strokeStyle=P.color||'#d8dde2';
+    ctx.globalAlpha=P.opacity||0.7;
+    ctx.lineWidth=P.strokeW||2;
+    ctx.beginPath();sec.points.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});ctx.stroke();
+  }
+  ctx.restore();
+}
+
+var _raf=false;
+function schedRender(){if(!_raf){_raf=true;requestAnimationFrame(function(){_raf=false;render();});}}
+
+/* ========== Mouse interaction ========== */
+function cPos(e){var cv=document.getElementById('tuneCanvas'),r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+var _guideStroke=null; // while drawing a guide
+
+function onDown(e){
+  var p=cPos(e);
+
+  // Guide tool: start freehand stroke
+  if(tool==='guide'){
+    _guideStroke=[{x:p.x,y:p.y}];
+    return;
+  }
+
+  // Image tool: start dragging ref image
+  if(tool==='image'&&refImg){
+    dragging={type:'image',startX:e.clientX,startY:e.clientY,origX:refX,origY:refY};
+    return;
+  }
+
+  // Move tool: check eyes, then points
+  if(tool==='move'){
+    if(dist(p,eyeL)<10){dragging={type:'eye',which:eyeL};return;}
+    if(dist(p,eyeR)<10){dragging={type:'eye',which:eyeR};return;}
+    for(var si=0;si<SECTIONS.length;si++){
+      for(var i=0;i<SECTIONS[si].points.length;i++){
+        if(dist(p,SECTIONS[si].points[i])<8){
+          activeSec=si;dragging={type:'point',sec:si,idx:i};buildPanel();schedRender();return;
+        }
+      }
+    }
+    return;
+  }
+
+  // Trace tool: add point (or strand point for flash)
+  if(tool==='trace'){
+    var sec=SECTIONS[activeSec];
+    if(sec.type==='strands'){
+      // For strand sections: left-click adds points to active strand
+      if(!sec._activeStrand) sec._activeStrand=[];
+      sec._activeStrand.push({x:p.x,y:p.y});
+      schedRender();
+      // Draw live preview of current strand
+      var cvt=document.getElementById('tuneCanvas'),ctxt=cvt.getContext('2d');
+      ctxt.strokeStyle=sec.color;ctxt.lineWidth=1.5;ctxt.setLineDash([3,3]);
+      ctxt.beginPath();sec._activeStrand.forEach(function(pt,i){if(i===0)ctxt.moveTo(pt.x,pt.y);else ctxt.lineTo(pt.x,pt.y);});
+      ctxt.stroke();ctxt.setLineDash([]);
+    } else {
+      sec.points.push({x:p.x,y:p.y});
+      sec.filled=false;
+    }
+    buildPanel();schedRender();
+  }
+}
+
+function onMove(e){
+  var p=cPos(e);
+  if(tool==='guide'&&_guideStroke){
+    _guideStroke.push({x:p.x,y:p.y});
+    schedRender();
+    // Draw live stroke
+    var cv=document.getElementById('tuneCanvas'),ctx=cv.getContext('2d');
+    ctx.strokeStyle='rgba(255,255,0,0.6)';ctx.lineWidth=2;ctx.setLineDash([2,2]);
+    ctx.beginPath();_guideStroke.forEach(function(pp,i){if(i===0)ctx.moveTo(pp.x,pp.y);else ctx.lineTo(pp.x,pp.y);});ctx.stroke();ctx.setLineDash([]);
+    return;
+  }
+  if(!dragging)return;
+  if(dragging.type==='eye'){dragging.which.x=p.x;dragging.which.y=p.y;schedRender();return;}
+  if(dragging.type==='point'){SECTIONS[dragging.sec].points[dragging.idx]={x:p.x,y:p.y};SECTIONS[dragging.sec].filled=false;schedRender();return;}
+  if(dragging.type==='image'){refX=dragging.origX+(e.clientX-dragging.startX);refY=dragging.origY+(e.clientY-dragging.startY);schedRender();return;}
+}
+
+function onUp(e){
+  if(tool==='guide'&&_guideStroke&&_guideStroke.length>3){
+    // Simplify: keep every 4th point
+    var simplified=[];
+    for(var i=0;i<_guideStroke.length;i+=4)simplified.push(_guideStroke[i]);
+    simplified.push(_guideStroke[_guideStroke.length-1]);
+    SECTIONS[activeSec].guides.push(simplified);
+    SECTIONS[activeSec].filled=false;
+    buildPanel();
+  }
+  _guideStroke=null;
+  dragging=null;
+  schedRender();
+}
+
+function onDbl(e){
+  var p=cPos(e);
+  // Delete nearest point in active section
+  var sec=SECTIONS[activeSec];
+  for(var i=0;i<sec.points.length;i++){
+    if(dist(p,sec.points[i])<8){sec.points.splice(i,1);sec.filled=false;buildPanel();schedRender();return;}
+  }
+}
+
+function onWheel(e){
+  // Scroll wheel adjusts ref image scale when image tool is active
+  if(tool==='image'&&refImg){
+    e.preventDefault();
+    refScale*=e.deltaY>0?0.95:1.05;
+    refScale=Math.max(0.05,Math.min(5,refScale));
+    schedRender();
+  }
+}
+
+/* ========== Controls panel ========== */
+function buildPanel(){
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0 6px;border-bottom:1px solid #333;margin-bottom:6px"><b style="color:#7B9E87">Fly Tracer</b>';
+  h+='<button class="tb" onclick="TUNE.resetAll()">Reset</button></div>';
+
+  // Reference image
+  h+='<div class="tg"><div class="tg-h" onclick="this.parentNode.classList.toggle(\'collapsed\')"><span>Reference Image</span><span>▾</span></div><div class="tg-b">';
+  h+='<input type="file" accept="image/*" onchange="TUNE.loadImg(this)" style="font-size:10px;color:#aaa;width:100%">';
+  h+=mkSlider('Opacity',refOpacity,0,1,0.05,'TUNE.setRefOp');
+  h+=mkChk('Show ref',showRef,'TUNE.togRef');
+  h+=mkChk('Show fill',showFill,'TUNE.togFill');
+  h+=mkChk('Show outlines',showOutlines,'TUNE.togOut');
+  h+=mkSlider('Img scale',refScale,0.05,5,0.02,'TUNE.setImgScale');
+  h+='</div></div>';
+
+  // Global
+  h+='<div class="tg"><div class="tg-h" onclick="this.parentNode.classList.toggle(\'collapsed\')"><span>Global</span><span>▾</span></div><div class="tg-b">';
+  h+='<div class="tr"><label>Seed</label><input type="number" min="1" max="99999" value="'+seed+'" onchange="TUNE.setSeed(+this.value)" style="width:60px"> <button class="tb" onclick="TUNE.randSeed()">↻</button></div>';
+  h+='</div></div>';
+
+  // Sections
+  h+='<div class="tg"><div class="tg-h"><span>Sections</span></div><div class="tg-b">';
+  SECTIONS.forEach(function(sec,i){
+    var act=i===activeSec;
+    h+='<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;cursor:pointer" onclick="TUNE.pickSec('+i+')">';
+    h+='<span style="width:10px;height:10px;border-radius:2px;background:'+sec.color+';display:inline-block;border:'+(act?'2px solid #fff':'1px solid #555')+'"></span>';
+    h+='<span style="color:'+(act?'#fff':'#999')+';font-size:10px">'+sec.label+' ('+sec.points.length+'p, '+sec.guides.length+'g)</span>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  // Active section
+  var sec=SECTIONS[activeSec];
+  h+='<div class="tg"><div class="tg-h" onclick="this.parentNode.classList.toggle(\'collapsed\')"><span>'+sec.label+'</span><span>▾</span></div><div class="tg-b">';
+  h+='<div style="display:flex;gap:3px;margin-bottom:4px;flex-wrap:wrap">';
+  h+='<button class="tb'+(sec.filled?' accent':'')+'" onclick="TUNE.fillSec('+activeSec+')">'+(sec.filled?'Re-fill':'Fill')+'</button>';
+  h+='<button class="tb" onclick="TUNE.clearPts('+activeSec+')">Clear pts</button>';
+  h+='<button class="tb" onclick="TUNE.clearGuides('+activeSec+')">Clear guides</button>';
+  h+='</div>';
+  // Properties
+  Object.keys(sec.props).forEach(function(k){
+    var v=sec.props[k];
+    if(typeof v==='boolean'){h+=mkChk(k,v,"TUNE.setProp('"+sec.id+"','"+k+"',this.checked)");}
+    else if(typeof v==='string'&&v[0]==='#'){h+=mkColor(k,v,"TUNE.setProp('"+sec.id+"','"+k+"',this.value)");}
+    else if(typeof v==='number'){
+      var mn=0,mx=Math.max(v*3,10),st=v<1?0.01:v<10?0.1:1;
+      if(k.indexOf('density')>=0||k.indexOf('ount')>=0){mn=1;mx=1000;st=10;}
+      if(k.indexOf('Len')>=0){mn=1;mx=200;st=1;}
+      if(k.indexOf('Var')>=0){mn=0;mx=100;st=1;}
+      if(k.indexOf('ngle')>=0){mn=-180;mx=180;st=1;}
+      if(k.indexOf('pacity')>=0||k.indexOf('Str')>=0){mn=0;mx=1;st=0.05;}
+      if(k.indexOf('Width')>=0||k.indexOf('strokeW')>=0||k.indexOf('wireW')>=0){mn=0.1;mx=5;st=0.1;}
+      if(k.indexOf('Freq')>=0){mn=1;mx=15;st=1;}
+      if(k.indexOf('waviness')>=0){mn=0;mx=10;st=0.5;}
+      h+=mkSlider(k,v,mn,mx,st,"TUNE.setPropN('"+sec.id+"','"+k+"')");
+    }
+  });
+  h+='</div></div>';
+
+  // Export
+  h+='<div class="tg"><div class="tg-h" onclick="this.parentNode.classList.toggle(\'collapsed\')"><span>Export / Import</span><span>▾</span></div><div class="tg-b">';
+  h+='<button class="tb accent" style="width:100%;margin-bottom:3px" onclick="TUNE.copyJSON()">Copy state JSON</button>';
+  h+='<textarea id="tuneJsonArea" style="width:100%;height:40px;background:#222;border:1px solid #444;color:#aaa;font-family:inherit;font-size:9px;border-radius:3px;resize:vertical" placeholder="Paste JSON…"></textarea>';
+  h+='<button class="tb" style="width:100%;margin-top:3px" onclick="TUNE.pasteJSON()">Apply JSON</button>';
+  h+='</div></div>';
+
+  document.getElementById('tunePanel').innerHTML=h;
+}
+
+function mkSlider(label,val,mn,mx,st,cb){
+  var dp=st<1?2:0;
+  return '<div class="tr"><label>'+label+'</label><input type="range" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+val+'" oninput="'+cb+'(parseFloat(this.value));this.nextElementSibling.textContent=this.value"><span class="v">'+Number(val).toFixed(dp)+'</span></div>';
+}
+function mkChk(label,val,cb){
+  return '<div class="tr"><label>'+label+'</label><input type="checkbox" '+(val?'checked':'')+' onchange="'+cb+'"></div>';
+}
+function mkColor(label,val,cb){
+  return '<div class="tr"><label>'+label+'</label><input type="color" value="'+val+'" oninput="'+cb+'"></div>';
+}
+
+function buildToolbar(){
+  var h='';
+  ['trace','move','guide','image'].forEach(function(t){
+    var labels={trace:'Trace',move:'Move',guide:'Guide ✏',image:'Img ↔'};
+    h+='<button class="tb'+(tool===t?' active':'')+'" onclick="TUNE.setTool(\''+t+'\')">'+labels[t]+'</button>';
+  });
+  h+='<span style="color:#555;font-size:9px;padding:4px">Dbl-click = del pt | Scroll = img scale</span>';
+  document.getElementById('tuneToolbar').innerHTML=h;
+}
+
+/* ========== Public API ========== */
+window.TUNE={
+  loadImg:function(inp){if(!inp.files||!inp.files[0])return;var rd=new FileReader();rd.onload=function(e){var img=new Image();img.onload=function(){refImg=img;var cv=document.getElementById('tuneCanvas');refScale=Math.min(cv.width/img.width,cv.height/img.height)*0.9;refX=(cv.width-img.width*refScale)/2;refY=(cv.height-img.height*refScale)/2;schedRender();};img.src=e.target.result;};rd.readAsDataURL(inp.files[0]);},
+  setRefOp:function(v){refOpacity=v;schedRender();},
+  setImgScale:function(v){refScale=v;schedRender();},
+  togRef:function(v){showRef=typeof v==='boolean'?v:!showRef;schedRender();},
+  togFill:function(v){showFill=typeof v==='boolean'?v:!showFill;schedRender();},
+  togOut:function(v){showOutlines=typeof v==='boolean'?v:!showOutlines;schedRender();},
+  setSeed:function(v){seed=v;schedRender();},
+  randSeed:function(){seed=Math.floor(Math.random()*99999)+1;buildPanel();schedRender();},
+  pickSec:function(i){activeSec=i;buildPanel();schedRender();},
+  clearPts:function(i){SECTIONS[i].points=[];if(SECTIONS[i].strands)SECTIONS[i].strands=[];SECTIONS[i]._activeStrand=null;SECTIONS[i].filled=false;buildPanel();schedRender();},
+  clearGuides:function(i){SECTIONS[i].guides=[];SECTIONS[i].filled=false;buildPanel();schedRender();},
+  fillSec:function(i){SECTIONS[i].filled=true;buildPanel();schedRender();},
+  setProp:function(id,k,v){var s=SECTIONS.find(function(s){return s.id===id;});if(s){s.props[k]=v;schedRender();}},
+  setPropN:function(id,k){return function(v){var s=SECTIONS.find(function(s){return s.id===id;});if(s){s.props[k]=v;schedRender();}};},
+  setTool:function(t){tool=t;buildToolbar();document.getElementById('tuneCenterCol').style.cursor=t==='image'?'grab':t==='move'?'default':t==='guide'?'url(data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22><circle cx=%228%22 cy=%228%22 r=%224%22 fill=%22yellow%22 stroke=%22%23333%22/></svg>) 8 8, crosshair':'crosshair';},
+  copyJSON:function(){var st={sections:SECTIONS.map(function(s){var o={id:s.id,points:s.points,guides:s.guides,filled:s.filled,props:s.props};if(s.strands)o.strands=s.strands;return o;}),eyeL:eyeL,eyeR:eyeR,seed:seed,refOpacity:refOpacity,refScale:refScale,refX:refX,refY:refY};navigator.clipboard.writeText(JSON.stringify(st,null,2)).then(function(){alert('Copied!');});},
+  pasteJSON:function(){try{var st=JSON.parse(document.getElementById('tuneJsonArea').value);if(st.sections)st.sections.forEach(function(ss){var s=SECTIONS.find(function(s){return s.id===ss.id;});if(s){s.points=ss.points||[];s.guides=ss.guides||[];s.filled=!!ss.filled;if(ss.strands)s.strands=ss.strands;if(ss.props)Object.assign(s.props,ss.props);}});if(st.eyeL)Object.assign(eyeL,st.eyeL);if(st.eyeR)Object.assign(eyeR,st.eyeR);if(st.seed!=null)seed=st.seed;if(st.refOpacity!=null)refOpacity=st.refOpacity;if(st.refScale!=null)refScale=st.refScale;if(st.refX!=null)refX=st.refX;if(st.refY!=null)refY=st.refY;buildPanel();schedRender();}catch(e){alert('Bad JSON: '+e.message);}},
+  resetAll:function(){SECTIONS.forEach(function(s){s.points=[];s.guides=[];s.filled=false;});eyeL={x:150,y:220};eyeR={x:150,y:240};seed=42;refImg=null;refScale=1;refX=0;refY=0;refOpacity=0.45;buildPanel();schedRender();}
+};
+
+/* ========== Show/hide ========== */
+function openTune(){tuneActive=true;document.getElementById('tune-screen').classList.add('active');resizeCanvas();buildToolbar();buildPanel();schedRender();}
+window.closeTune=function(){tuneActive=false;document.getElementById('tune-screen').classList.remove('active');if(location.hash==='#/tune')history.replaceState(null,'','#');};
+
+function checkHash(){if(location.hash==='#/tune')openTune();else if(tuneActive)window.closeTune();}
+window.addEventListener('hashchange',checkHash);
+
+document.addEventListener('keydown',function(e){
+  if(e.shiftKey&&e.key==='T'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    var tag=document.activeElement&&document.activeElement.tagName;
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+    e.preventDefault();if(tuneActive)window.closeTune();else location.hash='#/tune';
+  }
+});
+
+document.addEventListener('DOMContentLoaded',function(){
+  var cv=document.getElementById('tuneCanvas');
+  if(cv){cv.addEventListener('mousedown',onDown);cv.addEventListener('mousemove',onMove);cv.addEventListener('mouseup',onUp);cv.addEventListener('mouseleave',onUp);cv.addEventListener('dblclick',onDbl);cv.addEventListener('wheel',onWheel,{passive:false});
+    cv.addEventListener('contextmenu',function(e){
+      e.preventDefault();
+      // Right-click finishes active strand for strand-type sections
+      var sec=SECTIONS[activeSec];
+      if(sec&&sec.type==='strands'&&sec._activeStrand&&sec._activeStrand.length>=2){
+        if(!sec.strands)sec.strands=[];
+        sec.strands.push(sec._activeStrand);
+        sec._activeStrand=null;
+        sec.filled=true;
+        buildPanel();schedRender();
+      }
+    });
+  }
+  window.addEventListener('resize',function(){if(tuneActive)resizeCanvas();});
+});
+
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(checkHash,0);
+else window.addEventListener('DOMContentLoaded',checkHash);
+})();
 </script>
 </body>
 </html>
