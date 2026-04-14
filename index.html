@@ -88,6 +88,37 @@
     font-size: clamp(52px, 9vw, 100px);
     color: var(--accent); letter-spacing: 0.04em; margin-bottom: 8px;
   }
+  /* Wavy "Drift" — letters rise one after the other, the peak
+     travelling left-to-right across the word like a slow wave. */
+  .drift-title { display: inline-block; line-height: 1; }
+  .drift-letter {
+    display: inline-block;
+    animation: driftWave 3.5s ease-in-out infinite;
+    transform-origin: 50% 70%;
+    will-change: transform;
+  }
+  /* negative delays = "already running" — smaller = further back in
+     the cycle, so D is ahead of r, r ahead of i, etc. Peak moves L→R. */
+  .drift-letter:nth-child(1) { animation-delay: -1.6s; }
+  .drift-letter:nth-child(2) { animation-delay: -1.2s; }
+  .drift-letter:nth-child(3) { animation-delay: -0.8s; }
+  .drift-letter:nth-child(4) { animation-delay: -0.4s; }
+  .drift-letter:nth-child(5) { animation-delay:  0s;   }
+  @keyframes driftWave {
+    0%, 100% { transform: translateY(0)    rotate(-1deg); }
+    50%      { transform: translateY(-4px) rotate(1deg);  }
+  }
+
+  /* Nav brand — subtle rocking wag */
+  .nav .brand {
+    display: inline-block;
+    animation: brandWag 3.4s ease-in-out infinite;
+    transform-origin: left center;
+  }
+  @keyframes brandWag {
+    0%, 100% { transform: translateY(0)    rotate(0deg); }
+    50%      { transform: translateY(-1.5px) rotate(-4deg); }
+  }
   .tagline {
     font-family: "IBM Plex Mono", monospace; color: var(--text-dim);
     letter-spacing: 0.35em; text-transform: uppercase; font-size: 12px; margin-bottom: 48px;
@@ -200,7 +231,7 @@
   }
   .section-head h2 { font-size: 38px; margin-top: 6px; color: var(--text); }
   .section-head .sub-note { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-dim); margin-top: 4px; }
-  .pattern-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+  .pattern-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px; max-width: 1380px; margin: 0 auto; }
   .pattern-card {
     background: #fff; border: 1px solid var(--border); border-radius: 12px;
     padding: 24px 22px; position: relative;
@@ -232,6 +263,15 @@
     overflow: hidden; border: 1px solid var(--border);
   }
   .pattern-preview canvas { width: 100%; height: 100%; display: block; }
+  /* Blank placeholder for patterns that don't have a procedural render yet */
+  .pattern-preview-empty {
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pattern-preview-empty .empty-label {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    color: var(--text-light); letter-spacing: 0.15em; text-transform: uppercase;
+  }
   .pattern-name { font-size: 22px; margin-bottom: 4px; }
   .pattern-sub { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 14px; }
   .pros-cons { margin-bottom: 14px; font-size: 13px; }
@@ -289,11 +329,50 @@
   @keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
 
   /* ---------- MATERIALS ---------- */
-  #materials-screen { padding: 100px 20px 60px; display: none; max-width: 900px; margin: 0 auto; }
+  #materials-screen { padding: 100px 20px 60px; display: none; max-width: 1280px; margin: 0 auto; }
   #materials-screen.active { display: block; }
+  /* ---------- THREE-COLUMN MATERIALS LAYOUT ---------- */
+  .mat-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 960px) {
+    .mat-columns { grid-template-columns: 1fr; gap: 20px; }
+  }
+  .mat-column-head {
+    font-family: "Playfair Display", serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .mat-column-sub {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.05em; line-height: 1.55;
+    margin-bottom: 14px;
+  }
+  /* Tool rows — checklist-only; no price/vendor/buy */
+  .tool-row {
+    display: grid; grid-template-columns: 22px 1fr;
+    align-items: center; gap: 12px; padding: 12px 14px;
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 6px; transition: opacity 200ms ease;
+  }
+  .tool-row.owned { opacity: 0.5; }
+  .tool-row.owned .tool-name { text-decoration: line-through; color: var(--text-dim); }
+  .tool-row input[type="checkbox"] {
+    width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer;
+  }
+  .tool-name { font-size: 13px; line-height: 1.4; }
+  .tool-optional {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9px; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-left: 2px;
+  }
   .mat-row {
-    display: grid; grid-template-columns: 30px 1.5fr auto auto;
-    align-items: center; gap: 14px; padding: 16px 18px;
+    display: grid; grid-template-columns: 22px 1fr auto;
+    align-items: center; gap: 10px; padding: 12px 14px;
     background: #fff; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; transition: all 200ms ease;
   }
   .mat-row.owned { opacity: 0.45; }
@@ -406,6 +485,17 @@
     font-family: "IBM Plex Mono", monospace; font-size: 10px;
     text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent); opacity: 0.75;
   }
+  /* Encouragement line shown under "Your Design" — updates per step */
+  .step-encouragement {
+    font-family: "Playfair Display", Georgia, serif;
+    font-style: italic; font-weight: 600;
+    font-size: 15px; line-height: 1.4;
+    color: var(--text); opacity: 0.78;
+    text-align: center;
+    max-width: 460px;
+    padding: 6px 20px 0;
+    transition: opacity 300ms ease;
+  }
   .canvas-panel canvas { background: var(--canvas-bg); border-radius: 6px; }
   .tying-steps {
     background: var(--surface); border: 1px solid var(--border); border-left: none;
@@ -422,20 +512,34 @@
     border-radius: 6px; font-family: "IBM Plex Mono", monospace; font-size: 11px;
     color: var(--blue); margin-bottom: 14px;
   }
-  .video-box {
-    width: 100%; aspect-ratio: 16/9; background: var(--surface-2);
-    border: 1px solid var(--border); border-radius: 8px;
-    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: var(--text-dim);
+  /* Tutorial video stage — one <video> per step is injected here */
+  .video-stage {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
   }
-  .play-icon {
-    width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent);
-    display: flex; align-items: center; justify-content: center;
+  .video-stage .tying-video {
+    width: 100%; height: 100%;
+    display: none;                 /* only the current step's video is shown */
+    object-fit: contain;           /* preserve aspect, don't stretch */
+    background: #000;
   }
-  .play-icon::after {
-    content: ""; width: 0; height: 0;
-    border-left: 14px solid var(--accent); border-top: 9px solid transparent; border-bottom: 9px solid transparent; margin-left: 3px;
+  .video-stage .tying-video.active { display: block; }
+  .video-fallback {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--coral-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--coral);
+    text-align: center;
   }
-  .video-label { font-family: "IBM Plex Mono", monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; }
   .tying-bar {
     max-width: 1300px; margin: 20px auto 0; padding: 16px 24px;
     background: #fff; border: 1px solid var(--border); border-radius: 8px;
@@ -476,6 +580,136 @@
   .saved-item .dt { font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--text-dim); }
   .hl-flash { animation: hlFlash 800ms ease; }
   @keyframes hlFlash { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.08) drop-shadow(0 0 6px var(--accent)); } }
+
+  /* ==========================================================
+     GLOBAL FISH WALLPAPER
+     A fixed, z-index:-1 pseudo-element on <body> repeats the
+     same fish tile the question screen uses and slowly drifts
+     so the pattern "swims". Title screen's own gradient paints
+     over it, and busier screens get a translucent veil to
+     dial it down (see overrides below).
+     ========================================================== */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -200px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'><g fill='none' stroke='%23b8b5ac' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round' opacity='0.55'><path d='M10 28 q10 -9 22 0 q6 5 14 0 l-5 6 l5 6 q-8 -5 -14 0 q-12 9 -22 0 z'/><circle cx='17' cy='26' r='0.9' fill='%23b8b5ac' stroke='none'/><path d='M70 72 q10 -9 22 0 q6 5 14 0 l-5 6 l5 6 q-8 -5 -14 0 q-12 9 -22 0 z'/><circle cx='77' cy='70' r='0.9' fill='%23b8b5ac' stroke='none'/><path d='M116 22 q10 -9 22 0 q6 5 14 0 l-5 6 l5 6 q-8 -5 -14 0 q-12 9 -22 0 z'/><circle cx='123' cy='20' r='0.9' fill='%23b8b5ac' stroke='none'/><path d='M30 92 q7 -6 16 0 q4 3 10 0 l-4 4 l4 4 q-6 -3 -10 0 q-9 6 -16 0 z' opacity='0.65'/><path d='M128 94 q7 -6 16 0 q4 3 10 0 l-4 4 l4 4 q-6 -3 -10 0 q-9 6 -16 0 z' opacity='0.65'/><path d='M4 6 q2 -1 3 0 M156 50 q2 -1 3 0 M54 54 q2 -1 3 0 M96 12 q2 -1 3 0' stroke-width='0.8' opacity='0.5'/></g></svg>");
+    background-repeat: repeat;
+    background-size: 160px 120px;
+    pointer-events: none;
+    z-index: -1;
+    /* 0.55 × 0.75 ≈ 0.41 — 25% reduction applied uniformly across every
+       screen that shows this wallpaper (questions, shopping, steps). */
+    opacity: 0.41;
+    animation: wallpaperDrift 140s linear infinite;
+  }
+  /* slight solid wash behind the tile so the grey page color shows
+     through the gaps consistently on every screen */
+  html, body { background-color: #EFEDE6; }
+  @keyframes wallpaperDrift {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(-160px, 120px); }   /* one tile diagonally — seamless */
+  }
+
+  /* Questions, shopping (materials), and steps (tying) all let the same
+     body::before wallpaper show through at the uniform reduced opacity.
+     No per-screen veil — the drift/texture feels continuous across
+     transitions. The customizer is outside the demo flow but kept
+     transparent for the same reason. */
+  #question-screen,
+  #materials-screen,
+  #tying-screen,
+  #customizer-screen { background-color: transparent; }
+  /* #pattern-screen / title-screen: body layer shows at full strength */
+
+  /* ============================================================
+     DRIFT — scene layer: swimming fish, bubbles, wrapping-paper
+     background on the question screen, hook that drops every
+     7-10s. Behind the existing title text and question cards.
+     ============================================================ */
+
+  /* -- Title screen swimming fish school -- */
+  .fish-school { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+  .swim-fish {
+    position: absolute;
+    width: 54px; height: 24px;
+    opacity: 0.55;
+    animation: swimAcross 22s linear infinite;
+    will-change: transform;
+  }
+  .swim-fish.flip { transform: scaleX(-1); animation-name: swimAcrossRev; }
+  .swim-fish svg { width: 100%; height: 100%; display: block; }
+  .swim-fish .wag { transform-origin: 6px 12px; animation: fishWag 420ms ease-in-out infinite; }
+  /* The symbol is drawn head-left, but the default school moves L→R.
+     Flip the inner SVG so head faces right; the .flip container
+     (scaleX(-1)) re-inverts it back to face left for R→L swimmers. */
+  .swim-fish svg { transform: scaleX(-1); transform-origin: center; }
+  @keyframes swimAcross {
+    0%   { transform: translateX(-120px); }
+    100% { transform: translateX(calc(100vw + 120px)); }
+  }
+  @keyframes swimAcrossRev {
+    0%   { transform: translateX(calc(100vw + 120px)) scaleX(-1); }
+    100% { transform: translateX(-120px) scaleX(-1); }
+  }
+  @keyframes fishWag {
+    0%, 100% { transform: scaleX(1) rotate(0deg); }
+    50%      { transform: scaleX(0.9) rotate(-4deg); }
+  }
+  /* bubble dots rising from the bottom of the title screen */
+  .bubble {
+    position: absolute; border-radius: 50%;
+    background: rgba(107,143,163,0.18);
+    border: 1px solid rgba(107,143,163,0.28);
+    animation: bubbleRise 9s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes bubbleRise {
+    0%   { transform: translateY(0) scale(0.8); opacity: 0; }
+    10%  { opacity: 0.9; }
+    90%  { opacity: 0.9; }
+    100% { transform: translateY(-120vh) scale(1.1); opacity: 0; }
+  }
+
+  /* ============================================================
+     QUESTION SCREEN — texture comes from the global body wallpaper
+     now, so this screen is transparent. Only structural rules stay.
+     ============================================================ */
+  #question-screen { position: relative; }
+  /* fish hooked on dangling lines in the corners */
+  .hooked-fish {
+    position: absolute;
+    width: 140px; height: 180px;
+    opacity: 0.9;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .hooked-fish.top-left  { top: -4px; left: 28px; }
+  .hooked-fish.top-right { top: -4px; right: 28px; transform: scaleX(-1); }
+  .hooked-fish svg { width: 100%; height: 100%; display: block; }
+  .hooked-fish .line { animation: lineSway 5s ease-in-out infinite; transform-origin: 50% 0; }
+  .hooked-fish.top-right .line { animation-duration: 6.4s; }
+  @keyframes lineSway {
+    0%, 100% { transform: rotate(-2deg); }
+    50%      { transform: rotate(2deg); }
+  }
+  .hooked-fish .fish-wriggle {
+    animation: wriggle 900ms ease-in-out infinite;
+    transform-origin: 70px 155px;
+  }
+  @keyframes wriggle {
+    0%, 100% { transform: rotate(-4deg); }
+    50%      { transform: rotate(4deg); }
+  }
+
+  /* raise the progress + card above the wallpaper */
+  #question-screen .progress-wrap,
+  #question-screen .flip-stage { position: relative; z-index: 2; }
+
+  /* give the question card a paper-backed look */
+  #question-screen .q-card {
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 0 0 6px rgba(255,255,255,0.35);
+  }
 </style>
 </head>
 <body>
@@ -490,6 +724,41 @@
   <div class="ripple-bg">
     <div class="ripple"></div><div class="ripple"></div><div class="ripple"></div>
   </div>
+
+  <!-- Scene layer: school of fish + bubbles + the hooking rig -->
+  <div class="fish-school" aria-hidden="true">
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <symbol id="ff-fish" viewBox="0 0 60 24">
+          <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12 q10 -10 24 0 q6 5 14 0 l-5 6 l5 6 q-8 -5 -14 0 q-14 10 -24 0 z"
+                  fill="currentColor" stroke="currentColor" stroke-width="1" opacity="0.85"/>
+            <circle cx="11" cy="10" r="1.4" fill="#FAFAF7"/>
+            <g class="wag">
+              <path d="M34 12 l10 -6 l-4 6 l4 6 z" fill="currentColor" opacity="0.8"/>
+            </g>
+          </g>
+        </symbol>
+      </defs>
+    </svg>
+    <!-- hand-placed school at different depths/speeds/colors -->
+    <div class="swim-fish"      style="top: 18%; color: var(--accent);       animation-duration: 24s; animation-delay: -3s;  opacity: 0.55; width: 60px; height: 26px;"><svg><use href="#ff-fish"/></svg></div>
+    <div class="swim-fish flip" style="top: 28%; color: var(--coral);        animation-duration: 18s; animation-delay: -9s;  opacity: 0.45; width: 38px; height: 18px;"><svg><use href="#ff-fish"/></svg></div>
+    <div class="swim-fish"      style="top: 46%; color: var(--blue);         animation-duration: 30s; animation-delay: -14s; opacity: 0.38; width: 80px; height: 34px;"><svg><use href="#ff-fish"/></svg></div>
+    <div class="swim-fish flip" style="top: 62%; color: var(--accent-hover); animation-duration: 21s; animation-delay: -6s;  opacity: 0.5;  width: 46px; height: 20px;"><svg><use href="#ff-fish"/></svg></div>
+    <div class="swim-fish"      style="top: 74%; color: var(--warning);      animation-duration: 26s; animation-delay: -18s; opacity: 0.42; width: 52px; height: 22px;"><svg><use href="#ff-fish"/></svg></div>
+    <div class="swim-fish flip" style="top: 84%; color: var(--blue);         animation-duration: 19s; animation-delay: -2s;  opacity: 0.35; width: 34px; height: 16px;"><svg><use href="#ff-fish"/></svg></div>
+    <div class="swim-fish"      style="top: 8%;  color: var(--coral);        animation-duration: 28s; animation-delay: -22s; opacity: 0.4;  width: 44px; height: 20px;"><svg><use href="#ff-fish"/></svg></div>
+
+    <!-- bubbles rising -->
+    <div class="bubble" style="left: 12%; bottom: -20px; width: 8px;  height: 8px;  animation-duration: 11s; animation-delay: -2s;"></div>
+    <div class="bubble" style="left: 24%; bottom: -20px; width: 5px;  height: 5px;  animation-duration: 8s;  animation-delay: -5s;"></div>
+    <div class="bubble" style="left: 68%; bottom: -20px; width: 10px; height: 10px; animation-duration: 13s; animation-delay: -1s;"></div>
+    <div class="bubble" style="left: 82%; bottom: -20px; width: 6px;  height: 6px;  animation-duration: 9s;  animation-delay: -7s;"></div>
+    <div class="bubble" style="left: 48%; bottom: -20px; width: 4px;  height: 4px;  animation-duration: 10s; animation-delay: -3s;"></div>
+
+  </div>
+
   <div class="title-inner">
     <svg class="logo-mark" viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="46" fill="none" stroke="#7B9E87" stroke-width="1.2" opacity="0.4"/>
@@ -497,7 +766,7 @@
       <path d="M15 65 Q35 50 55 58 Q75 66 88 52" fill="none" stroke="#C4846C" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
       <circle cx="18" cy="55" r="2.5" fill="#7B9E87"/>
     </svg>
-    <h1>Drift</h1>
+    <h1 class="drift-title"><span class="drift-letter">D</span><span class="drift-letter">r</span><span class="drift-letter">i</span><span class="drift-letter">f</span><span class="drift-letter">t</span></h1>
     <div class="tagline">Design · Tie · Fish</div>
     <button class="start-btn" onclick="startFlow()">Begin</button>
   </div>
@@ -505,6 +774,42 @@
 
 <!-- ============ QUESTION SCREEN ============ -->
 <div id="question-screen" class="screen">
+  <!-- A couple of fish snagged on lines dangling from the top corners.
+       The wallpaper repeating pattern handles the rest of the texture. -->
+  <div class="hooked-fish top-left" aria-hidden="true">
+    <svg viewBox="0 0 140 180" xmlns="http://www.w3.org/2000/svg">
+      <g class="line">
+        <path d="M70 0 Q72 60 70 120" stroke="#8A8A85" stroke-width="0.8" fill="none" stroke-dasharray="2 3" opacity="0.7"/>
+        <path d="M70 118 q0 10 -8 12 q-8 2 -8 -6" stroke="#5a5e64" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <g class="fish-wriggle" transform="translate(22 122) rotate(-18)">
+          <path d="M6 20 q16 -18 38 -2 q10 8 22 0 l-8 10 l8 10 q-12 -8 -22 0 q-22 16 -38 -2 z"
+                fill="#C4846C" stroke="#8a5a3a" stroke-width="1"/>
+          <circle cx="16" cy="16" r="2" fill="#FAFAF7"/>
+          <circle cx="16" cy="16" r="0.9" fill="#2D2D2B"/>
+          <path d="M22 22 q4 2 10 0" stroke="#8a5a3a" stroke-width="0.9" fill="none" opacity="0.6"/>
+          <circle cx="2" cy="16" r="1.6" fill="none" stroke="#6B8FA3" stroke-width="0.6" opacity="0.7"/>
+          <circle cx="-3" cy="12" r="1.0" fill="none" stroke="#6B8FA3" stroke-width="0.5" opacity="0.55"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <div class="hooked-fish top-right" aria-hidden="true">
+    <svg viewBox="0 0 140 180" xmlns="http://www.w3.org/2000/svg">
+      <g class="line">
+        <path d="M70 0 Q68 60 70 120" stroke="#8A8A85" stroke-width="0.8" fill="none" stroke-dasharray="2 3" opacity="0.7"/>
+        <path d="M70 118 q0 10 -8 12 q-8 2 -8 -6" stroke="#5a5e64" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <g class="fish-wriggle" transform="translate(22 122) rotate(-22)">
+          <path d="M6 20 q16 -18 38 -2 q10 8 22 0 l-8 10 l8 10 q-12 -8 -22 0 q-22 16 -38 -2 z"
+                fill="#7B9E87" stroke="#4a6353" stroke-width="1"/>
+          <circle cx="16" cy="16" r="2" fill="#FAFAF7"/>
+          <circle cx="16" cy="16" r="0.9" fill="#2D2D2B"/>
+          <path d="M22 22 q4 2 10 0" stroke="#4a6353" stroke-width="0.9" fill="none" opacity="0.6"/>
+          <circle cx="2" cy="16" r="1.6" fill="none" stroke="#6B8FA3" stroke-width="0.6" opacity="0.7"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
   <div class="progress-wrap">
     <div class="progress-label">
       <span>Question <span id="qnum">1</span> / <span id="qtotal">8</span></span>
@@ -589,7 +894,7 @@
     <button class="btn-primary" onclick="beginCheckout()">Checkout</button>
   </div>
   <div class="action-btns">
-    <button class="btn-ghost" onclick="goTo('customizer-screen')">Back</button>
+    <button class="btn-ghost" onclick="goTo('pattern-screen'); renderPatterns();">Back</button>
     <button class="btn-primary" onclick="startTying()">Begin Tying</button>
   </div>
 </div>
@@ -614,16 +919,21 @@
     <div class="tying-canvas">
       <canvas id="tyingCanvas" width="560" height="300"></canvas>
       <div class="your-design-label">Your Design</div>
+      <div class="step-encouragement" id="stepEncouragement"></div>
     </div>
     <div class="tying-steps">
       <div class="step-num">Step <span id="stepNum">1</span></div>
       <div class="step-title" id="stepTitle">—</div>
       <div class="step-desc" id="stepDesc">—</div>
       <div id="presentationNote"></div>
-      <!-- REPLACE: embed actual tying tutorial video URL below -->
-      <div class="video-box" id="videoBox">
-        <div class="play-icon"></div>
-        <div class="video-label">Tutorial video — embed here</div>
+      <!-- Video stage — one <video> element per step is injected by initVideoStage()
+           ROADMAP: left-handed video mirroring — flip via CSS transform scaleX(-1)
+                    or swap to mirrored video files under videos/*-L.mov
+           NOTE: if .mov playback fails in target browsers, convert to .mp4 with:
+                 ffmpeg -i input.mov -c:v libx264 -c:a aac output.mp4 -->
+      <div class="video-stage" id="videoStage"></div>
+      <div class="video-fallback" id="videoFallback" style="display:none">
+        Video unavailable — refresh to try again.
       </div>
     </div>
   </div>
@@ -1827,7 +2137,7 @@ function renderFly(ctx, cfg) {
    TRACED FLY RENDERER — draws from traced polygon/path data
    instead of the parametric hook-spine pipeline.
    ============================================================ */
-const TRACED_FLY_DATA = {"sections":[{"id":"collar","points":[{"x":261,"y":287},{"x":271,"y":267},{"x":288,"y":255},{"x":317,"y":243},{"x":342,"y":238},{"x":354,"y":239},{"x":362,"y":259},{"x":369,"y":283},{"x":369,"y":315},{"x":358,"y":331},{"x":338,"y":337},{"x":308,"y":332},{"x":282,"y":324},{"x":272,"y":318},{"x":267,"y":306},{"x":264,"y":296}],"guides":[],"filled":true,"props":{"baseColor":"#5a6b2e","tipColor":"#7a8a3e","shadowColor":"#3a4820","density":991,"fiberLen":25,"fiberLenVar":15,"fiberWidth":0.3,"sweepAngle":0,"opacity":0.85}},{"id":"body","points":[],"guides":[],"filled":false,"props":{"baseColor":"#c44a1e","tipColor":"#d85528","barColor":"#8a2e14","density":300,"fiberLen":15,"fiberLenVar":10,"fiberWidth":0.9,"sweepAngle":0,"barFreq":5,"opacity":0.85}},{"id":"tail","points":[{"x":334,"y":255},{"x":360,"y":240},{"x":376,"y":231},{"x":411,"y":231},{"x":435,"y":239},{"x":461,"y":245},{"x":489,"y":256},{"x":517,"y":267},{"x":536,"y":281},{"x":544,"y":286},{"x":516,"y":286},{"x":479,"y":285},{"x":444,"y":286},{"x":423,"y":286},{"x":391,"y":280},{"x":369,"y":278},{"x":347,"y":285},{"x":337,"y":285},{"x":337,"y":272},{"x":336,"y":263}],"guides":[],"filled":true,"props":{"baseColor":"#c44a1e","tipColor":"#d85528","barColor":"#8a2e14","hideColor":"#4a1808","density":771,"fiberLen":20,"fiberLenVar":2,"fiberWidth":0.9,"sweepAngle":-145,"barFreq":3,"hideSpine":true,"opacity":0.85}},{"id":"flash","points":[],"strands":[[{"x":542,"y":287},{"x":464,"y":300},{"x":412,"y":299},{"x":368,"y":290},{"x":354,"y":290},{"x":354,"y":290}],[{"x":339,"y":237},{"x":365,"y":217},{"x":365,"y":232}],[{"x":374,"y":231},{"x":402,"y":222},{"x":403,"y":228}],[{"x":414,"y":236},{"x":456,"y":222},{"x":456,"y":222}],[{"x":431,"y":243},{"x":455,"y":234},{"x":456,"y":234}],[{"x":462,"y":248},{"x":483,"y":245},{"x":483,"y":245}],[{"x":493,"y":261},{"x":529,"y":262},{"x":529,"y":262}],[{"x":510,"y":267},{"x":540,"y":266},{"x":540,"y":266}],[{"x":508,"y":277},{"x":539,"y":279},{"x":539,"y":279}],[{"x":431,"y":288},{"x":503,"y":277},{"x":503,"y":277}],[{"x":376,"y":281},{"x":428,"y":288},{"x":428,"y":288}]],"guides":[],"filled":true,"props":{"baseColor":"#3a2850","hlColor":"#8a6ab0","count":31,"waviness":3,"strokeW":0.7,"opacity":0.55}},{"id":"hook","points":[{"x":214,"y":313},{"x":306,"y":290},{"x":319,"y":278},{"x":325,"y":264},{"x":327,"y":254},{"x":328,"y":243},{"x":324,"y":236},{"x":320,"y":230},{"x":311,"y":228},{"x":305,"y":227},{"x":299,"y":228},{"x":293,"y":230},{"x":286,"y":232},{"x":282,"y":235},{"x":276,"y":238},{"x":274,"y":240}],"guides":[],"filled":true,"props":{"color":"#b8bcc0","wireW":2.8,"shadow":true}},{"id":"weedguard","points":[],"guides":[],"filled":false,"props":{"color":"#d8dde2","strokeW":2,"opacity":0.7}}],"eyeL":{"x":253,"y":298},"eyeR":{"x":257,"y":312},"seed":42};
+const TRACED_FLY_DATA = {"sections":[{"id":"collar","points":[{"x":261,"y":287},{"x":271,"y":267},{"x":288,"y":255},{"x":317,"y":243},{"x":342,"y":238},{"x":354,"y":239},{"x":362,"y":259},{"x":369,"y":283},{"x":369,"y":315},{"x":358,"y":331},{"x":338,"y":337},{"x":308,"y":332},{"x":282,"y":324},{"x":272,"y":318},{"x":267,"y":306},{"x":264,"y":296}],"guides":[],"filled":true,"props":{"baseColor":"#5a6b2e","tipColor":"#7a8a3e","shadowColor":"#3a4820","density":991,"fiberLen":25,"fiberLenVar":15,"fiberWidth":0.3,"sweepAngle":0,"opacity":0.85}},{"id":"body","points":[],"guides":[],"filled":false,"props":{"baseColor":"#c44a1e","tipColor":"#d85528","barColor":"#8a2e14","density":300,"fiberLen":15,"fiberLenVar":10,"fiberWidth":0.9,"sweepAngle":0,"barFreq":5,"opacity":0.85}},{"id":"tail","points":[{"x":334,"y":255},{"x":360,"y":240},{"x":376,"y":231},{"x":411,"y":231},{"x":435,"y":239},{"x":461,"y":245},{"x":489,"y":256},{"x":517,"y":267},{"x":536,"y":281},{"x":544,"y":286},{"x":516,"y":286},{"x":479,"y":285},{"x":444,"y":286},{"x":423,"y":286},{"x":391,"y":280},{"x":369,"y":278},{"x":347,"y":285},{"x":337,"y":285},{"x":337,"y":272},{"x":336,"y":263}],"guides":[],"filled":true,"props":{"baseColor":"#c44a1e","tipColor":"#d85528","barColor":"#8a2e14","hideColor":"#4a1808","density":771,"fiberLen":20,"fiberLenVar":2,"fiberWidth":0.9,"sweepAngle":-145,"barFreq":3,"hideSpine":true,"opacity":0.85}},{"id":"flash","points":[],"strands":[[{"x":542,"y":287},{"x":464,"y":300},{"x":412,"y":299},{"x":368,"y":290},{"x":354,"y":290},{"x":354,"y":290}],[{"x":339,"y":237},{"x":365,"y":217},{"x":365,"y":232}],[{"x":374,"y":231},{"x":402,"y":222},{"x":403,"y":228}],[{"x":414,"y":236},{"x":456,"y":222},{"x":456,"y":222}],[{"x":431,"y":243},{"x":455,"y":234},{"x":456,"y":234}],[{"x":462,"y":248},{"x":483,"y":245},{"x":483,"y":245}],[{"x":493,"y":261},{"x":529,"y":262},{"x":529,"y":262}],[{"x":510,"y":267},{"x":540,"y":266},{"x":540,"y":266}],[{"x":508,"y":277},{"x":539,"y":279},{"x":539,"y":279}],[{"x":431,"y":288},{"x":503,"y":277},{"x":503,"y":277}],[{"x":376,"y":281},{"x":428,"y":288},{"x":428,"y":288}]],"guides":[],"filled":true,"props":{"baseColor":"#3a2850","hlColor":"#8a6ab0","count":31,"waviness":3,"strokeW":0.7,"opacity":0.55}},{"id":"hook","points":[{"x":214,"y":313},{"x":306,"y":290},{"x":319,"y":278},{"x":325,"y":264},{"x":327,"y":254},{"x":328,"y":243},{"x":324,"y":236},{"x":320,"y":230},{"x":311,"y":228},{"x":305,"y":227},{"x":299,"y":228},{"x":293,"y":230},{"x":286,"y":232},{"x":282,"y":235},{"x":276,"y":238},{"x":274,"y":240}],"guides":[],"filled":true,"props":{"color":"#b8bcc0","wireW":2.8,"shadow":true}},{"id":"weedguard","points":[{"x":218,"y":318},{"x":252,"y":355},{"x":294,"y":320},{"x":272,"y":248}],"guides":[],"filled":false,"props":{"color":"#d8dde2","strokeW":2,"opacity":0.7}}],"eyeL":{"x":253,"y":298},"eyeR":{"x":257,"y":312},"seed":42};
 
 function _trPointInPoly(p,poly){
   var x=p.x,y=p.y,inside=false;
@@ -2121,6 +2431,33 @@ return { renderFly, renderTracedFly, buildHook, drawViseJaws, drawHook, drawDumb
    DATA
 ===================================================================== */
 const REGIONS = ["Texas Coast", "Louisiana", "Charleston, South Carolina", "Everglades, Florida", "Southern Virginia"];
+// Region display-name -> slug, used to look up species/bottom maps
+const REGION_SLUG = {
+  "Texas Coast":                "texas-coast",
+  "Louisiana":                  "louisiana",
+  "Charleston, South Carolina": "charleston-sc",
+  "Everglades, Florida":        "everglades-fl",
+  "Southern Virginia":          "southern-virginia"
+};
+// Species slug -> display label
+const SPECIES = {
+  "redfish":        "Redfish",
+  "sheepshead":     "Sheepshead",
+  "speckled-trout": "Speckled Trout",
+  "black-drum":     "Black Drum"
+};
+// Species availability by region — expand per region as patterns are added.
+const SPECIES_BY_REGION = {
+  "texas-coast":       ["redfish", "sheepshead", "speckled-trout", "black-drum"],
+  "louisiana":         ["redfish", "sheepshead", "speckled-trout", "black-drum"],
+  "charleston-sc":     ["redfish", "sheepshead", "speckled-trout", "black-drum"],
+  "everglades-fl":     ["redfish", "sheepshead", "speckled-trout", "black-drum"],
+  "southern-virginia": ["redfish", "sheepshead", "speckled-trout", "black-drum"]
+};
+// Demo-day unlocks: only these combinations drive the Bunny Slider output.
+// Everything else is visible but greyed out ("Coming Soon").
+const DEMO_UNLOCKED_SPECIES = new Set(["redfish"]);
+const DEMO_UNLOCKED_SIZE    = new Set(['Juvenile / Puppy Drum (33" and under)']);
 const SEASONS = ["Spring (March–May)", "Summer (June–August)", "Fall (September–November)", "Winter (December–February)"];
 const BOTTOM_BY_REGION = {
   "Texas Coast": ["Sandy flats", "Mud flats", "Oyster beds"],
@@ -2143,20 +2480,42 @@ const LIGHT_TIPS = {
 };
 
 const QUESTIONS = [
+  // 1 — Rod weight (first)
   { id:"rod", section:"Tackle", q:"What rod weight are you throwing?", type:"select",
     opts:["4wt","5wt","6wt","7wt","8wt","9wt","10wt","11wt","12wt"], default:"8wt" },
+
+  // 2 — Region
   { id:"location", section:"Location", q:"Where are you fishing?", type:"select", opts:REGIONS },
+
+  // 3 — Species (NEW, region-filtered). No default — the presenter clicks live.
+  { id:"species", section:"Target", q:"What are you fishing for?", type:"radio",
+    opts:[], dynamic:true, labelMap:SPECIES,
+    note:"Species list depends on your region" },
+
+  // 4 — Target size class (redfish only; hidden for other species).
+  // No default — the presenter clicks live. Algorithm gating still catches
+  // unsupported combinations downstream.
+  { id:"size", section:"Target", q:"Target size class", type:"radio",
+    opts:['Juvenile / Puppy Drum (33" and under)','Bull Redfish (over 33")'],
+    shouldShow: (a) => a.species === "redfish" },
+
+  // 5 — Season
   { id:"season", section:"Season", q:"When are you fishing?", type:"select", opts:SEASONS,
     note:"Season determines sink rate and eye weight" },
-  { id:"size", section:"Target", q:"Target size class", type:"radio",
-    opts:["Puppy Drum / Juvenile (under 18\")","Bull Redfish (40+, offshore)"],
-    disabled:[1], default:"Puppy Drum / Juvenile (under 18\")" },
+
+  // 6 — Water depth
   { id:"depth", section:"Depth", q:"Water depth?", type:"select",
     opts:["Skinny (under 1 ft)","Shallow (1–3 ft)","Medium (3–6 ft)"], default:"Shallow (1–3 ft)" },
+
+  // 7 — Light
   { id:"light", section:"Conditions", q:"Light conditions?", type:"select",
     opts:["Bright sun","Overcast","Low light / dawn-dusk","Night"],
     helpText:"Light affects presentation tactics (retrieve speed, positioning) — not fly construction for this pattern." },
+
+  // 8 — Bottom type (region-filtered)
   { id:"bottom", section:"Bottom", q:"What's the bottom type?", type:"select", opts:[], dynamic:true },
+
+  // 9 — Weed guard
   { id:"weed", section:"Guard", q:"Weed guard?", type:"toggle", default:true,
     note:"Always recommended for SE redfish — oyster beds and marsh structure" }
 ];
@@ -2179,25 +2538,71 @@ function mockStock(name, idx) {
   return "Out of Stock";
 }
 /* MOCK: real-time vendor pricing in production — prices below are realistic estimates */
-const BASE_MATERIALS = [
-  { name:"Gamakatsu SL12S, size 2", qty:"1 pack (25 hooks)", price:8.49,  vendor:"da" },
-  { name:"UTC 140 denier black thread", qty:"1 spool",        price:3.99,  vendor:"tt" },
-  { name:"Barred bunny strip, rust", qty:"1 pack (6–8 strips)",price:5.99, vendor:"da" },
-  { name:"Crosscut bunny fur, olive", qty:"1 package",         price:4.99, vendor:"rg" },
-  { name:"Black crystal flash", qty:"1 pack",                  price:3.99, vendor:"tt" },
-  { name:"Hard mono, 20 lb.", qty:"1 spool",                   price:4.99, vendor:"ole" },
-  { name:"Solarez UV resin", qty:"1 bottle",                   price:19.99,vendor:"ffs" },
-  { name:"Head cement", qty:"1 bottle (optional backup)",      price:5.49, vendor:"ole" }
+// Column 1 — fly-specific (cart items). Eyes slot is filled dynamically
+// in getFlyMaterials() based on the season (silent swap, winter = lead).
+const FLY_SPECIFIC_MATERIALS = [
+  { name:"Gamakatsu SL12S, size 2",      qty:"1 pack (25 hooks)",       price:8.49,  vendor:"da" },
+  { name:"UTC 140 denier black thread",  qty:"1 spool",                  price:3.99,  vendor:"tt" },
+  { name:"Barred bunny strip, rust",     qty:"1 pack (6–8 strips)",     price:5.99,  vendor:"da" },
+  { name:"Crosscut bunny fur, olive",    qty:"1 package",                price:4.99,  vendor:"rg" },
+  { name:"Black crystal flash",          qty:"1 pack",                   price:3.99,  vendor:"tt" }
 ];
-const EYES_STANDARD = { name:"Medium bead chain, black", qty:"1 package", price:2.99, vendor:"da" };  // MOCK: real-time vendor pricing in production
-const EYES_WINTER   = { name:"Small lead eyes, black",   qty:"1 package", price:3.99, vendor:"rg" };  // MOCK: real-time vendor pricing in production
+const EYES_STANDARD = { name:"Medium bead chain eyes, black", qty:"1 package", price:2.99, vendor:"da" };
+const EYES_WINTER   = { name:"Small lead eyes, black",        qty:"1 package", price:3.99, vendor:"rg" };
 
+// Column 2 — general materials, reusable across patterns (cart items)
+const GENERAL_MATERIALS = [
+  { name:"Head cement — Loon Hard Head or similar",            qty:"1 bottle", price:5.49,  vendor:"ole" },
+  { name:"UV resin — Solarez Bone Dry or Loon UV Knot Sense",  qty:"1 bottle", price:19.99, vendor:"ffs" },
+  { name:"20 lb hard mono (weed guards, saltwater patterns)",  qty:"1 spool",  price:4.99,  vendor:"ole" }
+];
+
+// Column 3 — tools (checklist only; persisted in localStorage, never in cart)
+const TOOLS = [
+  { id:"vise",            name:"Vise (DynaKing Barracuda or equivalent rotary vise)" },
+  { id:"bobbin",          name:"Bobbin" },
+  { id:"bobbin_threader", name:"Bobbin threader", optional:true },
+  { id:"scissors",        name:"Scissors (fine-tip tying scissors)" },
+  { id:"hackle_pliers",   name:"Hackle pliers" },
+  { id:"dubbing_loop",    name:"Dubbing loop tool (or dubbing twister)" },
+  { id:"bodkin",          name:"Bodkin / dubbing pick" },
+  { id:"whip_finisher",   name:"Whip finisher" },
+  { id:"uv_light",        name:"UV light (for curing UV resin)" },
+  { id:"hair_stacker",    name:"Hair stacker (for aligning bunny fur tips)", optional:true }
+];
+
+/* =====================================================================
+   PATTERNS
+   All three patterns share one schema. Only playable:true gets the
+   procedural render + full customize/materials/tying flow; the others
+   appear on the select screen with a blank preview and route through
+   showComingSoon() when clicked.
+===================================================================== */
 const BUNNY_SLIDER = {
   id:"bunny_slider", name:"Bunny Slider",
-  difficulty:"Medium", time:"30 min",
+  designer:"Traditional SE redfish pattern",
+  type:"Medium-sink streamer — maximum fur movement",
+  difficulty:"Medium",   // field retained for back-compat, not rendered
+  time:"5 min",
+  slideCount:7,          // matches TYING_STEPS.length (one step per video)
+  playable:true,
   pros:["~80% rabbit fur — maximum movement in water","Proven killer on SE redfish year-round"],
   con:"Bunny strips require careful prep and proportioning",
   techniques:["Thread base","Weed guard loop","Figure-8 eye wrap","Bunny strip palmering","Crosscut collar","UV cure finish"],
+  targetSpecies:["redfish"],
+  targetSpeciesLabels:["Redfish"],
+  regions:["texas-coast","louisiana","charleston-sc","everglades-fl","southern-virginia"],
+  seasons:["Spring (March–May)","Summer (June–August)","Fall (September–November)","Winter (December–February)"],
+  hook:"Gamakatsu SL12S #2",
+  hookSize:2,
+  thread:"UTC 140 denier, black",
+  eyesStandard:"Medium bead chain, black",
+  eyesWinter:"Small lead eyes, black",
+  weedGuard:true,
+  weedGuardMaterial:"20 lb hard mono loop",
+  finish:"UV resin head (Solarez)",
+  waterDepth:["Skinny (under 1 ft)","Shallow (1–3 ft)","Medium (3–6 ft)"],
+  bottomTypes:["Sandy flats","Mud flats","Oyster beds","Marsh creek bottoms","Seagrass beds"],
   rfConfig: {
     seed: 42, category:'streamer', hookType:'streamer', hookSize:2,
     hookColor: '#b8bcc0',
@@ -2211,44 +2616,229 @@ const BUNNY_SLIDER = {
   }
 };
 
-const COMING_SOON_PATTERNS = [
-  { name:"EP Spawning Shrimp", difficulty:"Hard", time:"45 min" },
-  { name:"Clouser Minnow", difficulty:"Easy", time:"15 min" }
-];
+// Traced polygon/path data for the EP Spawning Shrimp preview.
+// Same schema as FLY_RENDERER.TRACED_FLY_DATA — consumed by renderTracedFly().
+const EP_SHRIMP_TRACED_DATA = {
+  "sections": [
+    { "id":"collar",
+      "points": [
+        {"x":325,"y":384},{"x":372,"y":361},{"x":430,"y":355},{"x":450,"y":382},
+        {"x":488,"y":395},{"x":521,"y":411},{"x":444,"y":410},{"x":357,"y":410},
+        {"x":340,"y":404}
+      ],
+      "guides": [], "filled": true,
+      "props": { "baseColor":"#70591a","tipColor":"#c2983d","shadowColor":"#c38346",
+                 "density":561,"fiberLen":31,"fiberLenVar":15,"fiberWidth":1.8,
+                 "sweepAngle":-45,"opacity":0.85 } },
+    { "id":"body",
+      "points": [
+        {"x":485,"y":369},{"x":553,"y":354},{"x":630,"y":362},{"x":769,"y":394},
+        {"x":492,"y":394}
+      ],
+      "guides": [], "filled": true,
+      "props": { "baseColor":"#d6bf2e","tipColor":"#8d9523","barColor":"#bcbe46",
+                 "density":300,"fiberLen":73,"fiberLenVar":10,"fiberWidth":0.9,
+                 "sweepAngle":0,"barFreq":5,"opacity":0.85 } },
+    { "id":"tail",
+      "points": [
+        {"x":446,"y":360},{"x":466,"y":352},{"x":484,"y":364},{"x":491,"y":382},
+        {"x":480,"y":394},{"x":450,"y":387},{"x":444,"y":372}
+      ],
+      "guides": [], "filled": true,
+      "props": { "baseColor":"#c44a1e","tipColor":"#d85528","barColor":"#8a2e14","hideColor":"#4a1808",
+                 "density":151,"fiberLen":1,"fiberLenVar":30,"fiberWidth":1,
+                 "sweepAngle":0,"barFreq":5,"hideSpine":true,"opacity":0.85 } },
+    // Flash section intentionally omitted — no krystal flash on this shrimp.
+    { "id":"hook",
+      "points": [
+        {"x":286,"y":389},{"x":428,"y":392},{"x":455,"y":383},{"x":466,"y":369},
+        {"x":476,"y":355},{"x":477,"y":341},{"x":472,"y":328},{"x":457,"y":322},
+        {"x":437,"y":322},{"x":416,"y":325},{"x":408,"y":325}
+      ],
+      "guides": [], "filled": false,
+      "props": { "color":"#b8bcc0","wireW":2.8,"shadow":true } },
+    { "id":"weedguard",
+      "points": [], "guides": [], "filled": false,
+      "props": { "color":"#d8dde2","strokeW":2,"opacity":0.7 } }
+  ],
+  "eyeL": {"x":476,"y":377},
+  "eyeR": {"x":476,"y":387},
+  "seed": 42,
+  "refOpacity": 0.45,
+  "refScale": 0.6384713059566351,
+  "refX": 174.58947368421047,
+  "refY": 119.29999999999995
+};
 
+const EP_SPAWNING_SHRIMP = {
+  id:"ep_spawning_shrimp", name:"EP Spawning Shrimp",
+  tracedData: EP_SHRIMP_TRACED_DATA,
+  designer:"Enrico Puglisi",
+  type:"Suspending/slow-sink shrimp imitation",
+  difficulty:"Hard",
+  time:"5 min",
+  slideCount:6,          // reverse tie · EP taper · shrimp eyes · antennae · flash · UV finish
+  playable:false,
+  pros:["Natural shrimp profile from tapered EP Fibers","Triggers spawning-season feeds on flats"],
+  con:"EP Fibers require careful tapering to avoid clumping",
+  techniques:["Reverse tie","EP Fiber tapering","Mono shrimp eyes","Antennae mount","UV resin head"],
+  targetSpecies:["redfish","bonefish","permit","snook"],
+  targetSpeciesLabels:["Redfish","Bonefish","Permit","Snook"],
+  regions:["texas-coast","louisiana","charleston-sc","everglades-fl","southern-virginia"],
+  seasons:["Spring (March–May)","Summer (June–August)","Fall (September–November)","Winter (December–February)"],
+  seasonNote:"All seasons; Spring and Fall peak for spawning shrimp activity",
+  hook:"Gamakatsu SL11-3H or SC15 #1–2",
+  hookSize:2,
+  thread:"UTC 140 denier, tan or pink",
+  eyesStandard:"Medium bead chain, black",
+  eyesWinter:"Small lead eyes, black",
+  weedGuard:true,
+  weedGuardMaterial:"20 lb hard mono loop",
+  finish:"UV resin head",
+  waterDepth:["Skinny (under 1 ft)","Shallow (1–3 ft)"],
+  bottomTypes:["Sandy flats","Seagrass beds","Oyster beds"],
+  bodyMaterial:"EP Fibers (tan, pink, or shrimp-pink blend), reverse-tie tapered profile",
+  antennae:"2–4 strands stiff mono or boar bristle past the hook eye",
+  shrimpEyes:"Small black mono eyes / burnt mono nubs on either side of head",
+  flashMaterial:"Pearl or pink Krystal Flash, 4–6 strands"
+};
+
+// Traced polygon/path data for the Clouser Minnow preview.
+// Same schema as FLY_RENDERER.TRACED_FLY_DATA — consumed by renderTracedFly().
+const CLOUSER_TRACED_DATA = {
+  "sections": [
+    { "id":"collar",
+      "points": [
+        {"x":311,"y":381},{"x":343,"y":352},{"x":380,"y":335},{"x":439,"y":321},
+        {"x":493,"y":306},{"x":552,"y":297},{"x":629,"y":300},{"x":559,"y":319},
+        {"x":512,"y":344},{"x":442,"y":360},{"x":348,"y":373}
+      ],
+      "guides": [], "filled": true,
+      "props": { "baseColor":"#5a6b2e","tipColor":"#7a8a3e","shadowColor":"#3a4820",
+                 "density":200,"fiberLen":62,"fiberLenVar":19,"fiberWidth":2,"sweepAngle":0,"opacity":0.7 } },
+    { "id":"body",
+      "points": [
+        {"x":335,"y":387},{"x":387,"y":382},{"x":443,"y":367},{"x":492,"y":360},
+        {"x":542,"y":362},{"x":581,"y":385},{"x":592,"y":414},{"x":493,"y":416},
+        {"x":367,"y":399},{"x":343,"y":395}
+      ],
+      "guides": [], "filled": true,
+      "props": { "baseColor":"#e0bbae","tipColor":"#ead4cc","barColor":"#c5c4aa",
+                 "density":191,"fiberLen":39,"fiberLenVar":10,"fiberWidth":0.9,
+                 "sweepAngle":0,"barFreq":5,"opacity":0.85 } },
+    { "id":"tail",
+      "points": [], "guides": [], "filled": false,
+      "props": { "baseColor":"#c44a1e","tipColor":"#d85528","barColor":"#8a2e14","hideColor":"#4a1808",
+                 "density":250,"fiberLen":50,"fiberLenVar":30,"fiberWidth":1,
+                 "sweepAngle":0,"barFreq":5,"hideSpine":true,"opacity":0.85 } },
+    // Flash section intentionally omitted — no krystal flash on this Clouser.
+    { "id":"hook",
+      "points": [
+        {"x":282,"y":390},{"x":299,"y":389},{"x":340,"y":388},{"x":358,"y":387},
+        {"x":385,"y":382},{"x":399,"y":377},{"x":405,"y":369},{"x":408,"y":358},
+        {"x":406,"y":346},{"x":395,"y":339},{"x":376,"y":338},{"x":365,"y":340}
+      ],
+      "guides": [], "filled": true,
+      "props": { "color":"#b8bcc0","wireW":2.8,"shadow":true } },
+    { "id":"weedguard",
+      "points": [], "guides": [], "filled": false,
+      "props": { "color":"#d8dde2","strokeW":2,"opacity":0.7 } }
+  ],
+  "eyeL": {"x":316,"y":399},
+  "eyeR": {"x":319,"y":390},
+  "seed": 42,
+  "refOpacity": 0,
+  "refScale": 0.8751067611627457,
+  "refX": 31.589473684210475,
+  "refY": 63.299999999999955
+};
+
+const CLOUSER_MINNOW = {
+  id:"clouser_minnow", name:"Clouser Minnow",
+  tracedData: CLOUSER_TRACED_DATA,
+  designer:"Bob Clouser",
+  type:"Fast-sink baitfish imitation with jigging action",
+  difficulty:"Easy",
+  time:"10 min",
+  slideCount:9,          // hook · thread base · lead eyes · belly · flash · back · throat · thread head · cement/UV
+  playable:false,
+  pros:["Iconic jigging action from heavy lead eyes","Works on virtually every inshore gamefish"],
+  con:"Heavy lead eyes demand a careful casting stroke",
+  techniques:["Lead dumbbell mount","Bucktail belly","Krystal flash","Bucktail back","Thread head finish"],
+  targetSpecies:["redfish","speckled-trout","striped-bass","snook","smallmouth"],
+  targetSpeciesLabels:["Redfish","Speckled Trout","Striped Bass","Snook","Smallmouth"],
+  regions:["texas-coast","louisiana","charleston-sc","everglades-fl","southern-virginia"],
+  seasons:["Spring (March–May)","Summer (June–August)","Fall (September–November)","Winter (December–February)"],
+  hook:"Mustad 34007 or Gamakatsu SC15 #1/0–4",
+  hookSize:2,
+  thread:"UTC 140 denier, white (or matching top color)",
+  eyesStandard:"Lead dumbbell eyes — small/medium/large by depth (defining feature)",
+  eyesWinter:"Large lead dumbbell eyes",
+  weedGuard:false,
+  weedGuardMaterial:"Optional 20 lb hard mono loop for oyster/marsh",
+  finish:"Thread head + head cement or UV resin, optional painted eyes",
+  waterDepth:["Shallow (1–3 ft)","Medium (3–6 ft)"],
+  bottomTypes:["Sandy flats","Oyster beds","Marsh creek bottoms"],
+  bellyMaterial:"White bucktail",
+  backMaterial:"Chartreuse, olive, or tan bucktail (chartreuse-over-white iconic)",
+  flashMaterial:"Pearl or silver Krystal Flash, 6–10 strands"
+};
+
+// Ordered list driving the fly select grid. Bunny Slider stays first.
+const PATTERNS = [BUNNY_SLIDER, EP_SPAWNING_SHRIMP, CLOUSER_MINNOW];
+function getPatternById(id) { return PATTERNS.find(p => p.id === id); }
+
+// Bunny Slider tutorial — 7 steps, one per video. Each step adds its
+// own layer on top of the previous so the vise-view renders the fly
+// incrementally. Videos live in ./videos/ next to this file.
+// ROADMAP: left-handed mode — video paths below are the right-handed
+// recordings; when the left/right toggle is re-enabled, either swap to
+// mirrored video files (videos/1-L.mov etc.) or CSS scaleX(-1) the
+// <video> element. The descL strings already exist for the written text.
 const TYING_STEPS = [
-  { title:"Mount Hook & Thread Base",
-    descR:"Secure the Gamakatsu SL12S in your vise with the hook point facing away. Start UTC 140 black thread behind the eye. Wrap a smooth thread base from the eye back to the bend, then return the thread to about one-third back from the eye.",
-    descL:"Secure the Gamakatsu SL12S in your vise with the hook point facing away. Start UTC 140 black thread behind the eye. Wrap a smooth thread base from the eye back to the bend, then return the thread to about one-third back from the eye.",
+  { title:"Mount Hook, Thread Base & Tail",
+    video:"videos/1.mov",
+    descR:"Secure the Gamakatsu SL12S in your vise with the hook point down and facing away from you. Start UTC 140 black thread behind the hook eye and wrap a smooth base from the eye back to the bend. Then tie in a barred rust bunny strip at the bend — trim the leather to a tapered tip and orient the strip with the hide facing UP, fur flowing straight back as the tail. Secure with tight wraps and trim the stub.",
+    descL:"Secure the Gamakatsu SL12S in your vise with the hook point down and facing away from you. Start UTC 140 black thread behind the hook eye and wrap a smooth base from the eye back to the bend. Then tie in a barred rust bunny strip at the bend — trim the leather to a tapered tip and orient the strip with the hide facing UP, fur flowing straight back as the tail. Secure with tight wraps and trim the stub.",
+    encouragement:"Hook and tail — the fly already has its silhouette.",
     layers:[] },
+  { title:"Tie In Krystal Flash",
+    video:"videos/2.mov",
+    descR:"Cut 6–8 strands of black Krystal Flash about 4 inches long. Fold them over the thread and bind them in on top of the tail, letting the strands extend back past the bend. Trim to roughly 1.5× the tail length so the flash peeks through the fur.",
+    descL:"Cut 6–8 strands of black Krystal Flash about 4 inches long. Fold them over the thread and bind them in on top of the tail, letting the strands extend back past the bend. Trim to roughly 1.5× the tail length so the flash peeks through the fur.",
+    encouragement:"A few strands of flash and the fly already has some attitude.",
+    layers:["tail","body","flash"] },
+  { title:"Tie In Bead Chain Eyes",
+    video:"videos/3.mov",
+    descR:"Position bead chain eyes (or lead eyes if you're tying a winter version) on top of the shank, about one-third back from the hook eye. Make figure-8 thread wraps — over the left eye from the front, under the shank, over the right eye from behind — and repeat 6–8 times. Apply a drop of head cement to lock them.",
+    descL:"Position bead chain eyes (or lead eyes if you're tying a winter version) on top of the shank, about one-third back from the hook eye. Make figure-8 thread wraps — over the right eye from the front, under the shank, over the left eye from behind — and repeat 6–8 times. Apply a drop of head cement to lock them.",
+    encouragement:"Patient figure-8s now — these eyes keep everything locked together.",
+    layers:["tail","body","flash","eyes"] },
+  { title:"Create a Dubbing Loop",
+    video:"videos/4.mov",
+    descR:"Form a dubbing loop with your tying thread — pull a long loop of thread down, hold it with your finger or a loop tool, and load it with olive crosscut bunny fur. Spin the loop tight with a dubbing twister until the fibers stand out around a single fur-packed chenille. Keep it under tension; you'll palmer it onto the hook in the next step.",
+    descL:"Form a dubbing loop with your tying thread — pull a long loop of thread down, hold it with your finger or a loop tool, and load it with olive crosscut bunny fur. Spin the loop tight with a dubbing twister until the fibers stand out around a single fur-packed chenille. Keep it under tension; you'll palmer it onto the hook in the next step.",
+    encouragement:"Slow down and load it evenly — a good loop makes the next step effortless.",
+    // Prep step — no new component on the fly render.
+    layers:["tail","body","flash","eyes"] },
+  { title:"Palmer the Dubbing Loop (Olive Collar)",
+    video:"videos/5.mov",
+    descR:"Palmer-wrap the loaded dubbing loop forward around the shank, from just behind the eyes toward the hook eye, stroking the fibers backward with each wrap so they don't get trapped. This forms the bulky olive collar. Tie off behind the eyes, trim the excess thread and loop, and brush the collar out.",
+    descL:"Palmer-wrap the loaded dubbing loop forward around the shank, from just behind the eyes toward the hook eye, stroking the fibers backward with each wrap so they don't get trapped. This forms the bulky olive collar. Tie off behind the eyes, trim the excess thread and loop, and brush the collar out.",
+    encouragement:"The collar is coming alive. Keep stroking those fibers back.",
+    layers:["tail","body","flash","eyes","collar"] },
   { title:"Tie In Weed Guard",
-    descR:"Cut a 3-inch piece of 20 lb. hard mono. Tie it in on the near side of the shank, just behind the eye. The mono extends past the bend — you'll loop it back later. Secure with tight wraps moving left to right along the shank.",
-    descL:"Cut a 3-inch piece of 20 lb. hard mono. Tie it in on the far side of the shank, just behind the eye. The mono extends past the bend — you'll loop it back later. Secure with tight wraps moving right to left along the shank.",
-    layers:["weedGuard"] },
-  { title:"Mount Eyes (Figure-8 Wrap)",
-    descR:"Position bead chain (or lead) eyes on top of the shank, one-third back from the eye. Make figure-8 thread wraps: over the left eye from front, cross under the shank, over the right eye from behind. Repeat 6–8 times. Apply head cement to the wraps.",
-    descL:"Position bead chain (or lead) eyes on top of the shank, one-third back from the eye. Make figure-8 thread wraps: over the right eye from front, cross under the shank, over the left eye from behind. Repeat 6–8 times. Apply head cement to the wraps.",
-    layers:["weedGuard","eyes"] },
-  { title:"Prepare Bunny Strips",
-    descR:"Trim barred bunny strip to about 3 inches for the tail/body. Trim crosscut olive strip to about 2 inches for the collar. Remove any excess hide from the base of each strip. Set both aside within reach.",
-    descL:"Trim barred bunny strip to about 3 inches for the tail/body. Trim crosscut olive strip to about 2 inches for the collar. Remove any excess hide from the base of each strip. Set both aside within reach.",
-    layers:["weedGuard","eyes"] },
-  { title:"Tie In Tail & Palmer Body",
-    descR:"Tie the barred bunny strip at the bend with the fur flowing backward as the tail. Advance thread to the eyes. Palmer-wrap the strip forward in touching turns, stroking fibers backward with each wrap. Tie off behind the eyes and trim excess.",
-    descL:"Tie the barred bunny strip at the bend with the fur flowing backward as the tail. Advance thread to the eyes. Palmer-wrap the strip forward in touching turns, stroking fibers backward with each wrap. Tie off behind the eyes and trim excess.",
-    layers:["weedGuard","eyes","tail","body"] },
-  { title:"Wrap Crosscut Collar",
-    descR:"Tie in olive crosscut strip behind the eyes. Make 2–3 wraps forward, creating a bulky collar of radiating fur. Stroke fibers backward after each wrap to prevent trapping. Tie off in front of the eyes and trim.",
-    descL:"Tie in olive crosscut strip behind the eyes. Make 2–3 wraps forward, creating a bulky collar of radiating fur. Stroke fibers backward after each wrap to prevent trapping. Tie off in front of the eyes and trim.",
-    layers:["weedGuard","eyes","tail","body","collar"] },
-  { title:"Add Crystal Flash",
-    descR:"Select 4–6 strands of black crystal flash. Fold them over the thread and tie in on the near side of the shank, just behind the eyes. The strands should extend along both sides of the fly, reaching to about mid-tail length. Trim to length.",
-    descL:"Select 4–6 strands of black crystal flash. Fold them over the thread and tie in on the far side of the shank, just behind the eyes. The strands should extend along both sides of the fly, reaching to about mid-tail length. Trim to length.",
-    layers:["weedGuard","eyes","tail","body","collar","flash"] },
-  { title:"Whip Finish & UV Cure",
-    descR:"Build a small, neat thread head between the eyes and the hook eye. Whip finish 3–4 turns and trim thread. Loop the mono weed guard back to the eye and secure with thread. Apply Solarez UV resin to the thread head and cure under UV light for 15 seconds.",
-    descL:"Build a small, neat thread head between the eyes and the hook eye. Whip finish 3–4 turns and trim thread. Loop the mono weed guard back to the eye and secure with thread. Apply Solarez UV resin to the thread head and cure under UV light for 15 seconds.",
-    layers:["weedGuard","eyes","tail","body","collar","flash"] }
+    video:"videos/6.mov",
+    descR:"Cut a 3-inch piece of 20 lb hard mono. Lay it along the near side of the shank behind the hook eye and bind it down with tight wraps — the mono extends past the bend. Loop it back up toward the hook eye to form the weed guard and secure with more wraps.",
+    descL:"Cut a 3-inch piece of 20 lb hard mono. Lay it along the far side of the shank behind the hook eye and bind it down with tight wraps — the mono extends past the bend. Loop it back up toward the hook eye to form the weed guard and secure with more wraps.",
+    encouragement:"This mono loop is what keeps you fishing, not untangling.",
+    layers:["tail","body","flash","eyes","collar","weedGuard"] },
+  { title:"Finish with UV Resin",
+    video:"videos/7.mov",
+    descR:"Build a small, neat thread head between the eyes and the hook eye. Whip finish 3–4 turns and trim the thread. Apply Solarez UV resin to the thread head and cure under a UV light for 15 seconds. Your fly is complete — let it dry, then go find a redfish.",
+    descL:"Build a small, neat thread head between the eyes and the hook eye. Whip finish 3–4 turns and trim the thread. Apply Solarez UV resin to the thread head and cure under a UV light for 15 seconds. Your fly is complete — let it dry, then go find a redfish.",
+    encouragement:"Last wraps. Tight, quiet, finished — you tied the one that'll catch it.",
+    layers:["tail","body","flash","eyes","collar","weedGuard"] }
 ];
 
 const PART_LIST = ["body","collar","tail","eyes","flash"];
@@ -2259,7 +2849,7 @@ const PART_MAP = { body:"body", collar:"collar", tail:"tail", eyes:"eyes", flash
    STATE
 ===================================================================== */
 let state = {
-  answers: { rod:"8wt", size:'Puppy Drum / Juvenile (under 18")', depth:"Shallow (1–3 ft)", weed:true },
+  answers: { rod:"8wt", depth:"Shallow (1–3 ft)", weed:true },
   qIdx: 0,
   selectedPattern: null,
   custom: {
@@ -2267,6 +2857,8 @@ let state = {
     weedGuard: true, activePart: "body", prevVisible: null
   },
   owned: new Set(),
+  // Tool checkboxes (Col 3) persist across reloads — id strings, not indices
+  toolsOwned: new Set(JSON.parse(localStorage.getItem('drift_tools_owned') || '[]')),
   stepIdx: 0,
   // ROADMAP: left-handed mode — architecture ready, UI hidden for demo
   hand: 'right',
@@ -2286,22 +2878,63 @@ function startFlow() { state.qIdx = 0; goTo("question-screen"); renderQuestion()
 
 /* =====================================================================
    QUESTION FLOW
+   Some questions are conditionally hidden via q.shouldShow(answers).
+   The helpers below count/find questions accounting for that.
 ===================================================================== */
+function isQVisible(q) { return !q.shouldShow || q.shouldShow(state.answers); }
+function visibleCount() { return QUESTIONS.filter(isQVisible).length; }
+function visibleIndexOf(idx) {
+  // 1-based position of QUESTIONS[idx] among the currently visible questions
+  let n = 0;
+  for (let i = 0; i <= idx && i < QUESTIONS.length; i++) if (isQVisible(QUESTIONS[i])) n++;
+  return n;
+}
+function nextVisibleIdx(from) {
+  for (let i = from + 1; i < QUESTIONS.length; i++) if (isQVisible(QUESTIONS[i])) return i;
+  return -1;
+}
+function prevVisibleIdx(from) {
+  for (let i = from - 1; i >= 0; i--) if (isQVisible(QUESTIONS[i])) return i;
+  return -1;
+}
+
 function renderQuestion() {
+  // If the current question is hidden (e.g. user flipped species off redfish),
+  // skip to the next visible one.
+  if (!isQVisible(QUESTIONS[state.qIdx])) {
+    const nxt = nextVisibleIdx(state.qIdx);
+    if (nxt !== -1) { state.qIdx = nxt; }
+    else { finishFlow(); return; }
+  }
   const q = QUESTIONS[state.qIdx];
   const card = document.getElementById("qcard");
-  document.getElementById("qnum").textContent = state.qIdx + 1;
-  document.getElementById("qtotal").textContent = QUESTIONS.length;
+  const visIdx = visibleIndexOf(state.qIdx);
+  const visTot = visibleCount();
+  document.getElementById("qnum").textContent = visIdx;
+  document.getElementById("qtotal").textContent = visTot;
   document.getElementById("qsection").textContent = q.section;
-  document.getElementById("qfill").style.width = ((state.qIdx) / QUESTIONS.length * 100) + "%";
+  document.getElementById("qfill").style.width = ((visIdx - 1) / visTot * 100) + "%";
   card.classList.remove("flip-in"); void card.offsetWidth; card.classList.add("flip-in");
 
   // dynamic bottom type options
   if (q.dynamic && q.id === "bottom") {
     q.opts = BOTTOM_BY_REGION[state.answers.location] || ["Sandy flats","Mud flats","Oyster beds"];
   }
+  // dynamic species options (region-filtered)
+  if (q.dynamic && q.id === "species") {
+    const slug = REGION_SLUG[state.answers.location] || "";
+    const regional = SPECIES_BY_REGION[slug] || SPECIES_BY_REGION["texas-coast"];
+    q.opts = regional.slice();
+    // All options selectable for demo — no greyed-out treatment.
+    // isBunnySliderUnlocked()/renderPatterns handle unsupported combos.
+    q.disabled = [];
+    // Re-validate stored species against the (possibly new) region list.
+    if (state.answers.species && !q.opts.includes(state.answers.species)) {
+      state.answers.species = q.opts.includes(q.default) ? q.default : q.opts[0];
+    }
+  }
 
-  let html = `<div class="q-num">${String(state.qIdx+1).padStart(2,"0")} / ${String(QUESTIONS.length).padStart(2,"0")}</div>
+  let html = `<div class="q-num">${String(visIdx).padStart(2,"0")} / ${String(visTot).padStart(2,"0")}</div>
     <div class="q-text">${q.q}</div>`;
   if (q.note) html += `<div class="q-sub">${q.note}</div>`;
 
@@ -2320,7 +2953,13 @@ function renderQuestion() {
     q.opts.forEach((o, i) => {
       const dis = q.disabled && q.disabled.includes(i);
       const sel = state.answers[q.id] === o || (!state.answers[q.id] && q.default === o);
-      html += `<button class="opt ${sel?"selected":""} ${dis?"disabled":""}" ${dis?"":"onclick=\"pickOpt('"+q.id+"','"+o.replace(/'/g,"\\'")+"')\""}>${o}</button>`;
+      const label = q.labelMap ? (q.labelMap[o] || o) : o;
+      // HTML-escape the option for safe inclusion in attributes.
+      // Options like 'Juvenile / Puppy Drum (33" and under)' contain a
+      // double-quote which otherwise terminates the attribute.
+      const attrSafe = String(o).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const click = dis ? "" : `onclick="pickOpt(this)"`;
+      html += `<button class="opt ${sel?"selected":""} ${dis?"disabled":""}" data-qid="${q.id}" data-value="${attrSafe}" ${click}>${label}</button>`;
     });
     html += `</div>`;
   } else if (q.type === "toggle") {
@@ -2337,9 +2976,10 @@ function renderQuestion() {
     if (sr) html += `<div class="algo-badge sink">${sr.label}</div>`;
   }
 
+  const isLastVisible = nextVisibleIdx(state.qIdx) === -1;
   html += `<div class="q-nav">
-    <button class="btn-ghost" onclick="prevQ()" ${state.qIdx===0?"style='visibility:hidden'":""}>Back</button>
-    <button class="btn-primary" id="qNext" onclick="nextQ()">${state.qIdx===QUESTIONS.length-1?"Forge Pattern":"Next"}</button>
+    <button class="btn-ghost" onclick="prevQ()" ${prevVisibleIdx(state.qIdx)===-1?"style='visibility:hidden'":""}>Back</button>
+    <button class="btn-primary" id="qNext" onclick="nextQ()">${isLastVisible?"Forge Pattern":"Next"}</button>
   </div>`;
   card.innerHTML = html;
 
@@ -2357,27 +2997,65 @@ function renderQuestion() {
     state.answers[q.id] = q.default !== undefined ? q.default : true;
   }
 }
-function pickOpt(id, val) {
+function pickOpt(btnOrId, maybeVal) {
+  // Buttons now call pickOpt(this); browsers decode data-value from the
+  // HTML-escaped attribute back to the raw string. The old (id,val) form
+  // still works for anything outside the render path.
+  let id, val;
+  if (btnOrId && btnOrId.nodeType === 1) {
+    id  = btnOrId.dataset.qid;
+    val = btnOrId.dataset.value;
+  } else {
+    id  = btnOrId;
+    val = maybeVal;
+  }
   state.answers[id] = val;
-  document.querySelectorAll(".q-options .opt:not(.disabled)").forEach(b => b.classList.toggle("selected", b.textContent === val));
+  document.querySelectorAll(".q-options .opt:not(.disabled)").forEach(b => {
+    const v = b.dataset.value != null ? b.dataset.value : b.textContent;
+    b.classList.toggle("selected", v === val);
+  });
 }
 function toggleAnswer(id) {
   state.answers[id] = !state.answers[id];
   const sw = document.getElementById("qToggle");
   if (sw) sw.classList.toggle("on", state.answers[id]);
 }
-function nextQ() {
-  if (state.qIdx < QUESTIONS.length - 1) { state.qIdx++; renderQuestion(); }
-  else { document.getElementById("qfill").style.width = "100%"; runAlgorithm(); goTo("pattern-screen"); renderPatterns(); }
+function finishFlow() {
+  document.getElementById("qfill").style.width = "100%";
+  runAlgorithm();
+  goTo("pattern-screen");
+  renderPatterns();
 }
-function prevQ() { if (state.qIdx > 0) { state.qIdx--; renderQuestion(); } }
+function nextQ() {
+  const nxt = nextVisibleIdx(state.qIdx);
+  if (nxt !== -1) { state.qIdx = nxt; renderQuestion(); }
+  else { finishFlow(); }
+}
+function prevQ() {
+  const prv = prevVisibleIdx(state.qIdx);
+  if (prv !== -1) { state.qIdx = prv; renderQuestion(); }
+}
 
 /* =====================================================================
    ALGORITHM
+   Bunny Slider output is gated on species=redfish AND size=juvenile.
+   Any other combination (unreachable on demo day) surfaces a
+   "Pattern coming soon" card in renderPatterns().
 ===================================================================== */
+function isBunnySliderUnlocked() {
+  const sp = state.answers.species || "redfish";
+  const sz = state.answers.size || "";
+  return DEMO_UNLOCKED_SPECIES.has(sp) && DEMO_UNLOCKED_SIZE.has(sz);
+}
 function runAlgorithm() {
   const season = state.answers.season || "Fall (September–November)";
   const sr = SINK_RATE[season] || SINK_RATE["Fall (September–November)"];
+  state.algorithmResult = sr;
+  state.algorithmGated = !isBunnySliderUnlocked();
+  if (state.algorithmGated) {
+    state.computedConfig = null;
+    return;
+  }
   // Adjust eyes based on season
   const cfg = JSON.parse(JSON.stringify(BUNNY_SLIDER.rfConfig));
   if (sr.eyes === 'lead') {
@@ -2385,7 +3063,6 @@ function runAlgorithm() {
   } else {
     cfg.eyes = { style:'bead-chain', color:'#0a0a0c' };
   }
-  state.algorithmResult = sr;
   state.computedConfig = cfg;
 }
 
@@ -2395,65 +3072,145 @@ function runAlgorithm() {
 function renderPatterns() {
   if (!state.algorithmResult) runAlgorithm();
   const sr = state.algorithmResult;
+  const grid = document.getElementById("patternGrid");
+  const p = BUNNY_SLIDER;
+
+  // Gate: if the user's species/size doesn't unlock Bunny Slider, show
+  // a "Pattern coming soon" card instead of attempting to render/select.
+  if (state.algorithmGated) {
+    const speciesLabel = SPECIES[state.answers.species] || state.answers.species || "—";
+    const sizeLabel    = state.answers.size || "—";
+    document.getElementById("algoNote").innerHTML =
+      `Selection outside demo scope · ${speciesLabel}${state.answers.species==="redfish"?" · "+sizeLabel:""}`;
+    grid.innerHTML = `<div class="pattern-card coming-soon" style="pointer-events:none">
+      <div class="pattern-preview" style="background:var(--surface-2)"></div>
+      <div class="pattern-name">Pattern coming soon</div>
+      <div class="pattern-sub">${speciesLabel}${state.answers.species==="redfish"?" · "+sizeLabel:""}</div>
+    </div>`;
+    return;
+  }
+
   document.getElementById("algoNote").innerHTML =
     `${sr.label} · Gamakatsu SL12S #2 · Olive-rust · 20 lb. weed guard`;
 
-  const grid = document.getElementById("patternGrid");
-  const p = BUNNY_SLIDER;
-  let html = `<div class="pattern-card">
-    <div class="difficulty diff-med">${p.difficulty}</div>
-    <div class="pattern-preview"><canvas id="pp_${p.id}" width="720" height="260"></canvas></div>
-    <div class="pattern-name">${p.name}</div>
-    <div class="pattern-sub">${p.time} · ${p.techniques.length} techniques</div>
-    <div class="pros-cons">
-      ${p.pros.map(pr=>`<div class="pro">${pr}</div>`).join("")}
-      <div class="con">${p.con}</div>
-    </div>
-    <div class="tech-list">${p.techniques.map(t=>`<span class="tech-tag">${t}</span>`).join("")}</div>
-    <button class="select-btn" onclick="selectPattern()">Select Pattern</button>
-  </div>`;
-  // coming soon cards
-  COMING_SOON_PATTERNS.forEach(cs => {
-    const dc = cs.difficulty==='Easy'?'diff-easy':cs.difficulty==='Hard'?'diff-hard':'diff-med';
-    html += `<div class="pattern-card coming-soon">
-      <div class="difficulty ${dc}">${cs.difficulty}</div>
-      <div class="pattern-preview" style="background:var(--surface-2)"></div>
-      <div class="pattern-name">${cs.name}</div>
-      <div class="pattern-sub">${cs.time}</div>
+  // Render all patterns from the unified list. Each card has the same
+  // layout; only the preview area and the select-button target differ
+  // based on whether the pattern is playable.
+  let html = "";
+  PATTERNS.forEach(pat => {
+    // Canvas internal 1440x520 (2x the old 720x260) so the enlarged
+    // preview stays crisp when stretched to wider CSS cards.
+    // A canvas is created for any pattern that has traced data or is
+    // playable (parametric render fallback); otherwise a placeholder.
+    const hasPreview = pat.playable || pat.tracedData;
+    const preview = hasPreview
+      ? `<div class="pattern-preview"><canvas id="pp_${pat.id}" width="1440" height="520"></canvas></div>`
+      : `<div class="pattern-preview pattern-preview-empty"><div class="empty-label">Preview coming soon</div></div>`;
+    const onSelect = pat.playable
+      ? `selectPattern('${pat.id}')`
+      : `showComingSoon('${pat.id}')`;
+    const sub = `${pat.designer?"By "+pat.designer+" · ":""}${pat.slideCount} slides · ${pat.time}`;
+    html += `<div class="pattern-card">
+      ${preview}
+      <div class="pattern-name">${pat.name}</div>
+      <div class="pattern-sub">${sub}</div>
+      <div class="pros-cons">
+        ${pat.pros.map(pr=>`<div class="pro">${pr}</div>`).join("")}
+        <div class="con">${pat.con}</div>
+      </div>
+      <div class="tech-list">${pat.techniques.map(t=>`<span class="tech-tag">${t}</span>`).join("")}</div>
+      <button class="select-btn" onclick="${onSelect}">Select Pattern</button>
     </div>`;
   });
   grid.innerHTML = html;
-  // paint preview
-  const cv = document.getElementById("pp_"+p.id);
-  if (cv) {
+
+  // Paint any pattern that has a canvas (playable Bunny Slider uses
+  // the tuned FLY_RENDERER.TRACED_FLY_DATA; other patterns with their
+  // own tracedData are auto-fit to the canvas using the section point
+  // bounding box).
+  PATTERNS.forEach(pat => {
+    const cv = document.getElementById("pp_"+pat.id);
+    if (!cv) return;
     const ctx = cv.getContext("2d");
     ctx.fillStyle = "#ECEBE6"; ctx.fillRect(0,0,cv.width,cv.height);
-    if (FLY_RENDERER.TRACED_FLY_DATA) {
-      var scX2=cv.width/800, scY2=cv.height/500, sc2=Math.min(scX2,scY2)*1.38;
+
+    if (pat.id === "bunny_slider" && FLY_RENDERER.TRACED_FLY_DATA) {
+      // Tuned Bunny Slider render — 2x scale of the original, matching
+      // the fly data's (400,280) center anchor.
+      var scX2=cv.width/800, scY2=cv.height/500, sc2=Math.min(scX2,scY2)*2.76;
       ctx.save();
       ctx.translate(cv.width/2-400*sc2, cv.height/2-280*sc2);
       ctx.scale(sc2, sc2);
       FLY_RENDERER.renderTracedFly(ctx, FLY_RENDERER.TRACED_FLY_DATA, 42);
       ctx.restore();
-    } else {
-      ctx.save(); ctx.translate(136,21); ctx.scale(0.435,0.435);
-      FLY_RENDERER.renderFly(ctx, state.computedConfig || p.rfConfig);
+    } else if (pat.tracedData) {
+      // Auto-fit any other traced pattern (e.g. Clouser) from its
+      // section bounding box. 0.66 keeps a little padding around the fly.
+      const b = tracedBounds(pat.tracedData);
+      if (b.w > 0 && b.h > 0) {
+        const scale = Math.min(cv.width / b.w, cv.height / b.h) * 0.66;
+        ctx.save();
+        ctx.translate(cv.width/2 - b.cx*scale, cv.height/2 - b.cy*scale);
+        ctx.scale(scale, scale);
+        FLY_RENDERER.renderTracedFly(ctx, pat.tracedData, pat.tracedData.seed || 42);
+        ctx.restore();
+      }
+    } else if (pat.playable) {
+      // Parametric fallback for a playable pattern missing traced data.
+      const fs = 0.87;
+      ctx.save();
+      ctx.translate(cv.width/2 - 400*fs, cv.height/2 - 250*fs);
+      ctx.scale(fs, fs);
+      FLY_RENDERER.renderFly(ctx, state.computedConfig || pat.rfConfig);
       ctx.restore();
     }
-  }
+  });
 }
 
-function selectPattern() {
-  const p = BUNNY_SLIDER;
+// Bounding box across every traced section's points + strands — used
+// to auto-center and scale a preview inside its canvas.
+function tracedBounds(data) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  const consume = (p) => {
+    if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+  };
+  (data.sections || []).forEach(s => {
+    (s.points  || []).forEach(consume);
+    (s.strands || []).forEach(strand => strand.forEach(consume));
+  });
+  if (data.eyeL) consume(data.eyeL);
+  if (data.eyeR) consume(data.eyeR);
+  return {
+    minX, maxX, minY, maxY,
+    cx: (minX + maxX) / 2,
+    cy: (minY + maxY) / 2,
+    w:   maxX - minX,
+    h:   maxY - minY
+  };
+}
+
+function showComingSoon(id) {
+  const p = getPatternById(id);
+  const name = p ? p.name : "This pattern";
+  alert(`${name}\n\nPattern coming soon — full integration in development.`);
+}
+
+function selectPattern(id) {
+  const p = (id && getPatternById(id)) || BUNNY_SLIDER;
+  if (!p.playable) { showComingSoon(p.id); return; }
   state.selectedPattern = p;
+  // Customizer is skipped in the demo flow — seed the defaults that
+  // materials + the tying view read (config, weedGuard, etc.) and jump
+  // straight to the materials screen.
   state.custom.config = JSON.parse(JSON.stringify(state.computedConfig || p.rfConfig));
   state.custom.reference = JSON.parse(JSON.stringify(state.custom.config));
   state.custom.weedGuard = true;
   state.custom.activePart = "body";
   state.custom.prevVisible = null;
   document.getElementById("custTitle").textContent = p.name;
-  goTo("customizer-screen");
-  initCustomizer();
+  goTo("materials-screen");
+  renderMaterials();
 }
 
 /* =====================================================================
@@ -2481,6 +3238,24 @@ function renderFlyWrapped(ctx, config, options) {
     var scX = W / 800, scY = H / 500, sc = Math.min(scX, scY) * 1.38;
     ctx.translate(W/2 - 400*sc, H/2 - 280*sc);
     ctx.scale(sc, sc);
+
+    // Vise: drawn first so the jaws sit BEHIND the fly. The drawViseJaws
+    // helper grips wherever we tell it — we use the hook section's first
+    // traced point, which is the hook eye (loop end) on the left of the
+    // shank. VISE_PARAMS are sized for the parametric pipeline (~470-unit
+    // hook), so we scale down ~2x to sit correctly on the traced hook.
+    if (options.vise) {
+      var hookSec = FLY_RENDERER.TRACED_FLY_DATA.sections.find(function(s){return s.id==='hook';});
+      if (hookSec && hookSec.points && hookSec.points.length > 0) {
+        var eyePt = hookSec.points[0];
+        ctx.save();
+        ctx.translate(eyePt.x, eyePt.y);
+        ctx.scale(0.48, 0.48);
+        FLY_RENDERER.drawViseJaws(ctx, { eye: { x: 0, y: 0 } });
+        ctx.restore();
+      }
+    }
+
     // Pass visible layers for step-by-step
     var visSet = options.visible || null;
     FLY_RENDERER.renderTracedFly(ctx, FLY_RENDERER.TRACED_FLY_DATA, 42, visSet);
@@ -2589,25 +3364,42 @@ function drawCustom() {
 /* =====================================================================
    MATERIALS — live cost breakdown with per-vendor shipping
 ===================================================================== */
-function getMaterials() {
+function getFlyMaterials() {
   // Silent seasonal eye swap — only affects materials list and cost, never tying steps
   const season = state.answers.season || "Fall (September–November)";
   const sr = SINK_RATE[season];
   const eyeItem = (sr && sr.eyes === 'lead') ? EYES_WINTER : EYES_STANDARD;
-  return [BASE_MATERIALS[0], BASE_MATERIALS[1], eyeItem, ...BASE_MATERIALS.slice(2)];
+  // Order inside the column: hook, thread, eyes, tail, body, flash
+  return [
+    FLY_SPECIFIC_MATERIALS[0],
+    FLY_SPECIFIC_MATERIALS[1],
+    eyeItem,
+    ...FLY_SPECIFIC_MATERIALS.slice(2)
+  ];
 }
+function getGeneralMaterials() { return GENERAL_MATERIALS.slice(); }
+// Flat list used by cart / cost breakdown / checkout / export — only Col 1 + Col 2.
+// state.owned is indexed into this array; Tools (Col 3) are tracked separately
+// in state.toolsOwned and never reach the cart math.
+function getMaterials() { return [...getFlyMaterials(), ...getGeneralMaterials()]; }
 function renderMaterials() {
   const sr = state.algorithmResult || SINK_RATE["Fall (September–November)"];
   document.getElementById("matSeasonNote").textContent = sr.label;
   const wrap = document.getElementById("matListWrap");
-  const mats = getMaterials();
-  wrap.innerHTML = mats.map((m,i) => {
+  const fly = getFlyMaterials();
+  const gen = getGeneralMaterials();
+
+  // Cart-row renderer — shared between Col 1 and Col 2 so both follow
+  // the same vendor / stock / "I already have this" / price contract.
+  // globalIdx is the index into getMaterials() (Col 1 then Col 2),
+  // which state.owned / the cost breakdown / checkout all key off.
+  const renderCartRow = (m, globalIdx) => {
     const v = vendorById(m.vendor);
     const vName = v ? v.name : "—";
     const stockStatus = mockStock(m.name, VENDORS.indexOf(v));
     const cls = stockStatus==="In Stock"?"in-stock":stockStatus==="Limited"?"limited":"out-of-stock";
-    return `<div class="mat-row ${state.owned.has(i)?"owned":""}" id="matRow${i}">
-      <input type="checkbox" ${state.owned.has(i)?"checked":""} onchange="toggleOwned(${i},this.checked)" title="I already have this">
+    return `<div class="mat-row ${state.owned.has(globalIdx)?"owned":""}" id="matRow${globalIdx}">
+      <input type="checkbox" ${state.owned.has(globalIdx)?"checked":""} onchange="toggleOwned(${globalIdx},this.checked)" title="I already have this">
       <div>
         <div class="mat-name">${m.name}</div>
         <div class="mat-qty">${m.qty}</div>
@@ -2616,15 +3408,52 @@ function renderMaterials() {
         </div>
       </div>
       <div class="mat-price">$${m.price.toFixed(2)}</div>
-      <div></div>
+    </div>`;
+  };
+
+  const flyRows = fly.map((m, i) => renderCartRow(m, i)).join("");
+  const genRows = gen.map((m, i) => renderCartRow(m, fly.length + i)).join("");
+
+  const toolRows = TOOLS.map(t => {
+    const checked = state.toolsOwned.has(t.id);
+    const opt = t.optional ? ` <span class="tool-optional">(optional)</span>` : "";
+    return `<div class="tool-row ${checked?"owned":""}" id="tool_${t.id}">
+      <input type="checkbox" ${checked?"checked":""} onchange="toggleTool('${t.id}', this.checked)">
+      <div class="tool-name">${t.name}${opt}</div>
     </div>`;
   }).join("");
+
+  wrap.innerHTML = `
+    <div class="mat-columns">
+      <div class="mat-column">
+        <h3 class="mat-column-head">Fly-Specific Materials</h3>
+        <div class="mat-column-sub">Unique to the Bunny Slider.</div>
+        ${flyRows}
+      </div>
+      <div class="mat-column">
+        <h3 class="mat-column-head">General Materials</h3>
+        <div class="mat-column-sub">Reusable across most patterns — buy once, tie many flies.</div>
+        ${genRows}
+      </div>
+      <div class="mat-column">
+        <h3 class="mat-column-head">Tools</h3>
+        <div class="mat-column-sub">Check off what you already own.</div>
+        ${toolRows}
+      </div>
+    </div>
+  `;
   updateCostBreakdown();
 }
 function toggleOwned(i,v) {
   if(v) state.owned.add(i); else state.owned.delete(i);
   document.getElementById("matRow"+i).classList.toggle("owned",v);
   updateCostBreakdown();
+}
+function toggleTool(id, v) {
+  if (v) state.toolsOwned.add(id); else state.toolsOwned.delete(id);
+  localStorage.setItem('drift_tools_owned', JSON.stringify([...state.toolsOwned]));
+  const row = document.getElementById('tool_'+id);
+  if (row) row.classList.toggle('owned', v);
 }
 function updateCostBreakdown() {
   /* Live cost breakdown: materials subtotal + per-vendor shipping + grand total.
@@ -2798,7 +3627,57 @@ function startTying() {
   // document.getElementById("handRight").classList.toggle("active",state.hand==='right');
   // document.getElementById("handLeft").classList.toggle("active",state.hand==='left');
   state.hand = 'right'; // locked for demo — right-handed presentation only
+  initVideoStage();
   goTo("tying-screen"); renderStep();
+}
+
+// Build a <video> element for each TYING_STEPS entry once. Each keeps
+// its own playback position naturally, so "pause without reset" is free.
+// .mov files carry two <source> declarations — quicktime + mp4 — so
+// browsers that sniff codecs or trust MIME can both pick it up.
+function initVideoStage() {
+  const stage = document.getElementById('videoStage');
+  if (!stage || stage.dataset.init === 'true') return;
+  let html = '';
+  TYING_STEPS.forEach((step, i) => {
+    const src = step.video || '';
+    // NOTE: if .mov playback fails, convert to .mp4 with:
+    // ffmpeg -i input.mov -c:v libx264 -c:a aac output.mp4
+    html += `
+      <video class="tying-video" data-step="${i}" controls preload="metadata" playsinline>
+        <source src="${src}" type="video/quicktime">
+        <source src="${src}" type="video/mp4">
+        Your browser doesn't support video playback. You may need to convert to .mp4.
+      </video>`;
+  });
+  stage.innerHTML = html;
+  stage.dataset.init = 'true';
+  // Error handling — if any video fails to load, show the fallback banner.
+  const fallback = document.getElementById('videoFallback');
+  stage.querySelectorAll('video').forEach(v => {
+    v.addEventListener('error', () => {
+      if (fallback) fallback.style.display = 'block';
+      v.classList.remove('active');
+    });
+  });
+}
+
+// Show only the current step's video. Pause (but don't reset) all others
+// so the user can wander forward and back without losing their place.
+function showStepVideo(idx) {
+  const stage = document.getElementById('videoStage');
+  if (!stage) return;
+  const fallback = document.getElementById('videoFallback');
+  if (fallback) fallback.style.display = 'none';
+  stage.querySelectorAll('video').forEach(v => {
+    const stepI = parseInt(v.dataset.step, 10);
+    if (stepI === idx) {
+      v.classList.add('active');
+    } else {
+      if (!v.paused) v.pause();  // preserve currentTime, just pause
+      v.classList.remove('active');
+    }
+  });
 }
 function setHand(h) {
   state.hand=h; localStorage.setItem('drift_hand',h);
@@ -2817,6 +3696,12 @@ function renderStep() {
   document.getElementById("stepCt").textContent=`Step ${state.stepIdx+1} of ${TYING_STEPS.length}`;
   document.getElementById("tyFill").style.width=((state.stepIdx+1)/TYING_STEPS.length*100)+"%";
   document.getElementById("stepNextBtn").textContent=state.stepIdx===TYING_STEPS.length-1?"Finish":"Next";
+  // Encouragement line under the "Your Design" canvas label.
+  const enc=document.getElementById("stepEncouragement");
+  if (enc) enc.textContent = s.encouragement || "";
+
+  // Show the step's video; pause any video from the previous step.
+  showStepVideo(state.stepIdx);
 
   // presentation note from light conditions
   const pn=document.getElementById("presentationNote");
@@ -2856,9 +3741,12 @@ function openSaveModal() {
   document.getElementById("saveName").value="Bunny Slider (Custom)";
   document.getElementById("saveNotes").value="";
   const sum=document.getElementById("saveSummary"); const a=state.answers;
+  const speciesLabel = SPECIES[a.species] || "Redfish";
+  const sizeLabel    = a.size || 'Juvenile / Puppy Drum (33" and under)';
   sum.innerHTML=`
     <div class="row"><span>Pattern</span><span>Bunny Slider</span></div>
-    <div class="row"><span>Species</span><span>Puppy Drum (Redfish)</span></div>
+    <div class="row"><span>Species</span><span>${speciesLabel}</span></div>
+    <div class="row"><span>Size</span><span>${sizeLabel}</span></div>
     <div class="row"><span>Location</span><span>${a.location||"—"}</span></div>
     <div class="row"><span>Season</span><span>${a.season||"—"}</span></div>
     <div class="row"><span>Eyes</span><span>${(state.algorithmResult||{}).eyes==='lead'?'Lead (winter)':'Bead chain'}</span></div>
@@ -2880,7 +3768,9 @@ function savePattern() {
 }
 function copyShare() {
   const a=state.answers;
-  let txt=`Drift — ${document.getElementById("saveName").value}\n\nPattern: Bunny Slider\nTarget: Puppy Drum (Redfish)\n`;
+  const speciesLabel = SPECIES[a.species] || "Redfish";
+  const sizeLabel    = a.size || 'Juvenile / Puppy Drum (33" and under)';
+  let txt=`Drift — ${document.getElementById("saveName").value}\n\nPattern: Bunny Slider\nTarget: ${speciesLabel} — ${sizeLabel}\n`;
   txt+=`Location: ${a.location}\nSeason: ${a.season}\nHook: Gamakatsu SL12S #2\n`;
   txt+=`Weed Guard: ${state.custom.weedGuard?"Yes":"No"}\n\nMaterials:\n`;
   getMaterials().forEach(m=>{txt+=`  - ${m.name} (${m.qty})\n`;});
@@ -3551,7 +4441,34 @@ document.addEventListener('keydown',function(e){
     if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
     e.preventDefault();if(tuneActive)window.closeTune();else location.hash='#/tune';
   }
+  // Shift+7 — demo skip: fill in defaults and jump to the pattern grid
+  // with all three flies visible. e.code avoids keyboard-layout issues
+  // where Shift+7 may produce '&' or other symbols.
+  if(e.shiftKey&&e.code==='Digit7'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    var tag=document.activeElement&&document.activeElement.tagName;
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+    e.preventDefault();
+    skipToPatterns();
+  }
 });
+
+// Fills in demo defaults so runAlgorithm passes the redfish+juvenile
+// gate and renderPatterns shows all three fly cards (Bunny Slider
+// playable, EP / Clouser coming-soon placeholders/previews).
+function skipToPatterns() {
+  state.answers.rod      = state.answers.rod      || "8wt";
+  state.answers.location = state.answers.location || "Texas Coast";
+  state.answers.species  = "redfish";
+  state.answers.size     = 'Juvenile / Puppy Drum (33" and under)';
+  state.answers.season   = state.answers.season   || "Fall (September–November)";
+  state.answers.depth    = state.answers.depth    || "Shallow (1–3 ft)";
+  state.answers.light    = state.answers.light    || "Overcast";
+  state.answers.bottom   = state.answers.bottom   || "Sandy flats";
+  if (state.answers.weed == null) state.answers.weed = true;
+  runAlgorithm();
+  goTo("pattern-screen");
+  renderPatterns();
+}
 
 document.addEventListener('DOMContentLoaded',function(){
   var cv=document.getElementById('tuneCanvas');
@@ -3565,5 +4482,6 @@ if(document.readyState==='complete'||document.readyState==='interactive')setTime
 else window.addEventListener('DOMContentLoaded',checkHash);
 })();
 </script>
+
 </body>
 </html>
