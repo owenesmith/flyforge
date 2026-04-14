@@ -1947,20 +1947,27 @@ function renderTracedFly(ctx, data, seedVal, visibleSet) {
       ctx.save(); ctx.lineCap='round';
       const baseRGB=hexToRgb(P.baseColor||'#3a2850');
       const hlRGB=hexToRgb(P.hlColor||'#8a6ab0');
-      // Flash stores multiple strands in sec.strands (array of arrays)
-      // Fall back to sec.points as a single strand for legacy data
       const strands = sec.strands && sec.strands.length > 0 ? sec.strands : (sec.points.length > 1 ? [sec.points] : []);
       strands.forEach(function(strand) {
         if (strand.length < 2) return;
-        // Draw main strand as smooth wavy path
+        // Draw as smooth bezier with slight waviness offset per strand
+        const waveOff = (rng()-0.5) * (P.waviness||3);
         ctx.strokeStyle=rgbaStr(baseRGB[0],baseRGB[1],baseRGB[2],P.opacity||0.5);
-        ctx.lineWidth=(P.strokeW||0.7)*(0.6+rng()*0.6);
-        ctx.beginPath(); _trSmoothPath(ctx, strand, false); ctx.stroke();
-        // Shimmer highlights along strand
-        for (let k=1; k<strand.length-1; k++) {
-          if (rng()>0.5) continue;
-          ctx.fillStyle=rgbaStr(hlRGB[0],hlRGB[1],hlRGB[2],0.3+rng()*0.2);
-          ctx.beginPath();ctx.arc(strand[k].x+(rng()-0.5)*3,strand[k].y+(rng()-0.5)*3,0.6+rng()*0.8,0,Math.PI*2);ctx.fill();
+        ctx.lineWidth=(P.strokeW||0.7)*(0.5+rng()*0.7);
+        ctx.beginPath();
+        _trSmoothPath(ctx, strand, false);
+        ctx.stroke();
+        // Second pass: slightly offset duplicate for shimmer/thickness
+        ctx.strokeStyle=rgbaStr(hlRGB[0],hlRGB[1],hlRGB[2],0.15+rng()*0.1);
+        ctx.lineWidth=(P.strokeW||0.7)*0.4;
+        ctx.beginPath();
+        _trSmoothPath(ctx, strand.map(function(p){return{x:p.x+(rng()-0.5)*1.5+waveOff,y:p.y+(rng()-0.5)*1.5};}), false);
+        ctx.stroke();
+        // Shimmer dots at intervals along the strand
+        for (let k=0; k<strand.length; k++) {
+          if (rng()>0.4) continue;
+          ctx.fillStyle=rgbaStr(hlRGB[0],hlRGB[1],hlRGB[2],0.25+rng()*0.2);
+          ctx.beginPath();ctx.arc(strand[k].x+(rng()-0.5)*2,strand[k].y+(rng()-0.5)*2,0.5+rng()*0.7,0,Math.PI*2);ctx.fill();
         }
       });
       ctx.restore();
@@ -1996,31 +2003,13 @@ function renderTracedFly(ctx, data, seedVal, visibleSet) {
       ctx.stroke();
     }
 
-    // Generate fibers — ~85% inside polygon, ~15% near edges (soft overflow)
+    // ---- MAIN INTERIOR FIBERS ----
     const defAngle = P.sweepAngle || 0;
     let attempts=0;
-    for(let i=0;i<n;i++){
-      const px=softBBox.x+rng()*softBBox.w, py=softBBox.y+rng()*softBBox.h;
-      const inside = _trPointInPoly({x:px,y:py},sec.points);
-      if(!inside) {
-        // Allow ~15% of fibers to be near-edge overflow for soft look
-        // Find distance to nearest polygon edge
-        let minD=1e9;
-        for(let j=0;j<sec.points.length;j++){
-          const a=sec.points[j], b=sec.points[(j+1)%sec.points.length];
-          const dx=b.x-a.x,dy=b.y-a.y,len2=dx*dx+dy*dy;
-          if(len2<1){minD=Math.min(minD,Math.hypot(px-a.x,py-a.y));continue;}
-          const t=Math.max(0,Math.min(1,((px-a.x)*dx+(py-a.y)*dy)/len2));
-          minD=Math.min(minD,Math.hypot(px-(a.x+t*dx),py-(a.y+t*dy)));
-        }
-        if(minD>overflow*0.35||rng()>0.18){i--;attempts++;if(attempts>n*5)break;continue;}
-      }
-      attempts=0;
-      const angle=_trFlowAt(px,py,sec.guides,defAngle)+(rng()-0.5)*0.6;
-      const len=(P.fiberLen||15)+(rng()-0.5)*2*(P.fiberLenVar||10);
+    function _drawFiber(px,py,angle,len,alpha) {
       const ex=px+Math.cos(angle)*len, ey=py+Math.sin(angle)*len;
       const perpX=-Math.sin(angle),perpY=Math.cos(angle);
-      const sc=(rng()-0.5)*len*0.15;
+      const sc=(rng()-0.5)*len*0.18;
       const mx=px+Math.cos(angle)*len*0.5+perpX*sc;
       const my=py+Math.sin(angle)*len*0.5+perpY*sc;
       const t=rng();
@@ -2029,12 +2018,71 @@ function renderTracedFly(ctx, data, seedVal, visibleSet) {
       let cb=baseRGB[2]+(tipRGB[2]-baseRGB[2])*t*0.6;
       const bf=1+(rng()-0.5)*0.2;
       if(barRGB&&P.barFreq&&rng()<0.3){cr=barRGB[0];cg=barRGB[1];cb=barRGB[2];}
-      // Fibers outside polygon get reduced opacity for soft edge
-      const edgeAlpha = inside ? (P.opacity||0.8) : (P.opacity||0.8)*0.4;
-      ctx.strokeStyle=rgbaStr(cr*bf,cg*bf,cb*bf,edgeAlpha);
+      ctx.strokeStyle=rgbaStr(cr*bf,cg*bf,cb*bf,alpha);
       ctx.lineWidth=(P.fiberWidth||1)*(0.6+rng()*0.8);
       ctx.beginPath();ctx.moveTo(px,py);ctx.quadraticCurveTo(mx,my,ex,ey);ctx.stroke();
     }
+    for(let i=0;i<n;i++){
+      const px=bbox.x+rng()*bbox.w, py=bbox.y+rng()*bbox.h;
+      if(!_trPointInPoly({x:px,y:py},sec.points)){i--;attempts++;if(attempts>n*5)break;continue;}
+      attempts=0;
+      const angle=_trFlowAt(px,py,sec.guides,defAngle)+(rng()-0.5)*0.6;
+      const len=(P.fiberLen||15)+(rng()-0.5)*2*(P.fiberLenVar||10);
+      _drawFiber(px,py,angle,len,P.opacity||0.8);
+    }
+
+    // ---- EDGE HAIRS — fluffy sticking-out fibers along polygon boundary ----
+    // Walk each edge segment, spawn hairs pointing outward, perpendicular, and
+    // opposite to the flow direction so they look like fur poking out the sides.
+    const edgeCount = Math.floor(n * 0.25); // 25% as many as interior
+    const pts = sec.points;
+    const nPts = pts.length;
+    // Precompute polygon centroid for outward direction
+    let cx=0,cy=0; pts.forEach(function(p){cx+=p.x;cy+=p.y;}); cx/=nPts; cy/=nPts;
+
+    for(let i=0;i<edgeCount;i++){
+      // Pick random position along polygon perimeter
+      const edgeIdx = Math.floor(rng()*nPts);
+      const a=pts[edgeIdx], b=pts[(edgeIdx+1)%nPts];
+      const et=rng();
+      const ex=a.x+(b.x-a.x)*et, ey=a.y+(b.y-a.y)*et;
+      // Edge tangent and outward normal
+      const edx=b.x-a.x, edy=b.y-a.y, elen=Math.hypot(edx,edy)||1;
+      const tx=edx/elen, ty=edy/elen; // tangent
+      // Outward normal: perpendicular pointing away from centroid
+      let nx=-ty, ny=tx;
+      const toCx=cx-ex, toCy=cy-ey;
+      if(nx*toCx+ny*toCy>0){nx=-nx;ny=-ny;} // flip if pointing inward
+
+      // Fiber direction: mix of outward, perpendicular, and reverse-flow
+      const flowAng = _trFlowAt(ex,ey,sec.guides,defAngle);
+      const pick = rng();
+      let hairAng;
+      if(pick<0.4){
+        // Outward normal (sticking straight out from edge)
+        hairAng = Math.atan2(ny,nx) + (rng()-0.5)*0.5;
+      } else if(pick<0.7){
+        // Perpendicular to flow (sideways stray hairs)
+        hairAng = flowAng + (rng()<0.5?1:-1)*Math.PI/2 + (rng()-0.5)*0.4;
+      } else {
+        // Opposite to flow direction (backward stray)
+        hairAng = flowAng + Math.PI + (rng()-0.5)*0.6;
+      }
+
+      // Edge hairs are longer and thinner than interior, lower opacity
+      const hairLen = (P.fiberLen||15)*(0.8+rng()*0.8);
+      const hairAlpha = (P.opacity||0.8)*(0.25+rng()*0.25);
+      // Start slightly inside the polygon for natural rooting
+      const rootX = ex - nx*(1+rng()*2);
+      const rootY = ey - ny*(1+rng()*2);
+
+      // Thinner fiber width for wispy edge hairs
+      const origW = P.fiberWidth;
+      P.fiberWidth = (origW||1)*0.5;
+      _drawFiber(rootX, rootY, hairAng, hairLen, hairAlpha);
+      P.fiberWidth = origW;
+    }
+
     ctx.restore();
   });
 
@@ -3279,19 +3327,14 @@ function onDown(e){
     return;
   }
 
-  // Trace tool: add point (or strand point for flash)
+  // Trace tool: add point (or freehand strand for flash)
   if(tool==='trace'){
     var sec=SECTIONS[activeSec];
     if(sec.type==='strands'){
-      // For strand sections: left-click adds points to active strand
-      if(!sec._activeStrand) sec._activeStrand=[];
-      sec._activeStrand.push({x:p.x,y:p.y});
+      // Freehand bezier: mousedown starts a new strand, mousemove draws it
+      sec._activeStrand=[{x:p.x,y:p.y}];
+      sec._drawing=true;
       schedRender();
-      // Draw live preview of current strand
-      var cvt=document.getElementById('tuneCanvas'),ctxt=cvt.getContext('2d');
-      ctxt.strokeStyle=sec.color;ctxt.lineWidth=1.5;ctxt.setLineDash([3,3]);
-      ctxt.beginPath();sec._activeStrand.forEach(function(pt,i){if(i===0)ctxt.moveTo(pt.x,pt.y);else ctxt.lineTo(pt.x,pt.y);});
-      ctxt.stroke();ctxt.setLineDash([]);
     } else {
       sec.points.push({x:p.x,y:p.y});
       sec.filled=false;
@@ -3302,10 +3345,21 @@ function onDown(e){
 
 function onMove(e){
   var p=cPos(e);
+  // Freehand strand drawing for flash
+  var sec=SECTIONS[activeSec];
+  if(tool==='trace'&&sec&&sec.type==='strands'&&sec._drawing&&sec._activeStrand){
+    sec._activeStrand.push({x:p.x,y:p.y});
+    // Live preview
+    var cvl=document.getElementById('tuneCanvas'),ctxl=cvl.getContext('2d');
+    ctxl.strokeStyle=sec.color;ctxl.lineWidth=1.5;
+    ctxl.beginPath();
+    var pts=sec._activeStrand;
+    if(pts.length>=2){ctxl.moveTo(pts[pts.length-2].x,pts[pts.length-2].y);ctxl.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);ctxl.stroke();}
+    return;
+  }
   if(tool==='guide'&&_guideStroke){
     _guideStroke.push({x:p.x,y:p.y});
     schedRender();
-    // Draw live stroke
     var cv=document.getElementById('tuneCanvas'),ctx=cv.getContext('2d');
     ctx.strokeStyle='rgba(255,255,0,0.6)';ctx.lineWidth=2;ctx.setLineDash([2,2]);
     ctx.beginPath();_guideStroke.forEach(function(pp,i){if(i===0)ctx.moveTo(pp.x,pp.y);else ctx.lineTo(pp.x,pp.y);});ctx.stroke();ctx.setLineDash([]);
@@ -3318,12 +3372,33 @@ function onMove(e){
 }
 
 function onUp(e){
+  // Finish freehand flash strand
+  var sec=SECTIONS[activeSec];
+  if(tool==='trace'&&sec&&sec.type==='strands'&&sec._drawing&&sec._activeStrand){
+    if(sec._activeStrand.length>=3){
+      // Simplify to ~8-15 control points for smooth bezier
+      var raw=sec._activeStrand;
+      var keep=Math.max(3,Math.min(15,Math.floor(raw.length/6)));
+      var simplified=[];
+      for(var i=0;i<keep;i++){
+        var idx=Math.floor(i*raw.length/(keep));
+        simplified.push(raw[Math.min(idx,raw.length-1)]);
+      }
+      simplified.push(raw[raw.length-1]);
+      if(!sec.strands)sec.strands=[];
+      sec.strands.push(simplified);
+      sec.filled=true;
+    }
+    sec._activeStrand=null;
+    sec._drawing=false;
+    buildPanel();
+  }
+  // Finish guide stroke
   if(tool==='guide'&&_guideStroke&&_guideStroke.length>3){
-    // Simplify: keep every 4th point
-    var simplified=[];
-    for(var i=0;i<_guideStroke.length;i+=4)simplified.push(_guideStroke[i]);
-    simplified.push(_guideStroke[_guideStroke.length-1]);
-    SECTIONS[activeSec].guides.push(simplified);
+    var simplified2=[];
+    for(var j=0;j<_guideStroke.length;j+=4)simplified2.push(_guideStroke[j]);
+    simplified2.push(_guideStroke[_guideStroke.length-1]);
+    SECTIONS[activeSec].guides.push(simplified2);
     SECTIONS[activeSec].filled=false;
     buildPanel();
   }
@@ -3481,18 +3556,7 @@ document.addEventListener('keydown',function(e){
 document.addEventListener('DOMContentLoaded',function(){
   var cv=document.getElementById('tuneCanvas');
   if(cv){cv.addEventListener('mousedown',onDown);cv.addEventListener('mousemove',onMove);cv.addEventListener('mouseup',onUp);cv.addEventListener('mouseleave',onUp);cv.addEventListener('dblclick',onDbl);cv.addEventListener('wheel',onWheel,{passive:false});
-    cv.addEventListener('contextmenu',function(e){
-      e.preventDefault();
-      // Right-click finishes active strand for strand-type sections
-      var sec=SECTIONS[activeSec];
-      if(sec&&sec.type==='strands'&&sec._activeStrand&&sec._activeStrand.length>=2){
-        if(!sec.strands)sec.strands=[];
-        sec.strands.push(sec._activeStrand);
-        sec._activeStrand=null;
-        sec.filled=true;
-        buildPanel();schedRender();
-      }
-    });
+    cv.addEventListener('contextmenu',function(e){e.preventDefault();});
   }
   window.addEventListener('resize',function(){if(tuneActive)resizeCanvas();});
 });
